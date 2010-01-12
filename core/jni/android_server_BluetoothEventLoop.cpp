@@ -341,7 +341,7 @@ const char * get_adapter_path(DBusConnection *conn) {
                 if (dbus_error_has_name(&err,
                     "org.freedesktop.DBus.Error.ServiceUnknown")) {
                     // bluetoothd is still down, retry
-                    LOG_AND_FREE_DBUS_ERROR(&err);
+                    dbus_error_free(&err);
                     usleep(10000);  // 10 ms
                     continue;
                 } else {
