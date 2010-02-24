@@ -129,8 +129,8 @@ public class BluetoothService extends IBluetooth.Stub {
     private static final long MAX_AUTO_PAIRING_FAILURE_ATTEMPT_DELAY = 12000;
 
     // The timeout used to sent the UUIDs Intent
-    // This timeout should be greater than the page timeout
-    private static final int UUID_INTENT_DELAY = 6000;
+    // This timeout should be greater than the page timeout+sdp query
+    private static final int UUID_INTENT_DELAY = 20000;
 
     /** Always retrieve RFCOMM channel for these SDP UUIDs */
     private static final ParcelUuid[] RFCOMM_UUIDS = {
