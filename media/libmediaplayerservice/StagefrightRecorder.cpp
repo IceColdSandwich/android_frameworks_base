@@ -1496,7 +1496,7 @@ status_t StagefrightRecorder::setupVideoEncoder(
 
     sp<MetaData> meta = cameraSource->getFormat();
 
-    int32_t width, height, stride, sliceHeight, colorFormat, hfr;
+    int32_t width, height, stride, sliceHeight, colorFormat, hfr, is3D;
     CHECK(meta->findInt32(kKeyWidth, &width));
     CHECK(meta->findInt32(kKeyHeight, &height));
     CHECK(meta->findInt32(kKeyStride, &stride));
@@ -1591,6 +1591,9 @@ status_t StagefrightRecorder::setupVideoEncoder(
     }
     if (mVideoEncoderLevel != -1) {
         enc_meta->setInt32(kKeyVideoLevel, mVideoEncoderLevel);
+    }
+    if (meta->findInt32(kKey3D, &is3D)) {
+        enc_meta->setInt32(kKey3D, is3D);
     }
 
     OMXClient client;

@@ -554,6 +554,11 @@ status_t CameraSource::initWithCameraAccess(
         mGlitchDurationThresholdUs = glitchDurationUs;
     }
 
+    const char * k3dFrameArrangement = "3d-frame-format";
+    const char * arrangement = params.get(k3dFrameArrangement);
+    // XXX: just assume left/right for now since that's all the camera supports
+    bool want3D = (arrangement != NULL && !strcmp("left-right", arrangement));
+
     // XXX: query camera for the stride and slice height
     // when the capability becomes available.
     mMeta = new MetaData;
@@ -565,6 +570,10 @@ status_t CameraSource::initWithCameraAccess(
     mMeta->setInt32(kKeySliceHeight, mVideoSize.height);
     mMeta->setInt32(kKeyFrameRate,   mVideoFrameRate);
     mMeta->setInt32(kKeyHFR, hfr);
+
+    if (want3D) {
+        mMeta->setInt32(kKey3D, !0);
+    }
     return OK;
 }
 
