@@ -45,6 +45,7 @@ import android.provider.Settings;
 import android.util.Log;
 import android.util.Slog;
 import android.util.SparseBooleanArray;
+import java.util.List;
 
 import com.android.internal.net.NetworkStatsFactory;
 import com.google.android.collect.Sets;
@@ -107,6 +108,7 @@ public class NetworkManagementService extends INetworkManagementService.Stub
         public static final int InterfaceTxThrottleResult = 219;
         public static final int QuotaCounterResult        = 220;
         public static final int TetheringStatsResult      = 221;
+        public static final int V6RtrAdvResult            = 223;
 
         public static final int InterfaceChange           = 600;
         public static final int BandwidthControl          = 601;
@@ -360,6 +362,31 @@ public class NetworkManagementService extends INetworkManagementService.Stub
         } catch (NativeDaemonConnectorException e) {
             throw new IllegalStateException(
                     "Cannot communicate with native daemon to list interfaces");
+        }
+    }
+
+    public void addUpstreamV6Interface(String iface) throws IllegalStateException {
+        mContext.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_NETWORK_STATE, "NetworkManagementService");
+
+        Slog.d(TAG, "addUpstreamInterface("+ iface + ")");
+        try {
+            mConnector.doCommand("tether interface add_upstream " + iface);
+        } catch (NativeDaemonConnectorException e) {
+            throw new IllegalStateException("Cannot add upstream interface");
+        }
+    }
+
+    public void removeUpstreamV6Interface(String iface) throws IllegalStateException {
+        mContext.enforceCallingOrSelfPermission(
+                android.Manifest.permission.ACCESS_NETWORK_STATE, "NetworkManagementService");
+
+        Slog.d(TAG, "removeUpstreamInterface(" + iface + ")");
+
+        try {
+            mConnector.doCommand("tether interface remove_upstream " + iface);
+        } catch (NativeDaemonConnectorException e) {
+            throw new IllegalStateException("Cannot remove upstream interface");
         }
     }
 
