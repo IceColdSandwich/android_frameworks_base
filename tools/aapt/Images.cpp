@@ -18,7 +18,8 @@
 static void
 png_write_aapt_file(png_structp png_ptr, png_bytep data, png_size_t length)
 {
-    status_t err = ((AaptFile*)png_ptr->io_ptr)->writeData(data, length);
+    AaptFile* io_ptr = (AaptFile*)png_get_io_ptr(png_ptr);
+    status_t err = io_ptr->writeData(data, length);
     if (err != NO_ERROR) {
         png_error(png_ptr, "Write Error");
     }
@@ -83,7 +84,7 @@ static void read_png(const char* imageName,
         png_set_palette_to_rgb(read_ptr);
 
     if (color_type == PNG_COLOR_TYPE_GRAY && bit_depth < 8)
-        png_set_gray_1_2_4_to_8(read_ptr);
+        png_set_expand_gray_1_2_4_to_8(read_ptr);
 
     if (png_get_valid(read_ptr, read_info, PNG_INFO_tRNS)) {
         //printf("Has PNG_INFO_tRNS!\n");
@@ -937,7 +938,6 @@ static void write_png(const char* imageName,
 
     png_bytepp rows;
     if (color_type == PNG_COLOR_TYPE_RGB || color_type == PNG_COLOR_TYPE_RGB_ALPHA) {
-        png_set_filler(write_ptr, 0, PNG_FILLER_AFTER);
         rows = imageInfo.rows;
     } else {
         rows = outRows;
