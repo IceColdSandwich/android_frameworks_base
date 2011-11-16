@@ -412,11 +412,7 @@ void CameraParameters::set(const char *key, const char *value)
 void CameraParameters::set(const char *key, int value)
 {
     char str[16];
-#ifdef QCOM_HARDWARE
     snprintf(str, sizeof(str), "%d", value);
-#else
-    snprintf(str, sizeof(str), "%d", value);
-#endif
     set(key, str);
 }
 
@@ -509,11 +505,7 @@ static void parseSizesList(const char *sizesStr, Vector<Size> &sizes)
 void CameraParameters::setPreviewSize(int width, int height)
 {
     char str[32];
-#ifdef QCOM_HARDWARE
     snprintf(str, sizeof(str), "%dx%d", width, height);
-#else
-    snprintf(str, sizeof(str), "%dx%d", width, height);
-#endif
     set(KEY_PREVIEW_SIZE, str);
 }
 
@@ -658,6 +650,56 @@ void CameraParameters::dump() const
         LOGD("%s: %s\n", k.string(), v.string());
     }
 }
+
+#ifdef QCOM_HARDWARE
+void CameraParameters::setTouchIndexAec(int x, int y)
+{
+    char str[32];
+    snprintf(str, sizeof(str), "%dx%d", x, y);
+    set(KEY_TOUCH_INDEX_AEC, str);
+}
+
+void CameraParameters::getTouchIndexAec(int *x, int *y) const
+{
+    *x = -1;
+    *y = -1;
+
+    // Get the current string, if it doesn't exist, leave the -1x-1
+    const char *p = get(KEY_TOUCH_INDEX_AEC);
+    if (p == 0)
+        return;
+
+    int tempX, tempY;
+    if (parse_pair(p, &tempX, &tempY, 'x') == 0) {
+        *x = tempX;
+        *y = tempY;
+    }
+}
+
+void CameraParameters::setTouchIndexAf(int x, int y)
+{
+    char str[32];
+    snprintf(str, sizeof(str), "%dx%d", x, y);
+    set(KEY_TOUCH_INDEX_AF, str);
+}
+
+void CameraParameters::getTouchIndexAf(int *x, int *y) const
+{
+    *x = -1;
+    *y = -1;
+
+    // Get the current string, if it doesn't exist, leave the -1x-1
+    const char *p = get(KEY_TOUCH_INDEX_AF);
+    if (p == 0)
+        return;
+
+    int tempX, tempY;
+    if (parse_pair(p, &tempX, &tempY, 'x') == 0) {
+        *x = tempX;
+        *y = tempY;
+    }
+}
+#endif
 
 #ifdef QCOM_HARDWARE
 void CameraParameters::setTouchIndexAec(int x, int y)
