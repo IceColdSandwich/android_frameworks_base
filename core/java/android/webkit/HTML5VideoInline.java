@@ -1,3 +1,30 @@
+/* Copyright (c) 2011, Code Aurora Forum. All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are
+ * met:
+ *     * Redistributions of source code must retain the above copyright
+ *       notice, this list of conditions and the following disclaimer.
+ *     * Redistributions in binary form must reproduce the above
+ *       copyright notice, this list of conditions and the following
+ *       disclaimer in the documentation and/or other materials provided
+ *       with the distribution.
+ *     * Neither the name of Code Aurora Forum, Inc. nor the names of its
+ *       contributors may be used to endorse or promote products derived
+ *       from this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED "AS IS" AND ANY EXPRESS OR IMPLIED
+ * WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
+ * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NON-INFRINGEMENT
+ * ARE DISCLAIMED.  IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS
+ * BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR
+ * BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,
+ * WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE
+ * OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN
+ * IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
 
 package android.webkit;
 
@@ -16,16 +43,9 @@ import android.os.PowerManager;
  */
 public class HTML5VideoInline extends HTML5VideoView{
 
-    // Due to the fact that the decoder consume a lot of memory, we make the
-    // surface texture as singleton. But the GL texture (m_textureNames)
-    // associated with the surface texture can be used for showing the screen
-    // shot when paused, so they are not singleton.
-    private static SurfaceTexture mSurfaceTexture = null;
+    private SurfaceTexture mSurfaceTexture;
+    // m_textureNames is the texture bound with this SurfaceTexture.
     private int[] mTextureNames;
-    // Every time when the VideoLayer Id change, we need to recreate the
-    // SurfaceTexture in order to delete the old video's decoder memory.
-    private static int mVideoLayerUsingSurfaceTexture = -1;
-
     // Video control FUNCTIONS:
     @Override
     public void start() {
@@ -37,7 +57,6 @@ public class HTML5VideoInline extends HTML5VideoView{
     HTML5VideoInline(int videoLayerId, int position,
             boolean autoStart) {
         init(videoLayerId, position, autoStart);
-        mTextureNames = null;
     }
 
     @Override
@@ -73,29 +92,16 @@ public class HTML5VideoInline extends HTML5VideoView{
     @Override
     public SurfaceTexture getSurfaceTexture(int videoLayerId) {
         // Create the surface texture.
-        if (videoLayerId != mVideoLayerUsingSurfaceTexture
-            || mSurfaceTexture == null
-            || mTextureNames == null) {
-            if (mTextureNames != null) {
-                GLES20.glDeleteTextures(1, mTextureNames, 0);
+        if (mSurfaceTexture == null) {
+            if (mTextureNames == null) {
+                mTextureNames = new int[1];
+                GLES20.glGenTextures(1, mTextureNames, 0);
             }
             mTextureNames = new int[1];
             GLES20.glGenTextures(1, mTextureNames, 0);
             mSurfaceTexture = new SurfaceTexture(mTextureNames[0]);
         }
-        mVideoLayerUsingSurfaceTexture = videoLayerId;
         return mSurfaceTexture;
-    }
-
-    public boolean surfaceTextureDeleted() {
-        return (mSurfaceTexture == null);
-    }
-
-    @Override
-    public void deleteSurfaceTexture() {
-        mSurfaceTexture = null;
-        mVideoLayerUsingSurfaceTexture = -1;
-        return;
     }
 
     @Override
