@@ -1101,9 +1101,6 @@ public final class WebViewCore {
         // Feature Permissions
         static final int NAVIGATOR_PERMISSIONS_PROVIDE = 197;
 
-        // Feature Permissions
-        static final int NAVIGATOR_PERMISSIONS_PROVIDE = 196;
-
         // private message ids
         private static final int DESTROY =     200;
 

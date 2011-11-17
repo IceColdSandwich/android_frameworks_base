@@ -73,6 +73,7 @@ public class HTML5VideoInline extends HTML5VideoView{
     public void prepareDataAndDisplayMode(HTML5VideoViewProxy proxy) {
         super.prepareDataAndDisplayMode(proxy);
         setFrameAvailableListener(proxy);
+        setOnVideoSizeChangedListener(proxy);
         // TODO: This is a workaround, after b/5375681 fixed, we should switch
         // to the better way.
         if (mProxy.getContext().checkCallingOrSelfPermission(permission.WAKE_LOCK)
@@ -115,6 +116,10 @@ public class HTML5VideoInline extends HTML5VideoView{
 
     private void setFrameAvailableListener(SurfaceTexture.OnFrameAvailableListener l) {
         mSurfaceTexture.setOnFrameAvailableListener(l);
+    }
+
+    public void setOnVideoSizeChangedListener(HTML5VideoViewProxy proxy) {
+        mPlayer.setOnVideoSizeChangedListener(proxy);
     }
 
 }

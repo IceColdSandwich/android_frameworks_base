@@ -48,6 +48,7 @@ class HTML5VideoViewProxy extends Handler
                           MediaPlayer.OnCompletionListener,
                           MediaPlayer.OnErrorListener,
                           MediaPlayer.OnInfoListener,
+                          MediaPlayer.OnVideoSizeChangedListener,
                           SurfaceTexture.OnFrameAvailableListener {
     // Logging tag.
     private static final String LOGTAG = "HTML5VideoViewProxy";
@@ -70,6 +71,7 @@ class HTML5VideoViewProxy extends Handler
     private static final int POSTER_FETCHED    = 202;
     private static final int PAUSED            = 203;
     private static final int STOPFULLSCREEN    = 204;
+    private static final int SIZE_CHANGED      = 205;
 
     // Timer thread -> UI thread
     private static final int TIMEUPDATE = 300;
@@ -261,6 +263,18 @@ class HTML5VideoViewProxy extends Handler
         msg.obj = map;
         mWebCoreHandler.sendMessage(msg);
     }
+
+    //MediaPlayer.OnVideoSizeChangedListener
+    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+        Message msg = Message.obtain(mWebCoreHandler, SIZE_CHANGED);
+        Map<String, Object> map = new HashMap<String, Object>();
+        map.put("dur", new Integer(mp.getDuration()));
+        map.put("width", new Integer(width));
+        map.put("height", new Integer(height));
+        msg.obj = map;
+        mWebCoreHandler.sendMessage(msg);
+    }
+
 
     // MediaPlayer.OnCompletionListener;
     public void onCompletion(MediaPlayer mp) {
@@ -567,6 +581,15 @@ class HTML5VideoViewProxy extends Handler
                                 height.intValue(), mNativePointer);
                         break;
                     }
+                    case SIZE_CHANGED: {
+                        Map<String, Object> map = (Map<String, Object>) msg.obj;
+                        Integer duration = (Integer) map.get("dur");
+                        Integer width = (Integer) map.get("width");
+                        Integer height = (Integer) map.get("height");
+                        nativeOnPrepared(duration.intValue(), width.intValue(),
+                                height.intValue(), mNativePointer);
+                        break;
+                    }
                     case ENDED:
                         mSeekPosition = 0;
                         nativeOnEnded(mNativePointer);
@@ -723,6 +746,7 @@ class HTML5VideoViewProxy extends Handler
     }
 
     private native void nativeOnPrepared(int duration, int width, int height, int nativePointer);
+    private native void nativeOnSizeChanged(int duration, int width, int height, int nativePointer);
     private native void nativeOnEnded(int nativePointer);
     private native void nativeOnPaused(int nativePointer);
     private native void nativeOnPosterFetched(Bitmap poster, int nativePointer);
