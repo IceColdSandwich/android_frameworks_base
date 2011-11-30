@@ -87,6 +87,7 @@ private:
     int64_t mSeekTimeUs;
 
     bool mStarted;
+    bool mSourcePaused;
 
     bool mIsFirstBuffer;
     status_t mFirstBufferResult;

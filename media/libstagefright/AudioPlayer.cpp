@@ -50,6 +50,7 @@ AudioPlayer::AudioPlayer(
       mFirstBufferResult(OK),
       mFirstBuffer(NULL),
       mAudioSink(audioSink),
+      mSourcePaused(false),
       mObserver(observer) {
 }
 
@@ -70,6 +71,7 @@ status_t AudioPlayer::start(bool sourceAlreadyStarted) {
 
     status_t err;
     if (!sourceAlreadyStarted) {
+        mSourcePaused = false;
         err = mSource->start();
 
         if (err != OK) {
@@ -193,10 +195,20 @@ void AudioPlayer::pause(bool playPendingSamples) {
             mAudioTrack->pause();
         }
     }
+    CHECK(mSource != NULL);
+    if (mSource->pause() == OK) {
+        mSourcePaused = true;
+    }
+
 }
 
 void AudioPlayer::resume() {
     CHECK(mStarted);
+    CHECK(mSource != NULL);
+    if (mSourcePaused == true) {
+        mSourcePaused = false;
+        mSource->start();
+    }
 
     if (mAudioSink.get() != NULL) {
         mAudioSink->start();
@@ -233,6 +245,7 @@ void AudioPlayer::reset() {
         mInputBuffer = NULL;
     }
 
+    mSourcePaused = false;
     mSource->stop();
 
     // The following hack is necessary to ensure that the OMX
