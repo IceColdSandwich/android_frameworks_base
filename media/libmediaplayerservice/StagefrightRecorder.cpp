@@ -1748,6 +1748,13 @@ void StagefrightRecorder::setupMPEG4MetaData(int64_t startTimeUs, int32_t totalB
     if (mTrackEveryTimeDurationUs > 0) {
         (*meta)->setInt64(kKeyTrackTimeStatus, mTrackEveryTimeDurationUs);
     }
+
+    char value[PROPERTY_VALUE_MAX];
+    if (property_get("debug.camcorder.rotation", value, 0) > 0 && atoi(value) >= 0) {
+        mRotationDegrees = atoi(value);
+        LOGI("Setting rotation to %d", mRotationDegrees );
+    }
+
     if (mRotationDegrees != 0) {
         (*meta)->setInt32(kKeyRotation, mRotationDegrees);
     }
