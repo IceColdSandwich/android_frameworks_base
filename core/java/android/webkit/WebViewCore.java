@@ -1098,6 +1098,8 @@ public final class WebViewCore {
         static final int PLUGIN_SURFACE_READY = 195;
 
         static final int NOTIFY_ANIMATION_STARTED = 196;
+        // Feature Permissions
+        static final int NAVIGATOR_PERMISSIONS_PROVIDE = 197;
 
         // Feature Permissions
         static final int NAVIGATOR_PERMISSIONS_PROVIDE = 196;
