@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +45,9 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
+import java.lang.reflect.Method;
+
 
 /**
  * This class is a proxy class for handling WebCore -> UI thread messaging. All
@@ -122,6 +126,8 @@ class CallbackProxy extends Handler {
     private static final int SEARCHBOX_IS_SUPPORTED_CALLBACK      = 142;
     private static final int SEARCHBOX_DISPATCH_COMPLETE_CALLBACK = 143;
     private static final int PROCEEDED_AFTER_SSL_ERROR            = 144;
+    private static final int FEATURE_PERMISSIONS_SHOW_PROMPT      = 145;
+    private static final int FEATURE_PERMISSIONS_HIDE_PROMPT      = 146;
 
     // Message triggered by the client to resume execution
     private static final int NOTIFY                               = 200;
@@ -508,6 +514,64 @@ class CallbackProxy extends Handler {
             case GEOLOCATION_PERMISSIONS_HIDE_PROMPT:
                 if (mWebChromeClient != null) {
                     mWebChromeClient.onGeolocationPermissionsHidePrompt();
+                }
+                break;
+
+            case FEATURE_PERMISSIONS_SHOW_PROMPT:
+                if (mWebChromeClient != null) {
+                    HashMap<String, Object> map =
+                            (HashMap<String, Object>) msg.obj;
+                    Vector<String> features = (Vector<String>) map.get("features");
+                    String appid = (String) map.get("appid");
+                    GeolocationPermissions.Callback callback =
+                            (GeolocationPermissions.Callback)
+                            map.get("callback");
+                    // Since we are expecting onNavigatorPermissionsShowPrompt
+                    // to be implemented by native web app developer, we need
+                    // to use reflection to call onNavigatorPermissionsShowPrompt
+                    boolean methodFound = false;
+                    try {
+                        Class cls = mWebChromeClient.getClass();
+                        Method m[] = cls.getDeclaredMethods();
+                        int i;
+                        for(i=0; i<m.length; i++) {
+                            if(m[i].getName().equals("onNavigatorPermissionsShowPrompt")) {
+                                methodFound = true;
+                                break;
+                            }
+                        }
+
+                        if(methodFound) {
+                            Object arglist[] = new Object[3];
+                            arglist[0] = features;
+                            arglist[1] = appid;
+                            arglist[2] = callback;
+                            m[i].invoke(mWebChromeClient,arglist);
+                        }
+                    } catch(Exception e) {
+                        Log.e("Webapps", "Caught Exception " + e);
+                    }
+                }
+                break;
+
+            case FEATURE_PERMISSIONS_HIDE_PROMPT:
+                if (mWebChromeClient != null) {
+                    boolean methodFound = false;
+                    try {
+                        Class cls = mWebChromeClient.getClass();
+                        Method m[] = cls.getDeclaredMethods();
+                        int i;
+                        for(i=0; i<m.length; i++) {
+                            if(m[i].getName().equals("onNavigatorPermissionsHidePrompt")) {
+                                methodFound = true;
+                                break;
+                            }
+                        }
+                        if(methodFound)
+                             m[i].invoke(mWebChromeClient);
+                    } catch(Exception e) {
+                        Log.e("Webapps", "Caught Exception " + e);
+                    }
                 }
                 break;
 
@@ -1491,6 +1555,62 @@ class CallbackProxy extends Handler {
         }
 
         Message hideMessage = obtainMessage(GEOLOCATION_PERMISSIONS_HIDE_PROMPT);
+        sendMessage(hideMessage);
+    }
+
+    /**
+     * Called by WebViewCore to instruct the browser to display a prompt to ask
+     * the user to set the feature permission state for the given feature.
+     * @param feature The feature for which app is requesting permsissions.
+     * @param appid The app which is requesting feature permsissions.
+     * @param callback The callback to call once a permission state has been
+     *     obtained.
+     */
+    public void onNavigatorPermissionsShowPrompt(Vector<String> features, String appid,
+            GeolocationPermissions.Callback callback) {
+        // Need to check whether client class has NavigatorPermissions.Callback implemented
+        if (mWebChromeClient == null) {
+            Log.e(LOGTAG , "chrome client is null , returning");
+            return;
+        }
+
+        boolean methodFound = false;
+        try {
+            Class cls = mWebChromeClient.getClass();
+            Method m[] = cls.getMethods();
+            for(int i=0; i<m.length; i++) {
+                if(m[i].getName().equals("onNavigatorPermissionsShowPrompt")) {
+                    methodFound = true;
+                    break;
+                }
+            }
+        } catch( Exception e) {
+            Log.e(LOGTAG, "WebchromeClient does not implement onNavigatorPermissionsShowPrompt");
+        }
+
+       if(methodFound) {
+            Message showMessage =
+                obtainMessage(FEATURE_PERMISSIONS_SHOW_PROMPT);
+            HashMap<String, Object> map = new HashMap();
+            map.put("features", features);
+            map.put("appid", appid);
+            map.put("callback", callback);
+            showMessage.obj = map;
+            sendMessage(showMessage);
+        }
+    }
+
+    /**
+     * Called by WebViewCore to instruct the browser to hide the Feature
+     * permissions prompt.
+     */
+    public void onNavigatorPermissionsHidePrompt() {
+        if (mWebChromeClient == null) {
+            Log.e(LOGTAG, "chrome client is null , returning");
+            return;
+        }
+
+        Message hideMessage = obtainMessage(FEATURE_PERMISSIONS_HIDE_PROMPT);
         sendMessage(hideMessage);
     }
 

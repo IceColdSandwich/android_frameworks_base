@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +27,7 @@ import android.util.DisplayMetrics;
 import android.util.EventLog;
 
 import java.util.Locale;
+import android.util.Log;
 
 /**
  * Manages settings state for a WebView. When a WebView is first created, it
@@ -207,6 +209,9 @@ public class WebSettings {
     // once. Keep track of when the path has been set.
     private boolean         mDatabasePathHasBeenSet = false;
     private String          mGeolocationDatabasePath = "";
+    // proteus: expose app private install path to the proteus framework, this
+    // will be used the root directory for installing the downloaded modules
+    private String          mDataPath = "";
     // Don't need to synchronize the get/set methods as they
     // are basic types, also none of these values are used in
     // native WebCore code.
@@ -397,6 +402,15 @@ public class WebSettings {
         mBlockNetworkLoads = mContext.checkPermission(
                 "android.permission.INTERNET", android.os.Process.myPid(),
                 android.os.Process.myUid()) != PackageManager.PERMISSION_GRANTED;
+
+        // proteus: 
+        try {
+          mDataPath = mContext.getPackageManager().getApplicationInfo(
+              mContext.getPackageName(), 0).dataDir;
+          Log.d("WebSettings", "mDataPath: " + mDataPath);
+        } catch (Exception e) {
+          Log.w("WebSettings", "Exception thrown setting mDataPath: " + e);
+        }
     }
 
     private static final String ACCEPT_LANG_FOR_US_LOCALE = "en-US";

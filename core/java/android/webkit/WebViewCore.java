@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2007 The Android Open Source Project
+ * Copyright (c) 2011, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +47,8 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
+import java.util.Vector;
+import org.json.*;
 
 import junit.framework.Assert;
 
@@ -439,6 +442,52 @@ public final class WebViewCore {
     }
 
     /**
+     * Shows a prompt to ask the user to set the Navigator permission state
+     * for the given feature for the current website.
+     * @param features device apis for which permissions are requested
+     * @param appid The website for which navigator permissions are
+     *     requested.
+     */
+    protected void navigatorPermissionsShowPrompt(Vector<String> features, String appid) {
+        mCallbackProxy.onNavigatorPermissionsShowPrompt(features,appid,
+                new GeolocationPermissions.Callback() {
+          public void invoke(String appid, boolean allow, boolean remember) {
+            NavigatorPermissionsData data = new NavigatorPermissionsData();
+
+            try {
+                // Get the JSON object from the string and then extract
+                // appid and features
+                JSONObject nJson = new JSONObject(appid);
+                if(nJson.has("appid")) {
+                    data.mAppid = (String)nJson.get("appid");
+                }
+                Vector<String> tmpFeatures = new Vector<String>();
+                JSONArray jArr;
+                if(nJson.has("features")) {
+                    jArr = nJson.getJSONArray("features");
+                    for(int i=0; i<jArr.length(); i++)
+                        tmpFeatures.add((String)jArr.get(i));
+                }
+                data.mFeatures = tmpFeatures;
+            } catch (org.json.JSONException e) {
+                Log.e(LOGTAG, "Caught excepttion" + e);
+            }
+            data.mAllow = allow;
+            data.mRemember = remember;
+            // Marshall to WebCore thread.
+            sendMessage(EventHub.NAVIGATOR_PERMISSIONS_PROVIDE, data);
+          }
+        });
+    }
+
+    /**
+     * Hides the navigator permissions prompt.
+     */
+    protected void navigatorPermissionsHidePrompt() {
+        mCallbackProxy.onNavigatorPermissionsHidePrompt();
+    }
+
+    /**
      * Invoke a javascript confirm dialog.
      * @param message The message displayed in the dialog.
      * @return True if the user confirmed or false if the user cancelled.
@@ -643,6 +692,7 @@ public final class WebViewCore {
      *     life of the current page.
      */
     private native void nativeGeolocationPermissionsProvide(String origin, boolean allow, boolean remember);
+    private native void nativeFeaturePermissionsProvide(Vector<String> features, String appid, boolean allow, boolean remember);
 
     /**
      * Provide WebCore with the previously visted links from the history database
@@ -863,6 +913,13 @@ public final class WebViewCore {
         boolean mRemember;
     }
 
+    static class NavigatorPermissionsData {
+        Vector<String> mFeatures;
+        String mAppid;
+        boolean mAllow;
+        boolean mRemember;
+    }
+
         static final String[] HandlerDebugString = {
             "REVEAL_SELECTION", // 96
             "REQUEST_LABEL", // 97
@@ -1041,6 +1098,9 @@ public final class WebViewCore {
         static final int PLUGIN_SURFACE_READY = 195;
 
         static final int NOTIFY_ANIMATION_STARTED = 196;
+
+        // Feature Permissions
+        static final int NAVIGATOR_PERMISSIONS_PROVIDE = 196;
 
         // private message ids
         private static final int DESTROY =     200;
@@ -1554,6 +1614,14 @@ public final class WebViewCore {
                                     (GeolocationPermissionsData) msg.obj;
                             nativeGeolocationPermissionsProvide(data.mOrigin,
                                     data.mAllow, data.mRemember);
+                            break;
+
+                        case NAVIGATOR_PERMISSIONS_PROVIDE:
+                            NavigatorPermissionsData tData =
+                                    (NavigatorPermissionsData) msg.obj;
+                            Vector<String> t = tData.mFeatures;
+                            nativeFeaturePermissionsProvide(tData.mFeatures,
+                                    tData.mAppid, tData.mAllow, tData.mRemember);
                             break;
 
                         case SPLIT_PICTURE_SET:
