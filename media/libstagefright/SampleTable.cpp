@@ -151,6 +151,14 @@ SampleTable::~SampleTable() {
 
     delete mSampleIterator;
     mSampleIterator = NULL;
+
+    while (!mSampleDescAtoms.empty()) {
+        List<SampleDescAtom *>::iterator it = mSampleDescAtoms.begin();
+        delete (*it)->ptr;
+        (*it) = NULL;
+         mSampleDescAtoms.erase(it);
+    }
+    mSampleDescAtoms.clear();
 }
 
 bool SampleTable::isValid() const {
@@ -766,7 +774,8 @@ status_t SampleTable::getMetaDataForSample(
         off64_t *offset,
         size_t *size,
         uint32_t *compositionTime,
-        bool *isSyncSample) {
+        bool *isSyncSample,
+        uint32_t *sampleDescIndex) {
     Mutex::Autolock autoLock(mLock);
 
     status_t err;
@@ -784,6 +793,10 @@ status_t SampleTable::getMetaDataForSample(
 
     if (compositionTime) {
         *compositionTime = mSampleIterator->getSampleTime();
+    }
+
+    if (sampleDescIndex) {
+       *sampleDescIndex = mSampleIterator->getDescIndex();
     }
 
     if (isSyncSample) {
@@ -819,5 +832,122 @@ uint32_t SampleTable::getNumSyncSamples()
 {
     return mNumSyncSamples;
 }
+
+status_t SampleTable::setSampleDescParams(uint32_t count, off64_t offset, size_t size)
+{
+    // avcC atom will start after 78 bytes in avC1 atom
+    const uint32_t avcC_offset = 78;
+
+    for(uint32_t i = 0; i < count; ++i) {
+        uint32_t hdr[2];
+        if (mDataSource->readAt(offset, hdr, 8) < 8) {
+            return ERROR_IO;
+        }
+        uint64_t avc1_chunk_size = ntohl(hdr[0]);
+        uint32_t avc1_chunk_type = ntohl(hdr[1]);
+        off64_t avc1_data_offset = offset + 8;
+
+        if(avc1_chunk_size == 0)
+            return ERROR_MALFORMED;
+
+        if (avc1_chunk_size == 1) {
+            if (mDataSource->readAt(offset + 8, &avc1_chunk_size, 8) < 8) {
+                return ERROR_IO;
+            }
+            avc1_chunk_size = ntoh64(avc1_chunk_size);
+            if (avc1_chunk_size == 0)
+                return ERROR_MALFORMED;
+            avc1_data_offset += 8;
+
+            if (avc1_chunk_size < 16) {
+                // The smallest valid chunk is 16 bytes long in this case.
+                return ERROR_MALFORMED;
+            }
+        } else if (avc1_chunk_size < 8) {
+            // The smallest valid chunk is 8 bytes long.
+            return ERROR_MALFORMED;
+        }
+
+        off64_t avc1_chunk_data_size = offset + avc1_chunk_size - avc1_data_offset;
+        LOGV("parsing chunk %c%c%c%c", ((char *)&avc1_chunk_type)[3],
+                                                   ((char *)&avc1_chunk_type)[2],
+                                                   ((char *)&avc1_chunk_type)[1],
+                                                   ((char *)&avc1_chunk_type)[0]);
+
+        if (avc1_chunk_type != FOURCC('a', 'v', 'c', '1')) {
+            LOGE("Multiple Non AVC Sample Entries are not supported");
+            return ERROR_MALFORMED;
+        }
+
+        uint8_t *buffer = new uint8_t[(ssize_t)avc1_chunk_data_size];
+        if (mDataSource->readAt(avc1_data_offset, buffer, (ssize_t)avc1_chunk_data_size) < (ssize_t)avc1_chunk_data_size) {
+              return ERROR_IO;
+        }
+        uint16_t data_ref_index = U16_AT(&buffer[6]);
+        uint16_t width = U16_AT(&buffer[6 + 18]);
+        uint16_t height = U16_AT(&buffer[6 + 20]);
+        LOGE("data_ref_index : %d width : %d height: %d", data_ref_index, width, height);
+
+        /* parse AVCC atom */
+        uint64_t avcc_chunk_size = U32_AT(&buffer[avcC_offset]);
+        uint32_t avcc_chunk_type = U32_AT(&buffer[avcC_offset+4]);;
+        if((avcc_chunk_size == 0)|| (avcc_chunk_size == 1)) {
+            LOGE("chunk size error while reading avCC atom");
+            return ERROR_MALFORMED;
+        }
+
+        LOGV("parsing chunk %c%c%c%c",
+               ((char *)&avcc_chunk_type)[3],
+               ((char *)&avcc_chunk_type)[2],
+               ((char *)&avcc_chunk_type)[1],
+               ((char *)&avcc_chunk_type)[0]);
+
+        if (avcc_chunk_type != FOURCC('a', 'v', 'c', 'C')) {
+            LOGE("'avcC' atom expected, but not found");
+            return ERROR_MALFORMED;
+        }
+
+        off64_t avcc_chunk_data_size = avc1_chunk_data_size - avcC_offset - 8;
+        SampleDescAtom *sda = new SampleDescAtom;
+        uint8_t *avccBuffer = new uint8_t[avcc_chunk_data_size];
+        memcpy(avccBuffer, buffer+avcC_offset+8,avcc_chunk_data_size);
+        sda->ptr = avccBuffer;
+        sda->size =  avcc_chunk_data_size;
+        mSampleDescAtoms.push_back(sda);
+
+        delete[] buffer;
+
+        offset += avc1_chunk_size;
+    }
+    return OK;
+}
+
+status_t SampleTable::getSampleDescAtIndex(uint32_t index, uint8_t **ptr, uint32_t *size)
+{
+    uint32_t i = 1;
+    for (List<SampleDescAtom *>::iterator it = mSampleDescAtoms.begin();
+         it != mSampleDescAtoms.end(); ++it, ++i) {
+
+         if(i == index) {
+             SampleDescAtom *sda = *it;
+             *ptr = sda->ptr;
+             *size = sda->size;
+         }
+    }
+    return OK;
+}
+
+status_t SampleTable::getMaxAvccAtomSize(uint32_t *size)
+{
+    *size = 0;
+    for (List<SampleDescAtom *>::iterator it = mSampleDescAtoms.begin();
+                it != mSampleDescAtoms.end(); ++it) {
+         SampleDescAtom *sda = *it;
+         if( *size < sda->size)
+             *size = sda->size;
+    }
+    return OK;
+}
+
 }  // namespace android
 

@@ -24,6 +24,7 @@
 #include <media/stagefright/MediaErrors.h>
 #include <utils/RefBase.h>
 #include <utils/threads.h>
+#include <utils/List.h>
 
 namespace android {
 
@@ -66,7 +67,8 @@ public:
             off64_t *offset,
             size_t *size,
             uint32_t *compositionTime,
-            bool *isSyncSample = NULL);
+            bool *isSyncSample = NULL,
+            uint32_t *sampleDescIndex = NULL);
 
     enum {
         kFlagBefore,
@@ -82,6 +84,11 @@ public:
 
     status_t findThumbnailSample(uint32_t *sample_index);
     uint32_t getNumSyncSamples();
+
+    status_t setSampleDescParams(uint32_t entry_count, off64_t data_offset, size_t data_size);
+    status_t getSampleDescAtIndex(uint32_t index, uint8_t **ptr, uint32_t *size);
+    status_t getMaxAvccAtomSize(uint32_t *size);
+
 protected:
     ~SampleTable();
 
@@ -143,6 +150,12 @@ private:
     static int CompareIncreasingTime(const void *, const void *);
 
     void buildSampleEntriesTable();
+
+    struct SampleDescAtom {
+        uint8_t *ptr;
+        uint32_t size;
+    };
+    List<SampleDescAtom *> mSampleDescAtoms;
 
     SampleTable(const SampleTable &);
     SampleTable &operator=(const SampleTable &);
