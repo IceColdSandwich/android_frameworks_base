@@ -121,7 +121,7 @@ key 98    NUMPAD_DIVIDE
 key 99    SYSRQ
 key 100   ALT_RIGHT
 # key 101 "KEY_LINEFEED"
-key 102   MOVE_HOME
+key 102   HOME
 key 103   DPAD_UP
 key 104   PAGE_UP
 key 105   DPAD_LEFT
