@@ -252,10 +252,10 @@ class HTML5Audio extends Handler
             break;
 
         case AudioManager.AUDIOFOCUS_LOSS:
-            // Lost focus for an unbounded amount of time: stop playback.
+            // Lost focus for an unbounded amount of time: pause playback.
             if (mState != ERROR && mMediaPlayer.isPlaying()) {
-                mMediaPlayer.stop();
-                mState = STOPPED;
+                pause();
+                nativeOnPaused(mNativePointer);
             }
             break;
 
@@ -350,6 +350,7 @@ class HTML5Audio extends Handler
 
     private native void nativeOnBuffering(int percent, int nativePointer);
     private native void nativeOnEnded(int nativePointer);
+    private native void nativeOnPaused(int nativePointer);
     private native void nativeOnPrepared(int duration, int width, int height, int nativePointer);
     private native void nativeOnTimeupdate(int position, int nativePointer);
 
