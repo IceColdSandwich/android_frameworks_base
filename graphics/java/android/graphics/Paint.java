@@ -671,7 +671,22 @@ public class Paint {
      *
      * @param color The new color (including alpha) to set in the paint.
      */
-    public native void setColor(int color);
+
+    public void setColor(int color){
+        setColor_w(color);
+    }
+
+    /**
+     * @hide
+     */
+    private final void setColor_w(int color){
+        native_setColor(color);
+    }
+
+    /**
+     * @hide
+     */
+    public native void native_setColor(int color);
     
     /**
      * Helper to getColor() that just returns the color's alpha value. This is

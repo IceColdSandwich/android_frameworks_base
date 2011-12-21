@@ -941,8 +941,17 @@ public class Canvas {
      */
     public void drawRect(float left, float top, float right, float bottom,
                          Paint paint) {
-        native_drawRect(mNativeCanvas, left, top, right, bottom,
+        plain_drawRect(mNativeCanvas, left, top, right, bottom,
                         paint.mNativePaint);
+    }
+
+    /**
+     * @hide
+     */
+    private final void plain_drawRect(int mNativeCanvas, float left, float top, float right, float bottom,
+                         int mNativePaint) {
+        native_drawRect(mNativeCanvas, left, top, right, bottom,
+                        mNativePaint);
     }
 
     /**

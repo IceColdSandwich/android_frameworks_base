@@ -90,6 +90,13 @@ public class Color {
      * @param blue  Blue component [0..255] of the color
      */
     public static int rgb(int red, int green, int blue) {
+        return rgb_w(red, green, blue);
+    }
+
+    /**
+     * @hide
+     */
+    private static final int rgb_w(int red, int green, int blue) {
         return (0xFF << 24) | (red << 16) | (green << 8) | blue;
     }
 

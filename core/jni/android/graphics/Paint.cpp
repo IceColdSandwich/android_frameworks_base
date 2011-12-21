@@ -850,7 +850,7 @@ static JNINativeMethod methods[] = {
     {"native_getStyle","(I)I", (void*) SkPaintGlue::getStyle},
     {"native_setStyle","(II)V", (void*) SkPaintGlue::setStyle},
     {"getColor","()I", (void*) SkPaintGlue::getColor},
-    {"setColor","(I)V", (void*) SkPaintGlue::setColor},
+    {"native_setColor","(I)V", (void*) SkPaintGlue::setColor},
     {"getAlpha","()I", (void*) SkPaintGlue::getAlpha},
     {"setAlpha","(I)V", (void*) SkPaintGlue::setAlpha},
     {"getStrokeWidth","()F", (void*) SkPaintGlue::getStrokeWidth},
