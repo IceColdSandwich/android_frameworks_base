@@ -56,6 +56,13 @@ struct OMXCodec : public MediaSource,
 
         // Secure decoding mode
         kUseSecureInputBuffers = 256,
+
+        kPreferThumbnailMode               = 0x8,
+        kPreferInterlacedOutputContent     = 0x10,
+        MAX_RESOLUTION = 414720, // video resolution for TI Vid Dec
+        MAX_RESOLUTION_WIDTH = 864, // video width for TI Vid Dec
+        MAX_RESOLUTION_HEIGHT = 864, // video height for TI Vid Dec
+
     };
     static sp<MediaSource> Create(
             const sp<IOMX> &omx,
@@ -140,6 +147,10 @@ private:
         kAvoidMemcopyInputRecordingFrames     = 2048,
         kRequiresLargerEncoderOutputBuffer    = 4096,
         kOutputBuffersAreUnreadable           = 8192,
+        kDecoderNeedsPortReconfiguration      = 16384,
+        kDecoderCantRenderSmallClips          = 32768,
+        kInterlacedOutputContent              = 65535,
+        kThumbnailMode                        = 131072,
     };
 
     enum BufferStatus {
