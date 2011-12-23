@@ -684,6 +684,14 @@ public class WebView extends AbsoluteLayout
     // cached value used to determine if we need to switch drawing models
     private boolean mHardwareAccelSkia = false;
 
+    // BrowserMgmt Plugin Handlers
+    private static boolean mIsBrowserManagementOn = false;
+    private static Class mBrowserMgmtClassType=null;
+    private static final String BrowserMgmtPluginName=
+        "/system/framework/browsermanagement.jar";
+    private static final String BrowserMgmtClassName=
+        "com.android.qualcomm.browsermanagement.BrowserManagement";
+
     /*
      * Private message ids
      */
@@ -1102,6 +1110,52 @@ public class WebView extends AbsoluteLayout
 
         if (privateBrowsing) {
             startPrivateBrowsing();
+        }
+
+        mIsBrowserManagementOn =
+            android.os.SystemProperties.getBoolean("browser.management", true);
+        if (DebugFlags.WEB_VIEW) {
+            Log.d(LOGTAG,"BrowserManagement sys prop is"+ mIsBrowserManagementOn);
+        }
+
+        if (mIsBrowserManagementOn) {
+             try {
+                 dalvik.system.PathClassLoader pluginClassLoader =
+                     new dalvik.system.PathClassLoader(
+                       BrowserMgmtPluginName,ClassLoader.getSystemClassLoader());
+                 try {
+                     mBrowserMgmtClassType =
+                         pluginClassLoader.loadClass(BrowserMgmtClassName);
+                 } catch (Throwable e) {
+                     if (DebugFlags.WEB_VIEW) {
+                         Log.d(LOGTAG, "class not found: BrowserManagement" + e);
+                     }
+                 }
+             } catch (Throwable el) {
+                  if (DebugFlags.WEB_VIEW) {
+                      Log.d(LOGTAG, "browsermanagement jar not loaded "+el);
+                  }
+             }
+
+             if(mBrowserMgmtClassType != null) {
+                 try {
+                     Class[] args_types = new Class[1];
+                     Context[] args_val = new Context[1];
+                     args_types[0] = Context.class;
+                     args_val[0] = context;
+                     mBrowserMgmtClassType.getMethod("Init",args_types).invoke(
+                     mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+                 } catch (Throwable e) {
+                     if (DebugFlags.WEB_VIEW) {
+                         Log.d(LOGTAG, "method not found: Init " + e);
+                     }
+                 }
+             }
+             else {
+                 if (DebugFlags.WEB_VIEW) {
+                    Log.d(LOGTAG,"browsermanagement class type NULL!!! - Init ");
+                 }
+             }
         }
 
         mAutoFillData = new WebViewCore.AutoFillData();
@@ -2080,6 +2134,27 @@ public class WebView extends AbsoluteLayout
         arg.mExtraHeaders = extraHeaders;
         mWebViewCore.sendMessage(EventHub.LOAD_URL, arg);
         clearHelpers();
+
+        if(mBrowserMgmtClassType != null) {
+            try {
+                Class[] args_types = new Class[1];
+                Context[] args_val = new Context[1];
+                args_types[0] = Context.class;
+                args_val[0] = mContext;
+
+                mBrowserMgmtClassType.getMethod("PageLoadStarted",args_types).
+                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+            } catch (Throwable e) {
+                if (DebugFlags.WEB_VIEW) {
+                    Log.d(LOGTAG, "method not found: PageLoadStarted " + e);
+                }
+            }
+        }
+        else {
+            if (DebugFlags.WEB_VIEW) {
+                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageLoadStarted ");
+            }
+        }
     }
 
     /**
@@ -3760,6 +3835,27 @@ public class WebView extends AbsoluteLayout
         // reset the flag since we set to true in if need after
         // loading is see onPageFinished(Url)
         mAccessibilityScriptInjected = false;
+
+        if(mBrowserMgmtClassType != null) {
+            try {
+                Class[] args_types = new Class[1];
+                Context[] args_val = new Context[1];
+                args_types[0] = Context.class;
+                args_val[0] = mContext;
+
+                mBrowserMgmtClassType.getMethod("PageLoadStarted",args_types).
+                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+            } catch (Throwable e) {
+                 if (DebugFlags.WEB_VIEW) {
+                     Log.d(LOGTAG, "method not found: PageLoadStarted " + e);
+                 }
+            }
+        }
+        else {
+            if (DebugFlags.WEB_VIEW) {
+                Log.d(LOGTAG,"browsermanagement class NULL!!! -PageLoadStarted ");
+            }
+        }
     }
 
     /**
@@ -3780,6 +3876,26 @@ public class WebView extends AbsoluteLayout
         }
         mZoomManager.onPageFinished(url);
         injectAccessibilityForUrl(url);
+
+        if(mBrowserMgmtClassType != null) {
+            try {
+                Class[] args_types = new Class[1];
+                Context[] args_val = new Context[1];
+                args_types[0] = Context.class;
+                args_val[0] = mContext;
+
+                mBrowserMgmtClassType.getMethod("PageLoadFinished",args_types).
+                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+            } catch (Throwable e) {
+                if (DebugFlags.WEB_VIEW) {
+                    Log.d(LOGTAG, "method not found: PageLoadFinished " + e);
+                }
+            }
+        }else {
+            if (DebugFlags.WEB_VIEW) {
+                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageLoadFinished ");
+            }
+        }
     }
 
     /**
@@ -6096,6 +6212,27 @@ public class WebView extends AbsoluteLayout
         int deltaY = mLastTouchY - y;
         int contentX = viewToContentX(x + mScrollX);
         int contentY = viewToContentY(y + mScrollY);
+
+        if(mBrowserMgmtClassType != null) {
+            try {
+                Class[] args_types = new Class[1];
+                Context[] args_val = new Context[1];
+                args_types[0] = Context.class;
+                args_val[0] = mContext;
+
+                mBrowserMgmtClassType.getMethod("PageTouched",args_types).
+                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+            } catch (Throwable e) {
+                if (DebugFlags.WEB_VIEW) {
+                    Log.d(LOGTAG, "method not found: PageTouched " + e);
+                }
+            }
+        }
+        else {
+            if (DebugFlags.WEB_VIEW) {
+                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageTouched ");
+            }
+        }
 
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
