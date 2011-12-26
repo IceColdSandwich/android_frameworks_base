@@ -1891,6 +1891,13 @@ public final class Settings {
         public static final String NOTIFICATION_LIGHT_PULSE = "notification_light_pulse";
 
         /**
+         * Whether the soft keys should display if device already has hard keys. The
+         * value is boolean (1 or 0).
+         * @hide
+         */
+        public static final String NAVIGATION_BAR_VISIBLE = "navigation_bar_visible";
+        
+        /**
          * Show pointer location on screen?
          * 0 = no
          * 1 = yes
