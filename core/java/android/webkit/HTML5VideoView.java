@@ -109,7 +109,8 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
             }
             mPlayer.start();
             setPlayerBuffering(false);
-        }
+        } else
+            mAutostart = true;
     }
 
     public void pause() {
@@ -356,7 +357,7 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
 
     public boolean fullScreenExited() {
         // Only meaningful for HTML5VideoFullScreen
-        return false;
+        return true;
     }
 
 }

@@ -87,6 +87,8 @@ class HTML5VideoViewProxy extends Handler
     private PosterDownloader mPosterDownloader;
     // The seek position.
     private int mSeekPosition;
+    // The video layer ID
+    private int mVideoLayerId;
     // A helper class to control the playback. This executes on the UI thread!
     private final class VideoPlayer {
         private HTML5VideoViewProxy mProxy;
@@ -128,12 +130,6 @@ class HTML5VideoViewProxy extends Handler
             }
         }
 
-        public int getVideoLayerId() {
-            if (mHTML5VideoView == null)
-                return -1;
-            return mHTML5VideoView.getVideoLayerId();
-        }
-
         // When a WebView is paused, we also want to pause the video in it.
         public void pauseAndDispatch() {
             if (mHTML5VideoView != null)
@@ -154,31 +150,38 @@ class HTML5VideoViewProxy extends Handler
         }
 
         public void enterFullScreenVideo(int layerId, String url, WebView webView) {
-                // Save the inline video info and inherit it in the full screen
-                int savePosition = 0;
-                boolean savedIsPlaying = false;
-                if (mHTML5VideoView != null) {
-                    // If we are playing the same video, then it is better to
-                    // save the current position.
-                    if (layerId == mHTML5VideoView.getVideoLayerId()) {
-                        savePosition = mHTML5VideoView.getCurrentPosition();
-                        savedIsPlaying = mHTML5VideoView.isPlaying();
-                    }
-                    mHTML5VideoView.pauseAndDispatch(mProxy);
-                    mHTML5VideoView.release();
+            // Save the inline video info and inherit it in the full screen
+            int savePosition = 0;
+            boolean savedIsPlaying = false;
+            if (mHTML5VideoView != null) {
+                // If we are playing the same video, then it is better to
+                // save the current position.
+                if (mHTML5VideoView.getCurrentState() >= HTML5VideoView.STATE_PREPARED) {
+                    savePosition = mHTML5VideoView.getCurrentPosition();
+                    savedIsPlaying = mHTML5VideoView.isPlaying();
+                } else {
+                    // If fullscreen mode is entered into before inline video has been prepared,
+                    // the expected behaviour is for fullscreen video to start automatically.
+                    savedIsPlaying = true;
                 }
-                mHTML5VideoView = new HTML5VideoFullScreen(mProxy.getContext(),
-                        layerId, savePosition, savedIsPlaying);
+                mHTML5VideoView.release();
+            }
+            mHTML5VideoView = new HTML5VideoFullScreen(mProxy.getContext(),
+                    layerId, savePosition, savedIsPlaying);
 
-                mHTML5VideoView.setVideoURI(url, mProxy);
+            mHTML5VideoView.setVideoURI(url, mProxy);
 
-                mHTML5VideoView.enterFullScreenVideoState(layerId, mProxy, webView);
+            mHTML5VideoView.enterFullScreenVideoState(layerId, mProxy, webView);
         }
 
         // This is on the UI thread.
         public void play(String url, int time, WebChromeClient client, int videoLayerId) {
             if (mHTML5VideoView == null
-                || mHTML5VideoView instanceof HTML5VideoFullScreen) {
+                || (mHTML5VideoView instanceof HTML5VideoFullScreen
+                    // Some HTML5 video pages make javascript "play" calls even while the
+                    // video is in fullscreen mode. This check is added to prevent this case
+                    // from releasing the fullscreen video view.
+                    && mHTML5VideoView.fullScreenExited())) {
                 if (mHTML5VideoView != null) {
                     // release the media player to avoid finalize error
                     mHTML5VideoView.release();
@@ -533,13 +536,16 @@ class HTML5VideoViewProxy extends Handler
      * @param webView is the WebView that hosts the video.
      * @param nativePtr is the C++ pointer to the MediaPlayerPrivate object.
      */
-    private HTML5VideoViewProxy(WebView webView, int nativePtr) {
+    private HTML5VideoViewProxy(WebView webView, int nativePtr, int videoLayerId) {
         // This handler is for the main (UI) thread.
         super(Looper.getMainLooper());
         // Save the WebView object.
         mWebView = webView;
         // Save the native ptr
         mNativePointer = nativePtr;
+        // Save the videoLayerId. This is needed early in order to support fullscreen mode
+        // before video playback
+        mVideoLayerId = videoLayerId;
         // create the message handler for this thread
         createWebCoreHandler();
         mVideoPlayer = new VideoPlayer(this);
@@ -689,7 +695,7 @@ class HTML5VideoViewProxy extends Handler
     }
 
     public int getVideoLayerId() {
-        return mVideoPlayer.getVideoLayerId();
+        return mVideoLayerId;
     }
     // End functions called from UI thread only by WebView
 
@@ -708,8 +714,8 @@ class HTML5VideoViewProxy extends Handler
      *
      * @return a new HTML5VideoViewProxy object.
      */
-    public static HTML5VideoViewProxy getInstance(WebViewCore webViewCore, int nativePtr) {
-        return new HTML5VideoViewProxy(webViewCore.getWebView(), nativePtr);
+    public static HTML5VideoViewProxy getInstance(WebViewCore webViewCore, int nativePtr, int videoLayerId) {
+        return new HTML5VideoViewProxy(webViewCore.getWebView(), nativePtr, videoLayerId);
     }
 
     /* package */ WebView getWebView() {
