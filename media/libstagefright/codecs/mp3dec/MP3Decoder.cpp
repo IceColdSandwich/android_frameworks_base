@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2012 Code Aurora Forum.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -505,6 +506,7 @@ status_t MP3Decoder::read(
         LOGV("mp3 decoder returned error %d", decoderErr);
 
         if ((decoderErr != NO_ENOUGH_MAIN_DATA_ERROR) &&
+            (decoderErr != SIDE_INFO_ERROR) &&
             (decoderErr != SYNCH_LOST_ERROR)) {
             buffer->release();
             buffer = NULL;
