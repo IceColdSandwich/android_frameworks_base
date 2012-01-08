@@ -18,8 +18,9 @@ LOCAL_SRC_FILES:= 	       \
 	EGL/Loader.cpp 	       \
 #
 
+LOCAL_CFLAGS += -flto -ffast-math
 LOCAL_SHARED_LIBRARIES += libcutils libutils libGLESv2_dbg
-LOCAL_LDLIBS := -lpthread -ldl
+LOCAL_LDLIBS := -flto -lpthread -ldl
 LOCAL_MODULE:= libEGL
 LOCAL_LDFLAGS += -Wl,--exclude-libs=ALL
 LOCAL_SHARED_LIBRARIES += libdl
@@ -86,7 +87,8 @@ LOCAL_SRC_FILES:= 		\
 #
 
 LOCAL_SHARED_LIBRARIES += libcutils libEGL
-LOCAL_LDLIBS := -lpthread -ldl
+LOCAL_CFLAGS += -flto -ffast-math
+LOCAL_LDLIBS := -flto -lpthread -ldl
 LOCAL_MODULE:= libGLESv1_CM
 
 LOCAL_SHARED_LIBRARIES += libdl
@@ -117,8 +119,9 @@ LOCAL_SRC_FILES:= 		\
 	GLES2/gl2.cpp.arm 	\
 #
 
+LOCAL_CFLAGS += -flto -ffast-math
 LOCAL_SHARED_LIBRARIES += libcutils libEGL
-LOCAL_LDLIBS := -lpthread -ldl
+LOCAL_LDLIBS := -flto -lpthread -ldl
 LOCAL_MODULE:= libGLESv2
 
 LOCAL_SHARED_LIBRARIES += libdl
@@ -163,7 +166,8 @@ LOCAL_SRC_FILES:= 		\
 	ETC1/etc1.cpp 	\
 #
 
-LOCAL_LDLIBS := -lpthread -ldl
+LOCAL_CFLAGS += -flto -ffast-math
+LOCAL_LDLIBS := -flto -lpthread -ldl
 LOCAL_MODULE:= libETC1
 
 include $(BUILD_SHARED_LIBRARY)
