@@ -1969,6 +1969,16 @@ status_t MPEG4Writer::Track::threadEntry() {
         meta_data->findInt32(kKeyIsSyncFrame, &isSync);
         CHECK(meta_data->findInt64(kKeyTime, &timestampUs));
 
+        if(!mIsAudio) {
+          int32_t frameRate, hfr, multiple;
+          bool success = mMeta->findInt32(kKeySampleRate, &frameRate);
+          CHECK(success);
+          success = mMeta->findInt32(kKeyHFR, &hfr);
+          CHECK(success);
+          multiple = hfr?(hfr/frameRate):1;
+          timestampUs = multiple * timestampUs;
+        }
+
 ////////////////////////////////////////////////////////////////////////////////
         if (mNumSamples == 0) {
             mFirstSampleTimeRealUs = systemTime() / 1000;

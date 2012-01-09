@@ -1496,12 +1496,18 @@ status_t StagefrightRecorder::setupVideoEncoder(
 
     sp<MetaData> meta = cameraSource->getFormat();
 
-    int32_t width, height, stride, sliceHeight, colorFormat;
+    int32_t width, height, stride, sliceHeight, colorFormat, hfr;
     CHECK(meta->findInt32(kKeyWidth, &width));
     CHECK(meta->findInt32(kKeyHeight, &height));
     CHECK(meta->findInt32(kKeyStride, &stride));
     CHECK(meta->findInt32(kKeySliceHeight, &sliceHeight));
     CHECK(meta->findInt32(kKeyColorFormat, &colorFormat));
+    CHECK(meta->findInt32(kKeyHFR, &hfr));
+
+    if(hfr) {
+      mMaxFileDurationUs = mMaxFileDurationUs * (hfr/mFrameRate);
+    }
+
 
     enc_meta->setInt32(kKeyWidth, width);
     enc_meta->setInt32(kKeyHeight, height);
@@ -1509,9 +1515,26 @@ status_t StagefrightRecorder::setupVideoEncoder(
     enc_meta->setInt32(kKeyStride, stride);
     enc_meta->setInt32(kKeySliceHeight, sliceHeight);
     enc_meta->setInt32(kKeyColorFormat, colorFormat);
+    enc_meta->setInt32(kKeyHFR, hfr);
     if (mVideoTimeScale > 0) {
         enc_meta->setInt32(kKeyTimeScale, mVideoTimeScale);
     }
+
+    char mDeviceName[100];
+    property_get("ro.board.platform",mDeviceName,"0");
+    if(!strncmp(mDeviceName, "msm7627a", 8)) {
+      if(hfr && (width * height > 432*240)) {
+        LOGE("HFR mode is supported only upto WQVGA resolution");
+        return INVALID_OPERATION;
+      }
+    }
+    else {
+      if(hfr && ((mVideoEncoder != VIDEO_ENCODER_H264) || (width * height > 800*480))) {
+        LOGE("HFR mode is supported only upto WVGA and H264 codec.");
+        return INVALID_OPERATION;
+      }
+    }
+
 
     /*
      * can set profile from the app as a parameter.
