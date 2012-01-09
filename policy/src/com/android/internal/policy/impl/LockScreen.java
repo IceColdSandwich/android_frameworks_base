@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 The Android Open Source Project
+ * Copyright (C) 2011 Twisted Playground
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +28,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.os.SystemProperties;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -52,7 +54,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
     private static final String ENABLE_MENU_KEY_FILE = "/data/local/enable_menu_key";
     private static final int WAIT_FOR_ANIMATION_TIMEOUT = 0;
     private static final int STAY_ON_WHILE_GRABBED_TIMEOUT = 30000;
-    static final String SOUND_LOCK_PROPERTY = "debug.soundlock";
+    static final String SOUND_LOCK_PROPERTY = "ro.config.soundlock";
 
     private LockPatternUtils mLockPatternUtils;
     private KeyguardUpdateMonitor mUpdateMonitor;
@@ -180,6 +182,8 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
         public void ping() {
         }
     }
+    
+    boolean mSoundLock = SystemProperties.get(SOUND_LOCK_PROPERTY).equalsIgnoreCase("true");
 
     class MultiWaveViewMethods implements MultiWaveView.OnTriggerListener,
             UnlockWidgetCommonMethods {
@@ -201,22 +205,18 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
                         != R.array.lockscreen_targets_with_camera;
             }
         }
-
-        String slProperty = SystemProperties.get(SOUND_LOCK_PROPERTY, "true");
-        mSoundLockProp = "true".equalsIgnoreCase(slProperty);        
         
         public void updateResources() {
             int resId;
-            if (mSoundLockProp) {
-            if (mCameraDisabled) {
-                // Fall back to showing ring/silence if camera is disabled by DPM...
-                resId = mSilentMode ? R.array.lockscreen_targets_when_silent
-                    : R.array.lockscreen_targets_when_soundon;
+            if (mSoundLock) {
+                if (mCameraDisabled) {
+                    // Fall back to showing ring/silence if camera is disabled by DPM...
+                    resId = mSilentMode ? R.array.lockscreen_targets_when_silent
+                        : R.array.lockscreen_targets_when_soundon;
+                } else {
+                    resId = R.array.lockscreen_targets_with_camera;
+                }
             } else {
-                resId = R.array.lockscreen_targets_with_camera;
-            }
-            } else {
-                int resId;
                 resId = mSilentMode ? R.array.lockscreen_targets_when_silent
                 : R.array.lockscreen_targets_when_soundon;
                 mMultiWaveView.setTargetResources(resId);
@@ -236,7 +236,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
             if (target == 0 || target == 1) { // 0 = unlock/portrait, 1 = unlock/landscape
                 mCallback.goToUnlockScreen();
             } else if (target == 2 || target == 3) { // 2 = alt/portrait, 3 = alt/landscape
-                if (mSoundLockProp) {
+                if (mSoundLock) {
                 if (!mCameraDisabled) {
                     // Start the Camera
                     Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
