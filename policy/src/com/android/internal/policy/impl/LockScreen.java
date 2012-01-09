@@ -52,6 +52,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
     private static final String ENABLE_MENU_KEY_FILE = "/data/local/enable_menu_key";
     private static final int WAIT_FOR_ANIMATION_TIMEOUT = 0;
     private static final int STAY_ON_WHILE_GRABBED_TIMEOUT = 30000;
+    static final String SOUND_LOCK_PROPERTY = "debug.soundlock";
 
     private LockPatternUtils mLockPatternUtils;
     private KeyguardUpdateMonitor mUpdateMonitor;
@@ -201,14 +202,24 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
             }
         }
 
+        String slProperty = SystemProperties.get(SOUND_LOCK_PROPERTY, "true");
+        mSoundLockProp = "true".equalsIgnoreCase(slProperty);        
+        
         public void updateResources() {
             int resId;
+            if (mSoundLockProp) {
             if (mCameraDisabled) {
                 // Fall back to showing ring/silence if camera is disabled by DPM...
                 resId = mSilentMode ? R.array.lockscreen_targets_when_silent
                     : R.array.lockscreen_targets_when_soundon;
             } else {
                 resId = R.array.lockscreen_targets_with_camera;
+            }
+            } else {
+                int resId;
+                resId = mSilentMode ? R.array.lockscreen_targets_when_silent
+                : R.array.lockscreen_targets_when_soundon;
+                mMultiWaveView.setTargetResources(resId);
             }
             mMultiWaveView.setTargetResources(resId);
         }
@@ -225,12 +236,18 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
             if (target == 0 || target == 1) { // 0 = unlock/portrait, 1 = unlock/landscape
                 mCallback.goToUnlockScreen();
             } else if (target == 2 || target == 3) { // 2 = alt/portrait, 3 = alt/landscape
+                if (mSoundLockProp) {
                 if (!mCameraDisabled) {
                     // Start the Camera
                     Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
                     intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     mContext.startActivity(intent);
                     mCallback.goToUnlockScreen();
+                } else {
+                    toggleRingMode();
+                    mUnlockWidgetMethods.updateResources();
+                    mCallback.pokeWakelock();
+                }
                 } else {
                     toggleRingMode();
                     mUnlockWidgetMethods.updateResources();
