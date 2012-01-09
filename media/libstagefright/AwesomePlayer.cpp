@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (c) 2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1574,6 +1575,7 @@ void AwesomePlayer::finishSeekIfNecessary(int64_t videoTimeUs) {
 
 void AwesomePlayer::onVideoEvent() {
     Mutex::Autolock autoLock(mLock);
+    int mAudioSourcePaused = false;
     if (!mVideoEventPending) {
         // The event has been cancelled in reset_l() but had already
         // been scheduled for execution at that time.
@@ -1603,6 +1605,7 @@ void AwesomePlayer::onVideoEvent() {
                 modifyFlags(AUDIO_RUNNING, CLEAR);
             }
             mAudioSource->pause();
+            mAudioSourcePaused = true;
         }
     }
 
@@ -1644,6 +1647,10 @@ void AwesomePlayer::onVideoEvent() {
                 }
                 finishSeekIfNecessary(-1);
 
+                if (mAudioSourcePaused) {
+                    mAudioSource->start();
+                    mAudioSourcePaused = false;
+                }
                 if (mAudioPlayer != NULL
                         && !(mFlags & (AUDIO_RUNNING | SEEK_PREVIEW))) {
                     startAudioPlayer_l();
@@ -1692,6 +1699,10 @@ void AwesomePlayer::onVideoEvent() {
     SeekType wasSeeking = mSeeking;
     finishSeekIfNecessary(timeUs);
 
+    if (mAudioSourcePaused) {
+        mAudioSource->start();
+        mAudioSourcePaused = false;
+    }
     if (mAudioPlayer != NULL && !(mFlags & (AUDIO_RUNNING | SEEK_PREVIEW))) {
         status_t err = startAudioPlayer_l();
         if (err != OK) {
