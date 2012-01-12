@@ -1971,7 +1971,7 @@ status_t MPEG4Writer::Track::threadEntry() {
 
         if(!mIsAudio) {
           int32_t frameRate, hfr, multiple;
-          bool success = mMeta->findInt32(kKeySampleRate, &frameRate);
+          bool success = mMeta->findInt32(kKeyFrameRate, &frameRate);
           CHECK(success);
           success = mMeta->findInt32(kKeyHFR, &hfr);
           CHECK(success);
@@ -2009,6 +2009,15 @@ status_t MPEG4Writer::Track::threadEntry() {
              */
             int64_t decodingTimeUs;
             CHECK(meta_data->findInt64(kKeyDecodingTime, &decodingTimeUs));
+            {
+              int32_t frameRate, hfr, multiple;
+              bool success = mMeta->findInt32(kKeyHFR, &hfr);
+              CHECK(success);
+              success = mMeta->findInt32(kKeyFrameRate, &frameRate);
+              CHECK(success);
+              multiple = hfr?(hfr/frameRate):1;
+              decodingTimeUs = multiple * decodingTimeUs;
+            }
             decodingTimeUs -= previousPausedDurationUs;
             int64_t timeUs = decodingTimeUs;
             cttsDeltaTimeUs = timestampUs - decodingTimeUs;
