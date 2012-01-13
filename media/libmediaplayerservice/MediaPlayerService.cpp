@@ -580,7 +580,9 @@ player_type getPlayerType(const char* url)
     if (!strncasecmp("http://", url, 7)
             || !strncasecmp("https://", url, 8)) {
         size_t len = strlen(url);
-        if (len >= 5 && !strcasecmp(".m3u8", &url[len - 5])) {
+        if ((len >= 5 && !strcasecmp(".m3u8", &url[len - 5]))||
+            (len >= 4 && !strcasecmp(".m3u", &url[len - 4])))
+        {
             return NU_PLAYER;
         }
         else if(len >= 4 && !strcasecmp(".mpd", &url[len - 4])) {
