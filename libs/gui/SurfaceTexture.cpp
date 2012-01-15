@@ -1104,9 +1104,6 @@ void SurfaceTexture::freeAllBuffersLocked() {
     for (int i = 0; i < NUM_BUFFER_SLOTS; i++) {
         freeBufferLocked(i);
     }
-#ifdef QCOM_HARDWARE
-    mGraphicBufferAlloc->freeAllGraphicBuffersExcept(-1);
-#endif
 }
 
 void SurfaceTexture::freeAllBuffersExceptHeadLocked() {
@@ -1123,9 +1120,6 @@ void SurfaceTexture::freeAllBuffersExceptHeadLocked() {
             freeBufferLocked(i);
         }
     }
-#ifdef QCOM_HARDWARE
-    mGraphicBufferAlloc->freeAllGraphicBuffersExcept(head);
-#endif
 }
 
 status_t SurfaceTexture::drainQueueLocked() {
