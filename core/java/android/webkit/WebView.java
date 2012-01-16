@@ -685,11 +685,14 @@ public class WebView extends AbsoluteLayout
     private boolean mHardwareAccelSkia = false;
 
     // BrowserMgmt Plugin Handlers
-    private static boolean mIsBrowserManagementOn = false;
-    private static Class mBrowserMgmtClassType=null;
-    private static final String BrowserMgmtPluginName=
+    private Class mBrowserMgmtClassType=null;
+    private Object mBrowserMgmtInst=null;
+    private Class[] args_types = null;
+    private Context[] args_val = null;
+    private boolean mFirstPaint = true;
+    private final String BrowserMgmtPluginName=
         "/system/framework/browsermanagement.jar";
-    private static final String BrowserMgmtClassName=
+    private final String BrowserMgmtClassName=
         "com.android.qualcomm.browsermanagement.BrowserManagement";
 
     /*
@@ -1112,53 +1115,45 @@ public class WebView extends AbsoluteLayout
             startPrivateBrowsing();
         }
 
-        mIsBrowserManagementOn =
+        boolean mIsBrowserManagementOn =
             android.os.SystemProperties.getBoolean("browser.management", true);
         if (DebugFlags.WEB_VIEW) {
-            Log.d(LOGTAG,"BrowserManagement sys prop is"+ mIsBrowserManagementOn);
+            Log.d(LOGTAG,"BrowserManagement sys prop is "+ mIsBrowserManagementOn);
         }
-
         if (mIsBrowserManagementOn) {
-             try {
-                 dalvik.system.PathClassLoader pluginClassLoader =
-                     new dalvik.system.PathClassLoader(
-                       BrowserMgmtPluginName,ClassLoader.getSystemClassLoader());
-                 try {
-                     mBrowserMgmtClassType =
-                         pluginClassLoader.loadClass(BrowserMgmtClassName);
-                 } catch (Throwable e) {
-                     if (DebugFlags.WEB_VIEW) {
-                         Log.d(LOGTAG, "class not found: BrowserManagement" + e);
-                     }
-                 }
-             } catch (Throwable el) {
-                  if (DebugFlags.WEB_VIEW) {
-                      Log.d(LOGTAG, "browsermanagement jar not loaded "+el);
-                  }
-             }
-
-             if(mBrowserMgmtClassType != null) {
-                 try {
-                     Class[] args_types = new Class[1];
-                     Context[] args_val = new Context[1];
-                     args_types[0] = Context.class;
-                     args_val[0] = context;
-                     mBrowserMgmtClassType.getMethod("Init",args_types).invoke(
-                     mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
-                 } catch (Throwable e) {
-                     if (DebugFlags.WEB_VIEW) {
-                         Log.d(LOGTAG, "method not found: Init " + e);
-                     }
-                 }
-             }
-             else {
-                 if (DebugFlags.WEB_VIEW) {
-                    Log.d(LOGTAG,"browsermanagement class type NULL!!! - Init ");
-                 }
-             }
+            setupBrowserMgmtPlugin(context);
         }
 
         mAutoFillData = new WebViewCore.AutoFillData();
+    }
+
+    private void setupBrowserMgmtPlugin(Context context) {
+
+        try {
+            dalvik.system.PathClassLoader pluginClassLoader =
+                new dalvik.system.PathClassLoader(
+                    BrowserMgmtPluginName,ClassLoader.getSystemClassLoader());
+            try {
+                mBrowserMgmtClassType =
+                    pluginClassLoader.loadClass(BrowserMgmtClassName);
+                mBrowserMgmtInst = mBrowserMgmtClassType.newInstance();
+                args_types = new Class[1];
+                args_val = new Context[1];
+                args_types[0] = Context.class;
+                args_val[0] = context;
+
+                try {
+                    mBrowserMgmtClassType.getMethod("Init",args_types).
+                    invoke(mBrowserMgmtInst,(Object)args_val[0]);
+                } catch (Throwable e) {
+                    Log.e(LOGTAG, "method not found: Init " + e);
+                }
+            } catch (Throwable e) {
+                Log.e(LOGTAG, "BrowserMgmt Instance failed " + e);
+            }
+       } catch (Throwable el) {
+            Log.e(LOGTAG, "browsermanagement jar not loaded "+el);
+       }
     }
 
     private static class ProxyReceiver extends BroadcastReceiver {
@@ -2143,27 +2138,6 @@ public class WebView extends AbsoluteLayout
         arg.mExtraHeaders = extraHeaders;
         mWebViewCore.sendMessage(EventHub.LOAD_URL, arg);
         clearHelpers();
-
-        if(mBrowserMgmtClassType != null) {
-            try {
-                Class[] args_types = new Class[1];
-                Context[] args_val = new Context[1];
-                args_types[0] = Context.class;
-                args_val[0] = mContext;
-
-                mBrowserMgmtClassType.getMethod("PageLoadStarted",args_types).
-                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
-            } catch (Throwable e) {
-                if (DebugFlags.WEB_VIEW) {
-                    Log.d(LOGTAG, "method not found: PageLoadStarted " + e);
-                }
-            }
-        }
-        else {
-            if (DebugFlags.WEB_VIEW) {
-                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageLoadStarted ");
-            }
-        }
     }
 
     /**
@@ -3847,23 +3821,12 @@ public class WebView extends AbsoluteLayout
 
         if(mBrowserMgmtClassType != null) {
             try {
-                Class[] args_types = new Class[1];
-                Context[] args_val = new Context[1];
-                args_types[0] = Context.class;
-                args_val[0] = mContext;
-
                 mBrowserMgmtClassType.getMethod("PageLoadStarted",args_types).
-                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
             } catch (Throwable e) {
-                 if (DebugFlags.WEB_VIEW) {
-                     Log.d(LOGTAG, "method not found: PageLoadStarted " + e);
-                 }
+                Log.e(LOGTAG, "method not found: PageLoadStarted " + e);
             }
-        }
-        else {
-            if (DebugFlags.WEB_VIEW) {
-                Log.d(LOGTAG,"browsermanagement class NULL!!! -PageLoadStarted ");
-            }
+            mFirstPaint = true;
         }
     }
 
@@ -3888,21 +3851,10 @@ public class WebView extends AbsoluteLayout
 
         if(mBrowserMgmtClassType != null) {
             try {
-                Class[] args_types = new Class[1];
-                Context[] args_val = new Context[1];
-                args_types[0] = Context.class;
-                args_val[0] = mContext;
-
                 mBrowserMgmtClassType.getMethod("PageLoadFinished",args_types).
-                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
             } catch (Throwable e) {
-                if (DebugFlags.WEB_VIEW) {
-                    Log.d(LOGTAG, "method not found: PageLoadFinished " + e);
-                }
-            }
-        }else {
-            if (DebugFlags.WEB_VIEW) {
-                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageLoadFinished ");
+                Log.e(LOGTAG, "method not found: PageLoadFinished " + e);
             }
         }
     }
@@ -4654,6 +4606,16 @@ public class WebView extends AbsoluteLayout
                 isPictureAfterFirstLayout, registerPageSwapCallback);
         if (mHTML5VideoViewManager != null)
             mHTML5VideoViewManager.setBaseLayer(layer);
+
+        if((mBrowserMgmtClassType != null) && (mFirstPaint)) {
+            try {
+                mBrowserMgmtClassType.getMethod("WebviewLoaded",args_types).
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
+            } catch (Throwable e) {
+                    Log.e(LOGTAG, "method not found: WebviewLoaded " + e);
+            }
+            mFirstPaint = false;
+        }
     }
 
     int getBaseLayer() {
@@ -5951,6 +5913,15 @@ public class WebView extends AbsoluteLayout
             mKeysPressed.clear();
         }
 
+        if(mBrowserMgmtClassType != null) {
+            try {
+                mBrowserMgmtClassType.getMethod("FocusChanged",args_types).
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
+            } catch (Throwable e) {
+                Log.e(LOGTAG, "method not found: FocusChanged " + e);
+            }
+        }
+
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
     }
 
@@ -6224,22 +6195,10 @@ public class WebView extends AbsoluteLayout
 
         if(mBrowserMgmtClassType != null) {
             try {
-                Class[] args_types = new Class[1];
-                Context[] args_val = new Context[1];
-                args_types[0] = Context.class;
-                args_val[0] = mContext;
-
                 mBrowserMgmtClassType.getMethod("PageTouched",args_types).
-                invoke(mBrowserMgmtClassType.newInstance(),(Object)args_val[0]);
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
             } catch (Throwable e) {
-                if (DebugFlags.WEB_VIEW) {
-                    Log.d(LOGTAG, "method not found: PageTouched " + e);
-                }
-            }
-        }
-        else {
-            if (DebugFlags.WEB_VIEW) {
-                Log.d(LOGTAG,"browsermanagement class NULL!!! - PageTouched ");
+                Log.d(LOGTAG, "method not found: PageTouched " + e);
             }
         }
 
