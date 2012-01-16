@@ -777,7 +777,7 @@ status_t StagefrightRecorder::setListener(const sp<IMediaRecorderClient> &listen
 status_t StagefrightRecorder::prepare() {
   LOGV(" %s E", __func__ );
 
-  if(mVideoHeight && mVideoWidth &&             /*Video recording*/
+  if(mVideoSource != VIDEO_SOURCE_LIST_END && mVideoEncoder != VIDEO_ENCODER_LIST_END && mVideoHeight && mVideoWidth &&             /*Video recording*/
          (mMaxFileDurationUs <=0 ||             /*Max duration is not set*/
          (mVideoHeight * mVideoWidth < 720 * 1280 && mMaxFileDurationUs > 30*60*1000*1000) ||
          (mVideoHeight * mVideoWidth >= 720 * 1280 && mMaxFileDurationUs > 10*60*1000*1000))) {
