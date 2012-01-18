@@ -61,7 +61,8 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
     static final int STATE_NOTPREPARED        = 1;
     static final int STATE_PREPARED           = 2;
     static final int STATE_PLAYING            = 3;
-    static final int STATE_RELEASED           = 4;
+    static final int STATE_BUFFERING          = 4;
+    static final int STATE_RELEASED           = 5;
     protected int mCurrentState;
 
     protected HTML5VideoViewProxy mProxy;

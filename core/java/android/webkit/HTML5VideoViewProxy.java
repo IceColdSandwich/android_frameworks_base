@@ -120,7 +120,7 @@ class HTML5VideoViewProxy extends Handler
                 if (layer != 0 && surfTexture != null && currentVideoLayerId != -1) {
                     int playerState = mHTML5VideoView.getCurrentState();
                     if (mHTML5VideoView.getPlayerBuffering())
-                        playerState = HTML5VideoView.STATE_NOTPREPARED;
+                        playerState = HTML5VideoView.STATE_BUFFERING;
                     nativeSendSurfaceTexture(surfTexture,
                             layer, currentVideoLayerId, textureName,
                             playerState);
