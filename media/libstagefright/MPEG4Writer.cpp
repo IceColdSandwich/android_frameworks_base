@@ -1333,9 +1333,6 @@ void MPEG4Writer::writeChunkToFile(Chunk* chunk) {
         sp<Track::AVCParamSet> seqEnhanceInfo = chunk->mTrack->mSeqEnhanceInfo;
         off64_t chunk_offset = mOffset;
 
-        // Unlock the mutex during file write, since it can take a long time when
-        // recording high resolution clips and block the track threads.
-        mLock.unlock();
         if (chunk->mTrack->isAvc() && seqEnhanceInfo != NULL) {
             MediaBuffer *temp = new MediaBuffer(const_cast<uint8_t *>(seqEnhanceInfo->mData), seqEnhanceInfo->mLength);
             addLengthPrefixedSample_l(temp);
