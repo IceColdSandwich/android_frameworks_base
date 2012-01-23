@@ -1329,14 +1329,14 @@ status_t AwesomePlayer::getPosition(int64_t *positionUs) {
 }
 
 status_t AwesomePlayer::seekTo(int64_t timeUs) {
-    if (mExtractorFlags & MediaExtractor::CAN_SEEK) {
+    if (((timeUs == 0) && (mExtractorFlags & MediaExtractor::CAN_SEEK_TO_ZERO)) ||
+        (mExtractorFlags & MediaExtractor::CAN_SEEK) ) {
         Mutex::Autolock autoLock(mLock);
         return seekTo_l(timeUs);
-    }else {
+    } else {
         notifyListener_l(MEDIA_SEEK_COMPLETE);
         mSeekNotificationSent = true;
     }
-
     return OK;
 }
 

@@ -49,6 +49,7 @@ public:
         CAN_SEEK_FORWARD   = 2,  // the "seek 10secs forward button"
         CAN_PAUSE          = 4,
         CAN_SEEK           = 8,  // the "seek bar"
+        CAN_SEEK_TO_ZERO   = 16, // the "previous button" for ADIF clips
     };
 
     // If subclasses do _not_ override this, the default is

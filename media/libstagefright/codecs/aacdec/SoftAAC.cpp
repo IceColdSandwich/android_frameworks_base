@@ -815,6 +815,18 @@ void SoftAAC::onPortFlushCompleted(OMX_U32 portIndex) {
         // Make sure that the next buffer output does not still
         // depend on fragments from the last one decoded.
         PVMP4AudioDecoderResetBuffer(mDecoderBuf);
+        if(mAACStreamFormat == OMX_AUDIO_AACStreamFormatADIF)
+        {
+            //Reset temp buffer
+            mTempBufferTotalSize = 0;
+            mInputBufferSize= 0;
+            mTempBufferOffset =0;
+            mTempBufferDataLen = 0;
+            mCheckFragment = false;
+
+            //reset the progress bar
+            mNumSamplesOutput = 0;
+        }
     }
 }
 
