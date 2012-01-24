@@ -168,6 +168,7 @@ private:
     sp<MediaSource> mVideoSource;
     sp<AwesomeRenderer> mVideoRenderer;
     bool mVideoRendererIsPreview;
+    bool mAudioEOD;
 
     sp<MediaSource> mAudioTrack;
     sp<MediaSource> mAudioSource;
