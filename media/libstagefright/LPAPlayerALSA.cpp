@@ -572,6 +572,11 @@ void LPAPlayer::pause(bool playPendingSamples) {
             if (!bIsA2DPEnabled) {
                 LOGV("LPAPlayer::Pause - Pause driver");
                 struct pcm * local_handle = (struct pcm *)handle;
+                pthread_mutex_lock(&pause_mutex);
+                if (local_handle->start != 1) {
+                    pthread_cond_wait(&pause_cv, &pause_mutex);
+                }
+                pthread_mutex_unlock(&pause_mutex);
                 if (ioctl(local_handle->fd, SNDRV_PCM_IOCTL_PAUSE,1) < 0) {
                     LOGE("Audio Pause failed");
                 }
@@ -905,6 +910,9 @@ void LPAPlayer::decoderThreadEntry() {
                             write(efd, &writeValue, sizeof(uint64_t));
                         }
                         LOGV("PCM write complete");
+                        pthread_mutex_lock(&pause_mutex);
+                        pthread_cond_signal(&pause_cv);
+                        pthread_mutex_unlock(&pause_mutex);
                     }
                 }
             }
@@ -1368,11 +1376,13 @@ void LPAPlayer::createThreads() {
     pthread_mutex_init(&effect_mutex, NULL);
     pthread_mutex_init(&apply_effect_mutex, NULL);
     pthread_mutex_init(&a2dp_notification_mutex, NULL);
+    pthread_mutex_init(&pause_mutex,NULL);
 
     pthread_cond_init (&event_cv, NULL);
     pthread_cond_init (&decoder_cv, NULL);
     pthread_cond_init (&a2dp_cv, NULL);
     pthread_cond_init (&a2dp_notification_cv, NULL);
+    pthread_cond_init (&pause_cv, NULL);
 
     // Create 4 threads Effect, decoder, event and A2dp
     pthread_attr_t attr;
