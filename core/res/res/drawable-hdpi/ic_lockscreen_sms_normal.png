@@ -1,0 +1,609 @@
+
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+  <title>
+  bigxie / android_frameworks_base / changelog &mdash; Bitbucket
+</title>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="description" content="" />
+  <meta name="keywords" content="" />
+  <!--[if lt IE 9]>
+  <script src="https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/js/lib/html5.js"></script>
+  <![endif]-->
+
+  <script>
+    (function (window) {
+      // prevent stray occurrences of `console.log` from causing errors in IE
+      var console = window.console || (window.console = {});
+      console.log || (console.log = function () {});
+
+      var BB = window.BB || (window.BB = {});
+      BB.debug = false;
+      BB.cname = false;
+      BB.CANON_URL = 'https://bitbucket.org';
+      BB.MEDIA_URL = 'https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/';
+      BB.images = {
+        noAvatar: 'https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/img/no_avatar.png'
+      };
+      BB.user = {
+        isKbdShortcutsEnabled: true,
+        isSshEnabled: false
+      };
+      BB.user.has = (function () {
+        var betaFeatures = [];
+        betaFeatures.push('repo2');
+        return function (feature) {
+          return _.contains(betaFeatures, feature);
+        };
+      }());
+      BB.repo || (BB.repo = {});
+  
+      BB.user.follows = {
+        repos: ''.split(',')
+      };
+      BB.user.id = 188346;
+    
+      BB.user.username = 'LorDClockaN';
+    
+    
+    
+  
+  
+      BB.user.isAdmin = false;
+      BB.repo.id = 572877;
+    
+    
+      BB.repo.language = null;
+      BB.repo.pygmentsLanguage = null;
+    
+    
+      BB.repo.slug = 'android_frameworks_base';
+    
+    
+      BB.repo.owner = {
+        username: 'bigxie'
+      };
+    
+      // Coerce `BB.repo` to a string to get
+      // "davidchambers/mango" or whatever.
+      BB.repo.toString = function () {
+        return BB.cname ? this.slug : this.owner.username + '/' + this.slug;
+      }
+    
+    
+  
+    }(this));
+  </script>
+
+  
+
+
+  <link rel="stylesheet" href="https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/bun/css/bundle.css"/>
+
+
+
+  <link rel="search" type="application/opensearchdescription+xml" href="/opensearch.xml" title="Bitbucket" />
+  <link rel="icon" href="https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/img/logo_new.png" type="image/png" />
+  <link type="text/plain" rel="author" href="/humans.txt" />
+
+
+  
+    <script src="https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/bun/js/bundle.js"></script>
+  
+
+
+
+  <link href="/bigxie/android_frameworks_base/rss?token=5eb70c1a8e13628323c15b0fed852745" rel="alternate nofollow" type="application/rss+xml" title="RSS feed for android_frameworks_base" />
+
+</head>
+
+<body id="" class="">
+  <script type="text/javascript">
+    if (!RegExp(" AppleWebKit/").test(navigator.userAgent)) {
+    $('body').addClass('non-webkit');
+    }
+  </script>
+  <!--[if IE 8]>
+  <script>jQuery(document.body).addClass('ie8')</script>
+  <![endif]-->
+  <!--[if IE 9]>
+  <script>jQuery(document.body).addClass('ie9')</script>
+  <![endif]-->
+
+  <div id="wrapper">
+
+
+
+  <div id="header-wrap">
+    <div id="header">
+    <ul id="global-nav">
+      <li><a class="home" href="http://www.atlassian.com">Atlassian Home</a></li>
+      <li><a class="docs" href="http://confluence.atlassian.com/display/BITBUCKET">Documentation</a></li>
+      <li><a class="support" href="/support">Support</a></li>
+      <li><a class="blog" href="http://blog.bitbucket.org">Blog</a></li>
+      <li><a class="forums" href="http://groups.google.com/group/bitbucket-users">Forums</a></li>
+    </ul>
+    <a href="/" id="logo">Bitbucket by Atlassian</a>
+
+    <div id="main-nav">
+    
+
+      <ul class="clearfix">
+        <li><a href="/explore" id="explore-link">Explore</a></li>
+        <li><a href="https://bitbucket.org" id="dashboard-link">Dashboard</a></li>
+        <li id="repositories-dropdown" class="inertial-hover active">
+          <a class="drop-arrow" href="/repo/mine" id="repositories-link">Repositories</a>
+          <div>
+            <div>
+              <div id="repo-overview"></div>
+              <div class="group">
+                <a href="/repo/create" class="new-repository" id="create-repo-link">Create repository</a>
+                <a href="/repo/import" class="import-repository" id="import-repo-link">Import repository</a>
+              </div>
+            </div>
+          </div>
+        </li>
+        <li id="user-dropdown" class="inertial-hover">
+          <a class="drop-arrow" href="/LorDClockaN">
+            <span>LorDClockaN</span>
+          </a>
+          <div>
+            <div>
+              <div class="group">
+                <a href="/account/" id="account-link">Account</a>
+                <a href="/account/notifications/" id="inbox-link">Inbox</a>
+              </div>
+              <div class="group">
+                <a href="/account/signout/">Log out</a>
+              </div>
+            </div>
+          </div>
+        </li>
+        
+
+<li class="search-box">
+  
+    <form action="/repo/all">
+      <input type="search" results="5" autosave="bitbucket-explore-search"
+             name="name" id="searchbox"
+             placeholder="Find a project" />
+  
+  </form>
+</li>
+
+      </ul>
+
+    
+    </div>
+    </div>
+  </div>
+
+    <div id="header-messages">
+  
+  
+    
+    
+    
+    
+  
+
+    
+   </div>
+
+
+
+    <div id="content">
+      <div id="changesets">
+      
+  
+  
+
+
+
+
+
+  <script>
+    jQuery(function ($) {
+        var cookie = $.cookie,
+            cookieOptions, date,
+            $content = $('#content'),
+            $pane = $('#what-is-bitbucket'),
+            $hide = $pane.find('[href="#hide"]').css('display', 'block').hide();
+
+        date = new Date();
+        date.setTime(date.getTime() + 365 * 24 * 60 * 60 * 1000);
+        cookieOptions = { path: '/', expires: date };
+
+        if (cookie('toggle_status') == 'hide') $content.addClass('repo-desc-hidden');
+
+        $('#toggle-repo-content').click(function (event) {
+            event.preventDefault();
+            $content.toggleClass('repo-desc-hidden');
+            cookie('toggle_status', cookie('toggle_status') == 'show' ? 'hide' : 'show', cookieOptions);
+        });
+
+        if (!cookie('hide_intro_message')) $pane.show();
+
+        $hide.click(function (event) {
+            event.preventDefault();
+            cookie('hide_intro_message', true, cookieOptions);
+            $pane.slideUp('slow');
+        });
+
+        $pane.hover(
+            function () { $hide.fadeIn('fast'); },
+            function () { $hide.fadeOut('fast'); });
+
+      (function () {
+        // Update "recently-viewed-repos" cookie for
+        // the "repositories" drop-down.
+        var
+          id = BB.repo.id,
+          cookieName = 'recently-viewed-repos_' + BB.user.id,
+          rvr = cookie(cookieName),
+          ids = rvr? rvr.split(','): [],
+          idx = _.indexOf(ids, '' + id);
+
+        // Remove `id` from `ids` if present.
+        if (~idx) ids.splice(idx, 1);
+
+        cookie(
+          cookieName,
+          // Insert `id` as the first item, then call
+          // `join` on the resulting array to produce
+          // something like "114694,27542,89002,84570".
+          [id].concat(ids.slice(0, 4)).join(),
+          {path: '/', expires: 1e6} // "never" expires
+        );
+      }());
+    });
+  </script>
+
+
+
+
+<div id="tabs">
+  <ul class="tabs">
+    <li>
+      <a href="/bigxie/android_frameworks_base/overview" id="repo-overview-link">Overview</a>
+    </li>
+
+    <li>
+      <a href="/bigxie/android_frameworks_base/downloads" id="repo-downloads-link">Downloads (<span id="downloads-count">0</span>)</a>
+    </li>
+
+    
+
+    <li>
+      <a href="/bigxie/android_frameworks_base/pull-requests" id="repo-pr-link">Pull requests (0)</a>
+    </li>
+
+    <li class="selected">
+      
+        <a href="/bigxie/android_frameworks_base/src" id="repo-source-link">Source</a>
+      
+    </li>
+
+    <li>
+      <a href="/bigxie/android_frameworks_base/changesets" id="repo-commits-link">Commits</a>
+    </li>
+
+    <li id="wiki-tab" class="dropdown"
+      style="display:
+                        none  
+        
+      ">
+      <a href="/bigxie/android_frameworks_base/wiki" id="repo-wiki-link">Wiki</a>
+    </li>
+
+    <li id="issues-tab" class="dropdown inertial-hover"
+      style="display:
+                      none  
+        
+      ">
+      <a href="/bigxie/android_frameworks_base/issues?status=new&amp;status=open" id="repo-issues-link">Issues (0) &raquo;</a>
+      <ul>
+        <li><a href="/bigxie/android_frameworks_base/issues/new">Create new issue</a></li>
+        <li><a href="/bigxie/android_frameworks_base/issues?status=new">New issues</a></li>
+        <li><a href="/bigxie/android_frameworks_base/issues?status=new&amp;status=open">Open issues</a></li>
+        <li><a href="/bigxie/android_frameworks_base/issues?status=duplicate&amp;status=invalid&amp;status=resolved&amp;status=wontfix">Closed issues</a></li>
+        
+          <li><a href="/bigxie/android_frameworks_base/issues?responsible=LorDClockaN">My issues</a></li>
+        
+        <li><a href="/bigxie/android_frameworks_base/issues">All issues</a></li>
+        <li><a href="/bigxie/android_frameworks_base/issues/query">Advanced query</a></li>
+      </ul>
+    </li>
+
+    
+
+    <li class="secondary">
+      <a href="/bigxie/android_frameworks_base/descendants">Forks/queues (0)</a>
+    </li>
+
+    <li class="secondary">
+      <a href="/bigxie/android_frameworks_base/zealots">Followers (<span id="followers-count">1</span>)</a>
+    </li>
+  </ul>
+</div>
+
+
+
+ 
+
+  <div class="repo-menu" id="repo-menu">
+    <ul id="repo-menu-links">
+    
+      <li>
+        <a href="/bigxie/android_frameworks_base/rss?token=5eb70c1a8e13628323c15b0fed852745" class="rss" title="RSS feed for android_frameworks_base">RSS</a>
+      </li>
+
+      <li><a href="/bigxie/android_frameworks_base/fork" class="fork">fork</a></li>
+      
+        
+          <li><a href="/bigxie/android_frameworks_base/hack" class="patch-queue">patch queue</a></li>
+        
+      
+      <li>
+        <a rel="nofollow" href="/bigxie/android_frameworks_base/follow" class="follow">follow</a>
+      </li>
+      
+          
+      
+      
+        <li class="get-source inertial-hover">
+          <a class="source">get source</a>
+          <ul class="downloads">
+            
+              
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.zip">zip</a></li>
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.tar.gz">gz</a></li>
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.tar.bz2">bz2</a></li>
+              
+            
+          </ul>
+        </li>
+      
+    </ul>
+
+  
+    <ul class="metadata">
+      
+      
+        <li class="branches inertial-hover">branches
+          <ul>
+            <li><a href="/bigxie/android_frameworks_base/src/2d8b0b871637">default</a>
+              
+              
+            </li>
+          </ul>
+        </li>
+      
+      
+      <li class="tags inertial-hover">tags
+        <ul>
+          <li><a href="/bigxie/android_frameworks_base/src/2d8b0b871637">tip</a>
+            
+            </li>
+        </ul>
+      </li>
+     
+     
+    </ul>
+  
+</div>
+
+<div class="repo-menu" id="repo-desc">
+    <ul id="repo-menu-links-mini">
+      
+
+      
+      <li>
+        <a href="/bigxie/android_frameworks_base/rss?token=5eb70c1a8e13628323c15b0fed852745" class="rss" title="RSS feed for android_frameworks_base"></a>
+      </li>
+
+      <li><a href="/bigxie/android_frameworks_base/fork" class="fork" title="Fork"></a></li>
+      
+        
+          <li><a href="/bigxie/android_frameworks_base/hack" class="patch-queue" title="Patch queue"></a></li>
+        
+      
+      <li>
+        <a rel="nofollow" href="/bigxie/android_frameworks_base/follow" class="follow">follow</a>
+      </li>
+      
+          
+      
+      
+        <li>
+          <a class="source" title="Get source"></a>
+          <ul class="downloads">
+            
+              
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.zip">zip</a></li>
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.tar.gz">gz</a></li>
+                <li><a rel="nofollow" href="/bigxie/android_frameworks_base/get/2d8b0b871637.tar.bz2">bz2</a></li>
+              
+            
+          </ul>
+        </li>
+      
+    </ul>
+
+    <h3 id="repo-heading" class="public hg">
+      <a class="owner-username" href="/bigxie">bigxie</a> /
+      <a class="repo-name" href="/bigxie/android_frameworks_base">android_frameworks_base</a>
+    
+
+    
+    </h3>
+
+        
+
+  <div id="repo-desc-cloneinfo">Clone this repository (size: 582.0 MB):
+    <a href="https://bitbucket.org/bigxie/android_frameworks_base" class="https">HTTPS</a> /
+    <a href="ssh://hg@bitbucket.org/bigxie/android_frameworks_base" class="ssh">SSH</a>
+    <pre id="clone-url-https">hg clone https://bitbucket.org/bigxie/android_frameworks_base</pre>
+    <pre id="clone-url-ssh">hg clone ssh://hg@bitbucket.org/bigxie/android_frameworks_base</pre>
+    
+  </div>
+
+        <a href="#" id="toggle-repo-content"></a>
+
+        
+
+</div>
+
+
+
+
+      
+
+
+  
+
+
+
+  <h1>File history for
+    <a href="/bigxie/android_frameworks_base/src">android_frameworks_base</a>
+  
+    <span>/</span>
+    
+    <a href="/bigxie/android_frameworks_base/src/2d8b0b871637/core/">core</a>
+    
+  
+    <span>/</span>
+    
+    <a href="/bigxie/android_frameworks_base/src/2d8b0b871637/core/res/">res</a>
+    
+  
+    <span>/</span>
+    
+    <a href="/bigxie/android_frameworks_base/src/2d8b0b871637/core/res/res/">res</a>
+    
+  
+    <span>/</span>
+    
+    <a href="/bigxie/android_frameworks_base/src/2d8b0b871637/core/res/res/drawable-hdpi/">drawable-hdpi</a>
+    
+  
+    <span>/</span>
+    
+    <a href="/bigxie/android_frameworks_base/src/2d8b0b871637/core/res/res/drawable-hdpi/ic_lockscreen_sms_normal.png">ic_lockscreen_sms_normal.png</a>
+    
+  
+  </h1>
+  <div id="commit-history">
+    <table id="file-history" class="iterable newtable no-diffstat">
+      <thead>
+        <tr>
+          <th class="person">Author</th>
+          <th class="hash">Revision</th>
+          <th class="text">Message</th>
+          <th class="labels">Labels</th>
+          <th class="date">Date</th>
+        </tr>
+      </thead>
+      <tbody>
+      
+        <tr class="iterable-item">
+          <td class="person">
+            
+              
+
+
+  
+    <a href="/bigxie" title="bigxie">
+      
+        <img src="https://secure.gravatar.com/avatar/50e063c3baafd7236a93adf4a0767676?d=identicon&s=32" />
+      
+      <span>bigxie</span>
+    </a>
+  
+
+
+            
+          </td>
+          <td class="hash"><a class="execute" href="/bigxie/android_frameworks_base/changeset/786c29b7814c#chg-core/res/res/drawable-hdpi/ic_lockscreen_sms_normal.png"><code>786c29b7814c</code></a></td>
+          <td class="text"><a href="/bigxie/android_frameworks_base/changeset/786c29b7814c#chg-core/res/res/drawable-hdpi/ic_lockscreen_sms_normal.png">added lockscreen images for hdpi</a></td>
+          <td class="labels">
+            <dl>
+  
+    
+  
+  
+    
+  
+  
+</dl>
+
+          </td>
+          <td class="date"><time datetime="2012-01-17T19:29:23+00:00" data-title="true">13 days ago</time></td>
+        </tr>
+      
+      </tbody>
+    </table>
+  </div>
+  
+
+
+
+
+
+      </div>
+    </div>
+
+  </div>
+
+  <div id="footer">
+    <ul id="footer-nav">
+      <li>Copyright © 2012 <a href="http://atlassian.com">Atlassian</a></li>
+      <li><a href="http://www.atlassian.com/hosted/terms.jsp">Terms of Service</a></li>
+      <li><a href="http://www.atlassian.com/about/privacy.jsp">Privacy</a></li>
+      <li><a href="//bitbucket.org/site/master/issues/new">Report a Bug to Bitbucket</a></li>
+      <li><a href="http://confluence.atlassian.com/x/IYBGDQ">API</a></li>
+      <li><a href="http://status.bitbucket.org/">Server Status</a></li>
+    </ul>
+    <ul id="social-nav">
+      <li class="blog"><a href="http://blog.bitbucket.org">Bitbucket Blog</a></li>
+      <li class="twitter"><a href="http://www.twitter.com/bitbucket">Twitter</a></li>
+    </ul>
+    <h5>We run</h5>
+    <ul id="technologies">
+      <li><a href="http://www.djangoproject.com/">Django 1.3.1</a></li>
+      <li><a href="//bitbucket.org/jespern/django-piston/">Piston 0.3dev</a></li>
+      <li><a href="http://git-scm.com/">Git 1.7.6</a></li>
+      <li><a href="http://www.selenic.com/mercurial/">Hg 1.9.2</a></li>
+      <li><a href="http://www.python.org">Python 2.7.2</a></li>
+      <li>80acdd9a1c49 | bitbucket02</li>
+    </ul>
+  </div>
+
+  <script src="https://dwz7u9t8u8usb.cloudfront.net/m/427eecceaf2a/js/lib/global.js"></script>
+
+
+
+
+
+
+  <script>
+    BB.gaqPush(['_trackPageview']);
+  
+    BB.gaqPush(['atl._trackPageview']);
+
+    
+
+    
+
+    (function () {
+        var ga = document.createElement('script');
+        ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+        ga.setAttribute('async', 'true');
+        document.documentElement.firstChild.appendChild(ga);
+    }());
+  </script>
+
+</body>
+</html>
