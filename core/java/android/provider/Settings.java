@@ -2204,6 +2204,12 @@ public final class Settings {
 	 */	
         public static final String LOCKSCREEN_QUAD_TARGETS = "lockscreen_quad_targets";
 
+	/**
+         * launch a custom app for sms	
+         * 	
+         * @hide
+         */
+        public static final String LOCKSCREEN_CUSTOM_SMS_INTENT = "lockscreen_custom_sms_intent";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
