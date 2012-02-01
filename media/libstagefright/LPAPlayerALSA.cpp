@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
- * Copyright (c) 2009-2011, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2009-2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -628,16 +628,7 @@ void LPAPlayer::reset() {
 
     requestAndWaitForA2DPNotificationThreadExit();
 
-    // Close the audiosink after all the threads exited to make sure
-    // there is no thread writing data to audio sink or applying effect
-    if (bIsA2DPEnabled) {
-        mAudioSink->close();
-    } else {
-        mAudioSink->closeSession();
-    }
 
-
-    mAudioSink.clear();
 
     // Make sure to release any buffer we hold onto so that the
     // source is able to stop().
@@ -665,8 +656,25 @@ void LPAPlayer::reset() {
 
     pmemBufferDeAlloc();
     LOGE("Buffer Deallocation complete! Closing pcm handle");
+
+    if (!isPaused && !bIsA2DPEnabled) {
+        if (ioctl(local_handle->fd, SNDRV_PCM_IOCTL_PAUSE,1) < 0) {
+            LOGE("Audio Pause failed");
+        }
+    }
+    local_handle->start = 0;
+    pcm_prepare(local_handle);
     pcm_close(local_handle);
     handle = (void*)local_handle;
+
+        // Close the audiosink after all the threads exited to make sure
+    // there is no thread writing data to audio sink or applying effect
+    if (bIsA2DPEnabled) {
+        mAudioSink->close();
+    } else {
+        mAudioSink->closeSession();
+    }
+    mAudioSink.clear();
 
     LOGV("reset() after pmemBuffersRequestQueue.size() = %d, pmemBuffersResponseQueue.size() = %d ",pmemBuffersRequestQueue.size(),pmemBuffersResponseQueue.size());
 
