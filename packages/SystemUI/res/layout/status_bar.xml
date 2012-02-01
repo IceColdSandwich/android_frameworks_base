@@ -28,6 +28,23 @@
     android:descendantFocusability="afterDescendants"
     >
 
+        <LinearLayout android:id="@+id/center"
+        android:gravity="center"
+        android:orientation="horizontal"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent">
+        
+	<com.android.systemui.statusbar.policy.CenterClock
+            android:id="@+id/clockcenter"
+            android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+            android:gravity="center"
+            android:paddingTop="3.0px"
+            android:layout_width="wrap_content"
+            android:layout_height="fill_parent"
+            android:singleLine="true"
+            android:layout_weight="1.0" />
+    </LinearLayout>
+
     <LinearLayout android:id="@+id/icons"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
