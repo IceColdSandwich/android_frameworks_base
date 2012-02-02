@@ -2226,6 +2226,12 @@ public final class Settings {
          */
         public static final String HIDE_CLOCK = "hide_clock";
 
+	/**
+	 * Whether volume up/down can be long pressed to skip tracks
+	 * @hide
+	 */
+        public static final String VOLUME_MUSIC_CONTROLS = "volume_music_controls";
+
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
