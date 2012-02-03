@@ -2011,11 +2011,13 @@ status_t MPEG4Writer::Track::threadEntry() {
         CHECK(meta_data->findInt64(kKeyTime, &timestampUs));
 
         if(!mIsAudio) {
-          int32_t frameRate, hfr, multiple;
+          int32_t frameRate, hfr = 0, multiple;
           bool success = mMeta->findInt32(kKeyFrameRate, &frameRate);
           CHECK(success);
           success = mMeta->findInt32(kKeyHFR, &hfr);
-          CHECK(success);
+          if (!success) {
+              hfr = 0;
+          }
           multiple = hfr?(hfr/frameRate):1;
           timestampUs = multiple * timestampUs;
         }

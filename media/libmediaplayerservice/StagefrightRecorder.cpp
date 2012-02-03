@@ -1502,7 +1502,10 @@ status_t StagefrightRecorder::setupVideoEncoder(
     CHECK(meta->findInt32(kKeyStride, &stride));
     CHECK(meta->findInt32(kKeySliceHeight, &sliceHeight));
     CHECK(meta->findInt32(kKeyColorFormat, &colorFormat));
-    CHECK(meta->findInt32(kKeyHFR, &hfr));
+    hfr = 0;
+    if (!meta->findInt32(kKeyHFR, &hfr)) {
+        LOGW("hfr not found, default to 0");
+    }
 
     if(hfr) {
       mMaxFileDurationUs = mMaxFileDurationUs * (hfr/mFrameRate);
