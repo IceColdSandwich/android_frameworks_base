@@ -105,7 +105,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private boolean mScreenOn = true;
     private boolean mInCall = false;
     private boolean mNotificationPulseEnabled;
-	private boolean mButtonBacklightEnabled;
+    private boolean mButtonBackLightEnabled;
 
     private final ArrayList<NotificationRecord> mNotificationList =
             new ArrayList<NotificationRecord>();
@@ -390,7 +390,7 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationPulseEnabled = pulseEnabled;
                 updateNotificationPulse();
             }
-			mButtonBacklightEnabled = Settings.System.getInt(resolver,
+			mButtonBackLightEnabled = Settings.System.getInt(resolver,
                         Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT, 0) != 0;
         }
     }
@@ -411,7 +411,7 @@ public class NotificationManagerService extends INotificationManager.Stub
 
         mNotificationLight = lights.getLight(LightsService.LIGHT_ID_NOTIFICATIONS);
         mAttentionLight = lights.getLight(LightsService.LIGHT_ID_ATTENTION);
-		mButtonBacklight = lights.getLight(LightsService.LIGHT_ID_BUTTONS);
+		mButtonBackLight = lights.getLight(LightsService.LIGHT_ID_BUTTONS);
 
         Resources resources = mContext.getResources();
         mDefaultNotificationColor = resources.getColor(
@@ -1099,8 +1099,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
                 // turn on button backlights
-                if(mButtonBacklightEnabled){
-                   mButtonBacklight.setBrightness(255);
+                if(mButtonBackLightEnabled){
+                   mButtonBackLight.setBrightness(255);
                 }
             }
         }
