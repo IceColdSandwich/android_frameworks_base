@@ -87,6 +87,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private StatusBarManagerService mStatusBar;
     private LightsService.Light mNotificationLight;
     private LightsService.Light mAttentionLight;
+	private LigtsService.Light mButtonBacklight
 
     private int mDefaultNotificationColor;
     private int mDefaultNotificationLedOn;
@@ -104,6 +105,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private boolean mScreenOn = true;
     private boolean mInCall = false;
     private boolean mNotificationPulseEnabled;
+	private boolean mButtonBacklightEnabled;
 
     private final ArrayList<NotificationRecord> mNotificationList =
             new ArrayList<NotificationRecord>();
@@ -371,6 +373,8 @@ public class NotificationManagerService extends INotificationManager.Stub
             ContentResolver resolver = mContext.getContentResolver();
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.NOTIFICATION_LIGHT_PULSE), false, this);
+			resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT), false, this);
             update();
         }
 
@@ -386,6 +390,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationPulseEnabled = pulseEnabled;
                 updateNotificationPulse();
             }
+			mButtonBacklightEnabled = Settings.System.getInt(resolver,
+                        Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT, 0) != 0;
         }
     }
 
@@ -405,6 +411,7 @@ public class NotificationManagerService extends INotificationManager.Stub
 
         mNotificationLight = lights.getLight(LightsService.LIGHT_ID_NOTIFICATIONS);
         mAttentionLight = lights.getLight(LightsService.LIGHT_ID_ATTENTION);
+		mButtonBacklight = lights.getLight(LightsService.LIGHT_ID_BUTTONS);
 
         Resources resources = mContext.getResources();
         mDefaultNotificationColor = resources.getColor(
@@ -1075,6 +1082,9 @@ public class NotificationManagerService extends INotificationManager.Stub
         // Don't flash while we are in a call or screen is on
         if (mLedNotification == null || mInCall || mScreenOn) {
             mNotificationLight.turnOff();
+            if(!mScreenOn){
+               mButtonBackLight.setBrightness(0);
+            }
         } else {
             int ledARGB = mLedNotification.notification.ledARGB;
             int ledOnMS = mLedNotification.notification.ledOnMS;
@@ -1088,6 +1098,10 @@ public class NotificationManagerService extends INotificationManager.Stub
                 // pulse repeatedly
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
+                // turn on button backlights
+                if(mButtonBacklightEnabled){
+                   mButtonBacklight.setBrightness(255);
+                }
             }
         }
     }
