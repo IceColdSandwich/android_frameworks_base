@@ -177,8 +177,13 @@ status_t NuPlayer::HTTPLiveSource::seekTo(int64_t seekTimeUs) {
         usleep(100000);
     }
     if( mFinalResult != OK  ) {
-       LOGW("Error state %d, Ignore this seek", mFinalResult);
-       return mFinalResult;
+        if( mFinalResult == ERROR_END_OF_STREAM ) {
+            LOGW("Allow seek even though all ts segments are downloaded");
+            mFinalResult = OK;
+        } else {
+            LOGW("Error state %d, Ignore this seek", mFinalResult);
+            return mFinalResult;
+        }
     }
 
     int64_t newSeekTime = -1;
