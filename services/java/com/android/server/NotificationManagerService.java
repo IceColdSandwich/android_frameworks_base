@@ -87,7 +87,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private StatusBarManagerService mStatusBar;
     private LightsService.Light mNotificationLight;
     private LightsService.Light mAttentionLight;
-	private LigtsService.Light mButtonBacklight
+    private LightsService.Light mButtonBackLight;
 
     private int mDefaultNotificationColor;
     private int mDefaultNotificationLedOn;
