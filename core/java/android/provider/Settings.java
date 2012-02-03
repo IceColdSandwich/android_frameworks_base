@@ -2211,7 +2211,32 @@ public final class Settings {
          */
         public static final String LOCKSCREEN_CUSTOM_SMS_INTENT = "lockscreen_custom_sms_intent";
 
-	        public static final String BATTERY_PERCENTAGES = "battery_percentages";
+	/*
+         * 0: Default no 1%
+         * 1: 1% Mod
+         * 2: 1% Bar
+         * 3: 1% Circle
+         * @hide
+         */
+        public static final String BATTERY_PERCENTAGES = "battery_percentages";
+
+	/**
+         * Hide standard battery
+         * @hide
+         */
+        public static final String HIDE_BATTERY = "hide_battery";
+
+        /**
+         * Show/Hide MIUI battery bar
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
+
+        /**
+         * MIUI battery bar color
+         * @hide
+         */
+        public static final String STATUSBAR_BATTERY_BAR_COLOR = "statusbar_battery_bar_color";
 
  	/**
          * whether volume keys wake the screen. boolean value
@@ -2219,6 +2244,12 @@ public final class Settings {
          * @hide	
          */
         public static final String VOLUME_WAKE_SCREEN = "volume_wake_screen";
+
+        /**
+         * Custom Carrier text on the systemui.
+         * @hide
+         */
+        public static final String CUSTOM_CARRIER_TEXT = "custom_carrier_text";
 
         /**
          * Setting to hide clock.
