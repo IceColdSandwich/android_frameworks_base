@@ -49,7 +49,7 @@ public class BatteryController extends BroadcastReceiver {
     private boolean mUseCircleBatt;
     private boolean mUseBarBatt;
     private boolean mUseHoneyBatt;
-    provate boolean mUseGenxBatt;
+    private boolean mUseGenxBatt;
     private Handler mHandler;
 
     public BatteryController(Context context) {
