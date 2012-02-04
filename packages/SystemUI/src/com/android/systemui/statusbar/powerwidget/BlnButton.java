@@ -55,6 +55,7 @@ public class BlnButton extends PowerButton {
     mView.getContext().startActivity(intent);
     return true;
 	*/
+    return false;
     }
 	
 
