@@ -48,6 +48,7 @@ public class BatteryController extends BroadcastReceiver {
     private boolean mUseBattPercentages;
     private boolean mUseCircleBatt;
     private boolean mUseBarBatt;
+    private boolean mUseHoneyBatt
     private Handler mHandler;
 
     public BatteryController(Context context) {
@@ -56,7 +57,8 @@ public class BatteryController extends BroadcastReceiver {
         mUseBattPercentages = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 1);
         mUseBarBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 2);
         mUseCircleBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 3);
-        mHideBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 4);
+	mUseHoneyBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 4);
+        mHideBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 5);
 
         mHandler = new Handler();
         SettingsObserver settingsObserver = new SettingsObserver(mHandler);
@@ -104,7 +106,10 @@ public class BatteryController extends BroadcastReceiver {
             } else if (mUseBarBatt) {
                 mBattIcon = R.drawable.stat_sys_battery_bar;
                 mChargeIcon = R.drawable.stat_sys_battery_charge_bar;
-            } else if (!mUseBattPercentages && !mUseCircleBatt && !mUseBarBatt) {
+	    } else if (mUseHoneyBatt) {
+                mBattIcon = R.drawable.stat_sys_battery_honey;
+                mChargeIcon = R.drawable.stat_sys_battery_charge_honey;
+	    } else if (!mUseBattPercentages && !mUseCircleBatt && !mUseBarBatt && !mUseHoneyBatt) {
                 mBattIcon = R.drawable.stat_sys_battery_normal;
                 mChargeIcon = R.drawable.stat_sys_battery_charge_normal;
             }
@@ -136,7 +141,8 @@ public class BatteryController extends BroadcastReceiver {
         mUseBattPercentages = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 1);
         mUseBarBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 2);
         mUseCircleBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 3);
-        mHideBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 4);
+	mUseHoneyBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 4);
+        mHideBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 5);
     }
 }
 
