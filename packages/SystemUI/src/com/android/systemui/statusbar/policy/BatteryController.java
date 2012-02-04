@@ -112,7 +112,7 @@ public class BatteryController extends BroadcastReceiver {
                 mBattIcon = R.drawable.stat_sys_battery_honey;
                 mChargeIcon = R.drawable.stat_sys_battery_charge_honey;
 	    } else if (mUseGenxBatt) {
-                mBattIcon = R.drawable.stat_sys_genx_honey;
+                mBattIcon = R.drawable.stat_sys_battery_genx;
                 mChargeIcon = R.drawable.stat_sys_battery_charge_genx;
 	    } else if (!mUseBattPercentages && !mUseCircleBatt && !mUseBarBatt && !mUseHoneyBatt && !mUseGenxBatt) {
                 mBattIcon = R.drawable.stat_sys_battery_normal;
