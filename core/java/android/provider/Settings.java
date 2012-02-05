@@ -4524,6 +4524,14 @@ public final class Settings {
             LOCK_SCREEN_OWNER_INFO_ENABLED
         };
 
+	/**
+         * use the lock screen timeout settings when the user turns the power off manually?
+         * Boolean value.
+         * 
+         * @hide
+         */
+        public static final String LOCK_SCREEN_LOCK_USER_OVERRIDE = "lock_screen_lock_suer_override";
+
         /**
          * Helper method for determining if a location provider is enabled.
          * @param cr the content resolver to use
