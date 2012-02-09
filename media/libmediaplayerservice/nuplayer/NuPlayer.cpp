@@ -529,6 +529,7 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
             }
 
             if( newSeekTime >= 0 ) {
+               mTimeDiscontinuityPending = true;
                if( (mAudioDecoder != NULL) &&
                    (mFlushingAudio == NONE || mFlushingAudio == AWAITING_DISCONTINUITY) ) {
                   flushDecoder( true, true );
