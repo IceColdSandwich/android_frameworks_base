@@ -1208,6 +1208,7 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
 
         boolean equalsOnsl = onsl != null && spn.equals(onsl);
         boolean equalsOnss = onss != null && spn.equals(onss);
+	
 
         String simNumeric = SystemProperties.get(
                 TelephonyProperties.PROPERTY_ICC_OPERATOR_NUMERIC, "");
@@ -1219,8 +1220,8 @@ final class GsmServiceStateTracker extends ServiceStateTracker {
                     equals(operatorNumeric.substring(0, 3));
         } catch (Exception e){
         }
-
-        return gsmRoaming && !(equalsMcc && (equalsOnsl || equalsOnss));
+        boolean mvnoRoaming = true;
+        return gsmRoaming && !(equalsMcc && (equalsOnsl || equalsOnss || mvnoRoaming));
     }
 
     private static int twoDigitsAt(String s, int offset) {
