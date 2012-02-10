@@ -1309,7 +1309,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
             }
 
             out.flush();
-            outputFile.finishWrite(fos);
+            outputFile.finishWriteNoSync(fos);
         } catch (IOException e) {
             Log.wtf(TAG, "problem writing stats", e);
             if (fos != null) {
@@ -1381,7 +1381,7 @@ public class NetworkStatsService extends INetworkStatsService.Stub {
             }
 
             out.flush();
-            mUidFile.finishWrite(fos);
+            mUidFile.finishWriteNoSync(fos);
         } catch (IOException e) {
             Log.wtf(TAG, "problem writing stats", e);
             if (fos != null) {
