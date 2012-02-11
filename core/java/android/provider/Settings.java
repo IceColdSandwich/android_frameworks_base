@@ -3675,6 +3675,11 @@ public final class Settings {
         public static final String CDMA_ROAMING_MODE = "roaming_settings";
 
         /**
+         * Whether national data Roming should be used.
+         */
+        public static final String MVNO_ROAMING = "mvno_roaming";
+
+        /**
          * The CDMA subscription mode 0 = RUIM/SIM (default)
          *                                1 = NV
          * @hide
