@@ -1746,6 +1746,15 @@ public class WebView extends AbsoluteLayout
             nativeDestroy();
             mNativeClass = 0;
         }
+
+        if(mBrowserMgmtClassType != null) {
+            try {
+                mBrowserMgmtClassType.getMethod("Destroy",args_types).
+                invoke(mBrowserMgmtInst,(Object)args_val[0]);
+            } catch (Throwable e) {
+                Log.e(LOGTAG, "BrowserMgmt method not found: Destroy " + e);
+            }
+        }
     }
 
     /**
