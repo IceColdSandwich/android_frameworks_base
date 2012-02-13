@@ -44,9 +44,9 @@ public class SwipeHelper {
     private static LinearInterpolator sLinearInterpolator = new LinearInterpolator();
 
     private float SWIPE_ESCAPE_VELOCITY = 100f; // dp/sec
-    private int DEFAULT_ESCAPE_ANIMATION_DURATION = 200; // ms
-    private int MAX_ESCAPE_ANIMATION_DURATION = 400; // ms
-    private int MAX_DISMISS_VELOCITY = 2000; // dp/sec
+    private int DEFAULT_ESCAPE_ANIMATION_DURATION = 100; // ms
+    private int MAX_ESCAPE_ANIMATION_DURATION = 200; // ms
+    private int MAX_DISMISS_VELOCITY = 4000; // dp/sec
     private static final int SNAP_ANIM_LEN = SLOW_ANIMATIONS ? 1000 : 150; // ms
 
     public static float ALPHA_FADE_START = 0f; // fraction of thumbnail width
