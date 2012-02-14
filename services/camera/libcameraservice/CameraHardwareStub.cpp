@@ -50,7 +50,8 @@ void CameraHardwareStub::initDefaultParameters()
     p.set(CameraParameters::KEY_SUPPORTED_PREVIEW_SIZES, "320x240");
     p.setPreviewSize(320, 240);
     p.setPreviewFrameRate(15);
-    p.setPreviewFormat(CameraParameters::PIXEL_FORMAT_YUV420SP);
+    //p.setPreviewFormat(CameraParameters::PIXEL_FORMAT_YUV420SP);
+    p.setPreviewFormat(CameraParameters::PIXEL_FORMAT_YUV422I);
 
     p.set(CameraParameters::KEY_SUPPORTED_PICTURE_SIZES, "320x240");
     p.setPictureSize(320, 240);
@@ -66,14 +67,14 @@ void CameraHardwareStub::initHeapLocked()
     // Create raw heap.
     int picture_width, picture_height;
     mParameters.getPictureSize(&picture_width, &picture_height);
-    mRawHeap = new MemoryHeapBase(picture_width * picture_height * 3 / 2);
+    mRawHeap = new MemoryHeapBase(picture_width * picture_height * 2);
 
     int preview_width, preview_height;
     mParameters.getPreviewSize(&preview_width, &preview_height);
     LOGD("initHeapLocked: preview size=%dx%d", preview_width, preview_height);
 
     // Note that we enforce yuv420sp in setParameters().
-    int how_big = preview_width * preview_height * 3 / 2;
+    int how_big = preview_width * preview_height * 2;
 
     // If we are being reinitialized to the same size as before, no
     // work needs to be done.
