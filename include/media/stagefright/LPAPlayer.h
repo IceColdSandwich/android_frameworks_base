@@ -229,7 +229,8 @@ private:
     bool mReachedEOS;
     status_t mFinalStatus;
     int64_t mSeekTimeUs;
-
+    int64_t mPauseTime;
+    int64_t mNumA2DPBytesPlayed;
     int64_t timePlayed;
     int64_t timeStarted;
 
@@ -249,13 +250,22 @@ private:
     sp<MediaPlayerBase::AudioSink> mAudioSink;
     AwesomePlayer *mObserver;
 
+    enum A2DPState {
+        A2DP_ENABLED,
+        A2DP_DISABLED,
+        A2DP_CONNECT,
+        A2DP_DISCONNECT
+    };
+
     size_t fillBuffer(void *data, size_t size);
 
     int64_t getRealTimeUsLocked();
+    int64_t getTimeStamp(A2DPState state);
 
     void reset();
 
     void onPauseTimeOut();
+
 
     LPAPlayer(const LPAPlayer &);
     LPAPlayer &operator=(const LPAPlayer &);

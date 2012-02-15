@@ -58,7 +58,7 @@ extern "C" {
 //Values to exit poll via eventfd
 #define KILL_EVENT_THREAD 1
 #define SIGNAL_EVENT_THREAD 2
-
+#define PCM_FORMAT 2
 #define NUM_FDS 2
 namespace android {
 int LPAPlayer::objectsAlive = 0;
@@ -70,9 +70,12 @@ LPAPlayer::LPAPlayer(
 mSampleRate(0),
 mLatencyUs(0),
 mFrameSize(0),
+mSeekTimeUs(0),
 mNumFramesPlayed(0),
 mPositionTimeMediaUs(-1),
 mPositionTimeRealUs(-1),
+mPauseTime(0),
+mNumA2DPBytesPlayed(0),
 mSeeking(false),
 mInternalSeeking(false),
 mReachedEOS(false),
@@ -225,21 +228,19 @@ void LPAPlayer::handleA2DPSwitch() {
                     LOGE("AUDIO PAUSE failed");
                 }
             }
-            /* Set timePlayed to time where we are pausing */
-            timePlayed += (nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted);
-            timeStarted = 0;
+
             LOGV("paused for bt switch");
+            mSeekTimeUs += getTimeStamp(A2DP_CONNECT);
+        }
+        else {
+            mSeekTimeUs = mPauseTime;
         }
 
         mInternalSeeking = true;
+        mNumA2DPBytesPlayed = 0;
         mReachedEOS = false;
-        mSeekTimeUs = timePlayed;
         pthread_cond_signal(&a2dp_notification_cv);
     } else {
-        if (!isPaused) {
-            timePlayed += (nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted);
-            timeStarted = 0;
-        }
         if (isPaused)
             pthread_cond_signal(&a2dp_notification_cv);
         else
@@ -422,8 +423,6 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
     mSeeking = true;
 
     mSeekTimeUs = time_us;
-    timePlayed  = time_us;
-    timeStarted = 0;
     struct pcm * local_handle = (struct pcm *)handle;
     LOGV("In seekTo(), mSeekTimeUs %lld",mSeekTimeUs);
     if (!bIsA2DPEnabled) {
@@ -463,6 +462,7 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
             mAudioSink->flush();
             mAudioSink->start();
         }
+        mNumA2DPBytesPlayed = 0;
     }
 
     return OK;
@@ -473,6 +473,7 @@ void LPAPlayer::pause(bool playPendingSamples) {
 
     LOGV("pause: playPendingSamples %d", playPendingSamples);
     isPaused = true;
+    A2DPState state;
     if (playPendingSamples) {
         isPaused = true;
         if (!bIsA2DPEnabled) {
@@ -488,16 +489,18 @@ void LPAPlayer::pause(bool playPendingSamples) {
             }
             if (mAudioSink.get() != NULL)
                 mAudioSink->pauseSession();
-
-            timePlayed += (nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted);
+            state = A2DP_DISABLED;
         }
         else {
             if (mAudioSink.get() != NULL)
                 mAudioSink->stop();
+            state = A2DP_ENABLED;
         }
+        mPauseTime = mSeekTimeUs + getTimeStamp(state);
     } else {
         if (a2dpDisconnectPause) {
             a2dpDisconnectPause = false;
+            mPauseTime = mSeekTimeUs + getTimeStamp(A2DP_DISCONNECT);
             pthread_cond_signal(&a2dp_notification_cv);
         } else {
             if (!bIsA2DPEnabled) {
@@ -517,11 +520,13 @@ void LPAPlayer::pause(bool playPendingSamples) {
                 if (mAudioSink.get() != NULL) {
                     mAudioSink->pauseSession();
                 }
+                state = A2DP_DISABLED;
             } else {
                 mAudioSink->pause();
                 mAudioSink->flush();
+                state = A2DP_ENABLED;
             }
-            timePlayed += (nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted);
+            mPauseTime = mSeekTimeUs + getTimeStamp(state);
         }
     }
 }
@@ -600,9 +605,6 @@ void LPAPlayer::resume() {
         enabled during pause state
         */
         pthread_cond_signal(&effect_cv);
-
-        /* Set timeStarted to current systemTime */
-        timeStarted = nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC));
     }
 }
 
@@ -792,10 +794,6 @@ void LPAPlayer::decoderThreadEntry() {
                         LOGV("Increment for even bytes");
                         aio_buf_local.data_len += 1;
                     }
-
-                    if (timeStarted == 0) {
-                        timeStarted = nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC));
-                    }
                 } else {
                     /* Put the buffer back into requestQ */
                     /* This is zero byte buffer - no need to put in response Q*/
@@ -920,7 +918,7 @@ void LPAPlayer::eventThreadEntry() {
             pfd[1].revents = 0;
             if (u == SIGNAL_EVENT_THREAD) {
                 BuffersAllocated tempbuf = *(pmemBuffersResponseQueue.begin());
-                timeout = 1000 * tempbuf.bytesToWrite / (numChannels * 2 * mSampleRate);
+                timeout = 1000 * tempbuf.bytesToWrite / (numChannels * PCM_FORMAT * mSampleRate);
                 LOGV("Setting timeout due Last buffer seek to %d, mReachedEOS %d, pmemBuffersRequestQueue.size() %d", timeout, mReachedEOS,pmemBuffersResponseQueue.size());
                 continue;
             }
@@ -934,7 +932,9 @@ void LPAPlayer::eventThreadEntry() {
         }
 
         if (timeout != -1 && mReachedEOS) {
-            LOGV("Posting EOS event to AwesomePlayer");
+            LOGV("Timeout %d: Posting EOS event to AwesomePlayer",timeout);
+            isPaused = true;
+            mPauseTime = mSeekTimeUs + getTimeStamp(A2DP_DISABLED);
             mObserver->postAudioEOS();
             audioEOSPosted = true;
             timeout = -1;
@@ -973,8 +973,8 @@ void LPAPlayer::eventThreadEntry() {
         /* If the rendering is complete report EOS to the AwesomePlayer */
         if (mObserver && !asyncReset && mReachedEOS && pmemBuffersResponseQueue.size() == 1) {
             BuffersAllocated tempbuf = *(pmemBuffersResponseQueue.begin());
-            timeout = 1000 * tempbuf.bytesToWrite / (numChannels * 2 * mSampleRate) + 1000 * buf.bytesToWrite / (numChannels * 2 * mSampleRate);
-            LOGE("Setting timeout to %d,buf.bytesToWrite %d, mReachedEOS %d, pmemBuffersRequestQueue.size() %d", timeout, buf.bytesToWrite, mReachedEOS,pmemBuffersResponseQueue.size());
+            timeout = 1000 * tempbuf.bytesToWrite / (numChannels * PCM_FORMAT * mSampleRate);
+            LOGV("Setting timeout to %d,nextbuffer %d, buf.bytesToWrite %d, mReachedEOS %d, pmemBuffersRequestQueue.size() %d", timeout, tempbuf.bytesToWrite, buf.bytesToWrite, mReachedEOS,pmemBuffersResponseQueue.size());
         }
 
         pthread_mutex_unlock(&pmem_response_mutex);
@@ -1022,12 +1022,12 @@ void LPAPlayer::A2DPThreadEntry() {
         // A2DP got disabled -- Queue up everything back to Request Queue
         if (!bIsA2DPEnabled) {
             pthread_mutex_lock(&pmem_request_mutex);
-            while (!pmemBuffersResponseQueue.empty()) {
-                LOGV("BUF transfer");
-                List<BuffersAllocated>::iterator it = pmemBuffersResponseQueue.begin();
-                BuffersAllocated buf = *it;
-                pmemBuffersRequestQueue.push_back(buf);
-                pmemBuffersResponseQueue.erase(it);
+            pmemBuffersResponseQueue.clear();
+            pmemBuffersRequestQueue.clear();
+
+            List<BuffersAllocated>::iterator it = bufPool.begin();
+            for(;it!=bufPool.end();++it) {
+                 pmemBuffersRequestQueue.push_back(*it);
             }
             pthread_mutex_unlock(&pmem_response_mutex);
             pthread_mutex_unlock(&pmem_request_mutex);
@@ -1040,11 +1040,6 @@ void LPAPlayer::A2DPThreadEntry() {
             pthread_mutex_unlock(&pmem_response_mutex);
             bytesToWrite = buf.bytesToWrite;
             LOGV("bytes To write:%d",bytesToWrite);
-            if (timeStarted == 0) {
-                LOGV("Time started in A2DP thread");
-                timeStarted = nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC));
-            }
-            //LOGV("16 bit :: cmdid = %d, len = %u, bytesAvailInBuffer = %u, bytesToWrite = %u", cmdid, len, bytesAvailInBuffer, bytesToWrite);
 
             uint32_t bytesWritten = 0;
             uint32_t numBytesRemaining = 0;
@@ -1061,6 +1056,7 @@ void LPAPlayer::A2DPThreadEntry() {
                 bytesAvailInBuffer = mAudioSink->bufferSize();
 
                 uint32_t writeLen = bytesAvailInBuffer > bytesToWrite ? bytesToWrite : bytesAvailInBuffer;
+                LOGV("Writing %d bytes to A2DP ", writeLen);
                 bytesWritten = mAudioSink->write(data, writeLen);
                 if ( bytesWritten != writeLen ) {
                     //Paused - Wait till resume
@@ -1080,6 +1076,7 @@ void LPAPlayer::A2DPThreadEntry() {
                     break;
                 }
                 data += bytesWritten;
+                mNumA2DPBytesPlayed += bytesWritten;
                 bytesToWrite -= bytesWritten;
                 LOGV("@_@bytes To write2:%d",bytesToWrite);
             }
@@ -1098,11 +1095,12 @@ void LPAPlayer::A2DPThreadEntry() {
                 mSeeked = false;
                 LOGV("A2DPThread: Putting buffers back to requestQ from responseQ");
                 pthread_mutex_lock(&pmem_response_mutex);
-                while (!pmemBuffersResponseQueue.empty()) {
-                    List<BuffersAllocated>::iterator it = pmemBuffersResponseQueue.begin();
-                    BuffersAllocated buf = *it;
-                    pmemBuffersRequestQueue.push_back(buf);
-                    pmemBuffersResponseQueue.erase(it);
+                pmemBuffersResponseQueue.clear();
+                pmemBuffersRequestQueue.clear();
+
+                List<BuffersAllocated>::iterator it = bufPool.begin();
+                for(;it!=bufPool.end();++it) {
+                     pmemBuffersRequestQueue.push_back(*it);
                 }
                 pthread_mutex_unlock(&pmem_response_mutex);
             }
@@ -1206,10 +1204,12 @@ void LPAPlayer::A2DPNotificationThreadEntry() {
             LOGV("Flushing all the buffers");
             pthread_mutex_lock(&pmem_response_mutex);
             pthread_mutex_lock(&pmem_request_mutex);
-            while(!pmemBuffersResponseQueue.empty()) {
-                BuffersAllocated buf = *(pmemBuffersResponseQueue.begin());
-                pmemBuffersResponseQueue.erase(pmemBuffersResponseQueue.begin());
-                pmemBuffersRequestQueue.push_back(buf);
+            pmemBuffersResponseQueue.clear();
+            pmemBuffersRequestQueue.clear();
+
+            List<BuffersAllocated>::iterator it = bufPool.begin();
+            for(;it!=bufPool.end();++it) {
+                 pmemBuffersRequestQueue.push_back(*it);
             }
             pthread_mutex_unlock(&pmem_request_mutex);
             pthread_mutex_unlock(&pmem_response_mutex);
@@ -1255,8 +1255,10 @@ void LPAPlayer::A2DPNotificationThreadEntry() {
                 mAudioSink->pauseSession();
             }
             mInternalSeeking = true;
+
             mReachedEOS = false;
-            mSeekTimeUs = timePlayed;
+            mSeekTimeUs += getTimeStamp(A2DP_DISCONNECT);
+            mNumA2DPBytesPlayed = 0;
             mIsAudioRouted = true;
             pthread_cond_signal(&a2dp_cv);
         }
@@ -1378,6 +1380,9 @@ size_t LPAPlayer::fillBuffer(void *data, size_t size) {
         {
             Mutex::Autolock autoLock(mLock);
 
+            if (mSeeking) {
+                mInternalSeeking = false;
+            }
             if (mSeeking || mInternalSeeking) {
                 if (mIsFirstBuffer) {
                     if (mFirstBuffer != NULL) {
@@ -1516,18 +1521,45 @@ int64_t LPAPlayer::getRealTimeUs() {
 
 
 int64_t LPAPlayer::getRealTimeUsLocked(){
+    //Used for AV sync: irrelevant API for LPA.
+    return 0;
+}
 
-    return nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted + timePlayed;
+int64_t LPAPlayer::getTimeStamp(A2DPState state) {
+    int64_t timestamp = 0;
+    switch (state) {
+    case A2DP_ENABLED:
+    case A2DP_DISCONNECT:
+        timestamp = (mNumA2DPBytesPlayed * 1000000)
+                    /(2 * numChannels * mSampleRate);
+        break;
+    case A2DP_DISABLED:
+    case A2DP_CONNECT: {
+        struct pcm * local_handle = (struct pcm *)handle;
+        struct snd_compr_tstamp tstamp;
+        if (ioctl(local_handle->fd, SNDRV_COMPRESS_TSTAMP, &tstamp)) {
+            LOGE("Tunnel Player: failed SNDRV_COMPRESS_TSTAMP\n");
+        }
+        else {
+            LOGV("timestamp = %lld\n", tstamp.timestamp);
+            timestamp = tstamp.timestamp;
+        }
+        break;
+    }
+    default:
+        break;
+    }
+    return timestamp;
 }
 
 int64_t LPAPlayer::getMediaTimeUs() {
     Mutex::Autolock autoLock(mLock);
-    LOGV("getMediaTimeUs() isPaused %d timeStarted %d timePlayed %d", isPaused, timeStarted, timePlayed);
-    if (isPaused || timeStarted == 0) {
-        return timePlayed;
+    LOGV("getMediaTimeUs() isPaused %d mSeekTimeUs %d mPauseTime %d", isPaused, mSeekTimeUs, mPauseTime);
+    if (isPaused) {
+        return mPauseTime;
     } else {
-        LOGV("curr_time %d", nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)));
-        return nanoseconds_to_microseconds(systemTime(SYSTEM_TIME_MONOTONIC)) - timeStarted + timePlayed;
+        A2DPState state = bIsA2DPEnabled ? A2DP_ENABLED : A2DP_DISABLED;
+        return (mSeekTimeUs + getTimeStamp(state));
     }
 }
 
@@ -1606,8 +1638,7 @@ void LPAPlayer::onPauseTimeOut() {
         // 1.) Set seek flags
         mInternalSeeking = true;
         mReachedEOS = false;
-        mSeekTimeUs = timePlayed;
-        timeStarted = 0;
+        mSeekTimeUs += getTimeStamp(A2DP_DISABLED);
 
         // 2.) Flush the buffers and transfer everything to request queue
         pthread_mutex_lock(&pmem_response_mutex);
