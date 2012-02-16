@@ -81,7 +81,7 @@ private:
     };
 
     enum {
-       kMinAVInterleavingOffset = 32 * 1024,
+       kMinAVInterleavingOffset = 256 * 1024,
        kMaxAVInterleavingOffset = 2 * 1024 * 1024,
     };
 
