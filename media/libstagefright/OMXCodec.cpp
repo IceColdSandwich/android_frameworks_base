@@ -5191,8 +5191,10 @@ status_t OMXCodec::stop() {
             */
 
             bool canFree = true;
-            if (!strncmp(mComponentName, "OMX.qcom.video.decoder.", 23) ||
-                    !strncmp(mComponentName, "OMX.qcom.video.encoder.", 23)) {
+            if ((!strncmp(mComponentName, "OMX.qcom.video.decoder.", 23)) ||
+                (!strncmp(mComponentName, "OMX.qcom.video.encoder.", 23)) ||
+                (!strncmp(mComponentName, "OMX.qcom.audio.decoder.multiaac",
+                strlen("OMX.qcom.audio.decoder.multiaac")))) {
                 if (state == OMX_StateInvalid) {
                     canFree = true;
                 }
