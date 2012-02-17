@@ -2307,6 +2307,15 @@ public final class Settings {
         public static final String MVNO_ROAMING = "mvno_roaming";
 
 	/**
+         * The number of milliseconds for which the device posture must be stable before we perform
+         * an orientation change. If the device appears to be rotating (being picked up, put down)
+         * then we keep waiting until it settles.
+         * default: 200ms
+         * @hide
+         */
+        public static final String ACCELEROMETER_ROTATION_SETTLE_TIME = "accelerometer_rotation_settle_time";
+
+	/**
          * Control the type of rotation which can be performed using the accelerometer
          * if ACCELEROMETER_ROTATION is enabled.
          * Value is a bitwise combination of
