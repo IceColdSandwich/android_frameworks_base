@@ -1026,7 +1026,7 @@ public abstract class WallpaperService extends Service {
                 } break;
                 case MSG_WINDOW_RESIZED: {
                     final boolean reportDraw = message.arg1 != 0;
-                    mEngine.updateSurface(true, false, reportDraw);
+                    mEngine.updateSurface(true, true, reportDraw);
                     mEngine.doOffsetsChanged(true);
                 } break;
                 case MSG_TOUCH_EVENT: {
