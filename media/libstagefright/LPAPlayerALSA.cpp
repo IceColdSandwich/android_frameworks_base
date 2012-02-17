@@ -947,13 +947,14 @@ void LPAPlayer::eventThreadEntry() {
 
         pfd[0].revents = 0;
         //pfd[1].revents = 0;
-        if (isPaused)
-            continue;
+
         LOGV("After an event occurs");
 
         if (killEventThread) {
             break;
         }
+        if (isPaused || pmemBuffersResponseQueue.empty())
+            continue;
 
         //exit on abrupt event
         Mutex::Autolock autoLock(mLock);
