@@ -950,9 +950,8 @@ public class NetworkManagementService extends INetworkManagementService.Stub
         try {
             wifiFirmwareReload(wlanIface, "AP");
             if (SystemProperties.getBoolean("wifi.hotspot.ti", false)) {
-                mConnector.doCommand(String.format("softap start " + softapIface));
-                mConnector.doCommand(String.format("softap startap " + softapIface));
                 NetworkUtils.enableInterface(softapIface);
+                mConnector.doCommand(String.format("softap startap " + softapIface));
             } else {
                 mConnector.doCommand(String.format("softap start " + wlanIface));
             }
