@@ -15,7 +15,7 @@
  */
 
 #define LOG_TAG "wifi"
-#define LOG_NDEBUG 0
+//#define LOG_NDEBUG 0
 
 #include "jni.h"
 #include <ScopedUtfChars.h>

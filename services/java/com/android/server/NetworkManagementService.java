@@ -76,7 +76,7 @@ import java.util.concurrent.CountDownLatch;
 public class NetworkManagementService extends INetworkManagementService.Stub
         implements Watchdog.Monitor {
     private static final String TAG = "NetworkManagementService";
-    private static final boolean DBG = true;
+    private static final boolean DBG = false;
     private static final String NETD_TAG = "NetdConnector";
 
     private static final int ADD = 1;
