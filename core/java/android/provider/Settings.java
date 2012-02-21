@@ -2352,6 +2352,20 @@ public final class Settings {
          */
         public static final String CALL_DISABLE_LIGHTSOUT = "call_disable_lightsout";
 
+	/**
+         * Whether to show statusbar signal text
+         * 
+         * @hide
+         */
+        public static final String STATUSBAR_SIGNAL_TEXT = "statusbar_signal_text";
+
+        /**
+         * statusbar signal text color
+         * 
+         * @hide
+         */
+        public static final String STATUSBAR_SIGNAL_TEXT_COLOR = "statusbar_signal_text_color";
+
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
