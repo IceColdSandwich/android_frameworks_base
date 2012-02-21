@@ -2366,6 +2366,13 @@ public final class Settings {
          */
         public static final String STATUSBAR_SIGNAL_TEXT_COLOR = "statusbar_signal_text_color";
 
+	/**
+         * whether to hide the signal barss
+         * 
+         * @hide
+         */
+        public static final String STATUSBAR_HIDE_SIGNAL_BARS = "statusbar_hide_signal_bars";
+
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
          * keys and easy to update.
