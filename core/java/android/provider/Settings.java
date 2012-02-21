@@ -2335,6 +2335,22 @@ public final class Settings {
          */
         public static final String ACCELEROMETER_ROTATION_ANGLES = "accelerometer_rotation_angles";
 
+	/**
+         * Allow Landscape in call
+         */
+        public static final String CALL_ENABLE_LANDSCAPE = "call_enable_landscape";
+        
+        /**
+         * Enable use of statusbar while in call
+         * 
+        */
+        public static final String CALL_ENABLE_STATUSBAR = "call_enable_statusbar";
+
+        /**
+         * Disable Lighouts while in call
+         * 
+         */
+        public static final String CALL_DISABLE_LIGHTSOUT = "call_disable_lightsout";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
