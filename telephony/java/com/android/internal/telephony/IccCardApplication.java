@@ -94,11 +94,6 @@ public class IccCardApplication {
         boolean isPersoSubStateUnknown() {
             return this == PERSOSUBSTATE_UNKNOWN;
         }
-
-        boolean isPersoSubStateNetworkLocked()
-        {
-            return this == PERSOSUBSTATE_SIM_NETWORK;
-        }
     };
 
     public AppType        app_type;

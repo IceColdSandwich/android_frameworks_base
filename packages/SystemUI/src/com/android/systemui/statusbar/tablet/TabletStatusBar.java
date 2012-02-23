@@ -28,7 +28,6 @@ import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.StatusBarManager;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -73,6 +72,10 @@ import android.widget.RemoteViews;
 import android.widget.ScrollView;
 import android.widget.TextView;
 
+import android.provider.Settings;
+import android.app.Activity;
+import android.util.Log;
+
 import com.android.internal.statusbar.StatusBarIcon;
 import com.android.internal.statusbar.StatusBarNotification;
 import com.android.systemui.R;
@@ -88,6 +91,7 @@ import com.android.systemui.statusbar.policy.CompatModeButton;
 import com.android.systemui.statusbar.policy.LocationController;
 import com.android.systemui.statusbar.policy.NetworkController;
 import com.android.systemui.statusbar.policy.Prefs;
+import com.android.systemui.statusbar.policy.toggles.TogglesView;
 
 public class TabletStatusBar extends StatusBar implements
         HeightReceiver.OnBarHeightChangedListener,
@@ -125,8 +129,6 @@ public class TabletStatusBar extends StatusBar implements
     int mIconSize = -1;
     int mIconHPadding = -1;
     private int mMaxNotificationIcons = 5;
-
-    private boolean mShowClock;
 
     H mHandler = new H();
 
@@ -167,7 +169,7 @@ public class TabletStatusBar extends StatusBar implements
     ViewGroup mPile;
 
     HeightReceiver mHeightReceiver;
-    BatteryController mBatteryController;
+//    BatteryController mBatteryController;
     BluetoothController mBluetoothController;
     LocationController mLocationController;
     NetworkController mNetworkController;
@@ -199,6 +201,8 @@ public class TabletStatusBar extends StatusBar implements
     private boolean mPanelSlightlyVisible;
 
     public Context getContext() { return mContext; }
+    
+    TogglesView mQuickToggles;
 
     private StorageManager mStorageManager;
 
@@ -215,10 +219,14 @@ public class TabletStatusBar extends StatusBar implements
                 new TouchOutsideListener(MSG_CLOSE_NOTIFICATION_PANEL, mNotificationPanel));
 
         // the battery icon
-        mBatteryController.addIconView((ImageView)mNotificationPanel.findViewById(R.id.battery));
-        mBatteryController.addLabelView(
-                (TextView)mNotificationPanel.findViewById(R.id.battery_text));
+//        mBatteryController.addIconView((ImageView)mNotificationPanel.findViewById(R.id.battery));
+//        mBatteryController.addLabelView(
+//                (TextView)mNotificationPanel.findViewById(R.id.battery_text));
 
+        mQuickToggles = (TogglesView) mNotificationPanel.findViewById(R.id.quick_toggles);
+        mQuickToggles.setVisibility(View.VISIBLE);
+        mQuickToggles.setBar(this);
+        
         // Bt
         mBluetoothController.addIconView(
                 (ImageView)mNotificationPanel.findViewById(R.id.bluetooth));
@@ -319,8 +327,13 @@ public class TabletStatusBar extends StatusBar implements
 
         // Recents Panel
         mRecentTasksLoader = new RecentTasksLoader(context);
-        mRecentsPanel = (RecentsPanelView) View.inflate(context,
-                R.layout.status_bar_recent_panel, null);
+        if (Settings.System.getInt(getContext().getContentResolver(),
+                Settings.System.HORIZONTAL_RECENTS_TASK_PANEL,0) == 1) 
+            mRecentsPanel = (RecentsPanelView) View.inflate(context,
+                R.layout.status_bar_recent_panel_webaokp, null);
+        else 
+            mRecentsPanel = (RecentsPanelView) View.inflate(context,
+                    R.layout.status_bar_recent_panel, null);
         mRecentsPanel.setVisibility(View.GONE);
         mRecentsPanel.setSystemUiVisibility(View.STATUS_BAR_DISABLE_BACK);
         mRecentsPanel.setOnTouchListener(new TouchOutsideListener(MSG_CLOSE_RECENTS_PANEL,
@@ -405,6 +418,8 @@ public class TabletStatusBar extends StatusBar implements
     @Override
     public void start() {
         super.start(); // will add the main bar view
+
+        Settings.System.putInt(mContext.getContentResolver(), Settings.System.IS_TABLET, 1);
     }
 
     @Override
@@ -503,8 +518,8 @@ public class TabletStatusBar extends StatusBar implements
         // The icons
         mLocationController = new LocationController(mContext); // will post a notification
 
-        mBatteryController = new BatteryController(mContext);
-        mBatteryController.addIconView((ImageView)sb.findViewById(R.id.battery));
+//        mBatteryController = new BatteryController(mContext);
+//        mBatteryController.addIconView((ImageView)sb.findViewById(R.id.battery));
         mBluetoothController = new BluetoothController(mContext);
         mBluetoothController.addIconView((ImageView)sb.findViewById(R.id.bluetooth));
 
@@ -946,14 +961,10 @@ public class TabletStatusBar extends StatusBar implements
     }
 
     public void showClock(boolean show) {
-        ContentResolver resolver = mContext.getContentResolver();
-
         View clock = mBarContents.findViewById(R.id.clock);
         View network_text = mBarContents.findViewById(R.id.network_text);
-        mShowClock = (Settings.System.getInt(resolver,
-                Settings.System.STATUS_BAR_CLOCK, 1) == 1);
         if (clock != null) {
-            clock.setVisibility(show ? (mShowClock ? View.VISIBLE : View.GONE) : View.GONE);
+            clock.setVisibility(show ? View.VISIBLE : View.GONE);
         }
         if (network_text != null) {
             network_text.setVisibility((!show) ? View.VISIBLE : View.GONE);
@@ -1924,6 +1935,10 @@ public class TabletStatusBar extends StatusBar implements
             }
             return false;
         }
+    }
+    
+    public boolean isTablet() {
+        return true;
     }
 
     public void dump(FileDescriptor fd, PrintWriter pw, String[] args) {

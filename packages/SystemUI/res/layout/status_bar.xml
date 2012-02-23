@@ -28,23 +28,6 @@
     android:descendantFocusability="afterDescendants"
     >
 
-        <LinearLayout android:id="@+id/center"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent">
-        
-	<com.android.systemui.statusbar.policy.CenterClock
-            android:id="@+id/clockcenter"
-            android:textAppearance="@style/TextAppearance.StatusBar.Clock"
-            android:gravity="center"
-            android:paddingTop="3.0px"
-            android:layout_width="wrap_content"
-            android:layout_height="fill_parent"
-            android:singleLine="true"
-            android:layout_weight="1.0" />
-    </LinearLayout>
-
     <LinearLayout android:id="@+id/icons"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -88,16 +71,22 @@
             android:orientation="horizontal"
             android:gravity="center"
             >
+			<com.android.systemui.statusbar.policy.SignalText
+				android:id="@+id/signal_text"
+				android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+				android:layout_width="wrap_content"
+				android:layout_height="match_parent"
+				android:gravity="center_vertical" 
+				/>
             <include layout="@layout/signal_cluster_view" 
                 android:id="@+id/signal_cluster"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 />
-            <ImageView
-                android:id="@+id/battery"
-                android:layout_height="wrap_content"
+            <include layout="@layout/battery_cluster_view" 
+                android:id="@+id/battery_cluster"
                 android:layout_width="wrap_content"
-                android:paddingLeft="4dip"
+                android:layout_height="wrap_content"
                 />
         </LinearLayout>
 
@@ -111,6 +100,22 @@
             android:gravity="center_vertical|left"
             />
     </LinearLayout>
+
+	<LinearLayout
+		android:id="@+id/center_clock_layout"
+		android:gravity="center"
+		android:orientation="horizontal"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent">
+		<com.android.systemui.statusbar.policy.CenterClock
+			android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+			android:gravity="center"
+			android:id="@+id/center_clock"
+			android:paddingLeft="6.0dip"
+			android:layout_width="wrap_content"
+			android:layout_height="fill_parent"
+			android:singleLine="true" />
+	</LinearLayout>    
         
     <LinearLayout android:id="@+id/ticker"
         android:layout_width="match_parent"
@@ -155,9 +160,9 @@
         </com.android.systemui.statusbar.phone.TickerView>
     </LinearLayout>
 
-    <com.android.systemui.statusbar.policy.BatteryBarController
-        android:layout_width="match_parent"
-        android:layout_height="1dp"
-	systemui:viewLocation="1" />
-
+	<com.android.systemui.statusbar.policy.BatteryBarController
+		android:layout_width="match_parent"
+		android:layout_height="1dp"
+		systemui:viewLocation="1" />
+		
 </com.android.systemui.statusbar.phone.PhoneStatusBarView>

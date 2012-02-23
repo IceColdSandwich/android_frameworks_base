@@ -34,8 +34,7 @@ import java.util.TimeZone;
 import com.android.internal.R;
 
 /**
- * This widget display an analogic clock with two hands for hours and
- * minutes.
+ * This widget display an analogic clock with two hands for hours and minutes.
  */
 public class CarrierLabel extends TextView {
     private boolean mAttached;
@@ -93,10 +92,12 @@ public class CarrierLabel extends TextView {
                     + " showPlmn=" + showPlmn + " plmn=" + plmn);
         }
 
-        String customCarrier = null;
-        customCarrier = Settings.System.getString(mContext.getContentResolver(), Settings.System.CUSTOM_CARRIER_TEXT);
+        String customLabel = null;
+        customLabel = Settings.System.getString(mContext.getContentResolver(),
+                Settings.System.CUSTOM_CARRIER_LABEL);
 
-        if (customCarrier == null) {
+        if (customLabel == null) {
+
             StringBuilder str = new StringBuilder();
             boolean something = false;
             if (showPlmn && plmn != null) {
@@ -116,12 +117,8 @@ public class CarrierLabel extends TextView {
                 setText(com.android.internal.R.string.lockscreen_carrier_default);
             }
         } else {
-            setText(customCarrier);
+            setText(customLabel);
         }
     }
 
-    
 }
-
-
-

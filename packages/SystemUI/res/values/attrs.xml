@@ -32,8 +32,12 @@
     <declare-styleable name="NotificationRowLayout">
         <attr name="rowHeight" format="dimension" />
     </declare-styleable>
-    <declare-styleable name="BatteryBarController">
-	<attr name="viewLocation" format="integer" />
-    </declare-styleable>
+	<declare-styleable name="Toggle">
+		<attr name="labelText" format="reference" />
+		<attr name="labelImage" format="reference" />
+	</declare-styleable>
+	<declare-styleable name="BatteryBarController">
+		<attr name="viewLocation" format="integer" />
+	</declare-styleable>
 </resources>
 

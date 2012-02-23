@@ -1,124 +1,105 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-/* 
-** Copyright 2011, The Android Open Source Project
-**
-** Licensed under the Apache License, Version 2.0 (the "License"); 
-** you may not use this file except in compliance with the License. 
-** You may obtain a copy of the License at 
-**
-**     http://www.apache.org/licenses/LICENSE-2.0 
-**
-** Unless required by applicable law or agreed to in writing, software 
-** distributed under the License is distributed on an "AS IS" BASIS, 
-** WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. 
-** See the License for the specific language governing permissions and 
-** limitations under the License.
-*/
--->
-
-<level-list xmlns:android="http://schemas.android.com/apk/res/android">
-    <item android:maxLevel="0" android:drawable="@drawable/stat_sys_circle_battery_0" />
-    <item android:maxLevel="1" android:drawable="@drawable/stat_sys_circle_battery_1" />
-    <item android:maxLevel="2" android:drawable="@drawable/stat_sys_circle_battery_2" />
-    <item android:maxLevel="3" android:drawable="@drawable/stat_sys_circle_battery_3" />
-    <item android:maxLevel="4" android:drawable="@drawable/stat_sys_circle_battery_4" />
-    <item android:maxLevel="5" android:drawable="@drawable/stat_sys_circle_battery_5" />
-    <item android:maxLevel="6" android:drawable="@drawable/stat_sys_circle_battery_6" />
-    <item android:maxLevel="7" android:drawable="@drawable/stat_sys_circle_battery_7" />
-    <item android:maxLevel="8" android:drawable="@drawable/stat_sys_circle_battery_8" />
-    <item android:maxLevel="9" android:drawable="@drawable/stat_sys_circle_battery_9" />
-    <item android:maxLevel="10" android:drawable="@drawable/stat_sys_circle_battery_10" />
-    <item android:maxLevel="11" android:drawable="@drawable/stat_sys_circle_battery_11" />
-    <item android:maxLevel="12" android:drawable="@drawable/stat_sys_circle_battery_12" />
-    <item android:maxLevel="13" android:drawable="@drawable/stat_sys_circle_battery_13" />
-    <item android:maxLevel="14" android:drawable="@drawable/stat_sys_circle_battery_14" />
-    <item android:maxLevel="15" android:drawable="@drawable/stat_sys_circle_battery_15" />
-    <item android:maxLevel="16" android:drawable="@drawable/stat_sys_circle_battery_16" />
-    <item android:maxLevel="17" android:drawable="@drawable/stat_sys_circle_battery_17" />
-    <item android:maxLevel="18" android:drawable="@drawable/stat_sys_circle_battery_18" />
-    <item android:maxLevel="19" android:drawable="@drawable/stat_sys_circle_battery_19" />
-    <item android:maxLevel="20" android:drawable="@drawable/stat_sys_circle_battery_20" />
-    <item android:maxLevel="21" android:drawable="@drawable/stat_sys_circle_battery_21" />
-    <item android:maxLevel="22" android:drawable="@drawable/stat_sys_circle_battery_22" />
-    <item android:maxLevel="23" android:drawable="@drawable/stat_sys_circle_battery_23" />
-    <item android:maxLevel="24" android:drawable="@drawable/stat_sys_circle_battery_24" />
-    <item android:maxLevel="25" android:drawable="@drawable/stat_sys_circle_battery_25" />
-    <item android:maxLevel="26" android:drawable="@drawable/stat_sys_circle_battery_26" />
-    <item android:maxLevel="27" android:drawable="@drawable/stat_sys_circle_battery_27" />
-    <item android:maxLevel="28" android:drawable="@drawable/stat_sys_circle_battery_28" />
-    <item android:maxLevel="29" android:drawable="@drawable/stat_sys_circle_battery_29" />
-    <item android:maxLevel="30" android:drawable="@drawable/stat_sys_circle_battery_30" />
-    <item android:maxLevel="31" android:drawable="@drawable/stat_sys_circle_battery_31" />
-    <item android:maxLevel="32" android:drawable="@drawable/stat_sys_circle_battery_32" />
-    <item android:maxLevel="33" android:drawable="@drawable/stat_sys_circle_battery_33" />
-    <item android:maxLevel="34" android:drawable="@drawable/stat_sys_circle_battery_34" />
-    <item android:maxLevel="35" android:drawable="@drawable/stat_sys_circle_battery_35" />
-    <item android:maxLevel="36" android:drawable="@drawable/stat_sys_circle_battery_36" />
-    <item android:maxLevel="37" android:drawable="@drawable/stat_sys_circle_battery_37" />
-    <item android:maxLevel="38" android:drawable="@drawable/stat_sys_circle_battery_38" />
-    <item android:maxLevel="39" android:drawable="@drawable/stat_sys_circle_battery_39" />
-    <item android:maxLevel="40" android:drawable="@drawable/stat_sys_circle_battery_40" />
-    <item android:maxLevel="41" android:drawable="@drawable/stat_sys_circle_battery_41" />
-    <item android:maxLevel="42" android:drawable="@drawable/stat_sys_circle_battery_42" />
-    <item android:maxLevel="43" android:drawable="@drawable/stat_sys_circle_battery_43" />
-    <item android:maxLevel="44" android:drawable="@drawable/stat_sys_circle_battery_44" />
-    <item android:maxLevel="45" android:drawable="@drawable/stat_sys_circle_battery_45" />
-    <item android:maxLevel="46" android:drawable="@drawable/stat_sys_circle_battery_46" />
-    <item android:maxLevel="47" android:drawable="@drawable/stat_sys_circle_battery_47" />
-    <item android:maxLevel="48" android:drawable="@drawable/stat_sys_circle_battery_48" />
-    <item android:maxLevel="49" android:drawable="@drawable/stat_sys_circle_battery_49" />
-    <item android:maxLevel="50" android:drawable="@drawable/stat_sys_circle_battery_50" />
-    <item android:maxLevel="51" android:drawable="@drawable/stat_sys_circle_battery_51" />
-    <item android:maxLevel="52" android:drawable="@drawable/stat_sys_circle_battery_52" />
-    <item android:maxLevel="53" android:drawable="@drawable/stat_sys_circle_battery_53" />
-    <item android:maxLevel="54" android:drawable="@drawable/stat_sys_circle_battery_54" />
-    <item android:maxLevel="55" android:drawable="@drawable/stat_sys_circle_battery_55" />
-    <item android:maxLevel="56" android:drawable="@drawable/stat_sys_circle_battery_56" />
-    <item android:maxLevel="57" android:drawable="@drawable/stat_sys_circle_battery_57" />
-    <item android:maxLevel="58" android:drawable="@drawable/stat_sys_circle_battery_58" />
-    <item android:maxLevel="59" android:drawable="@drawable/stat_sys_circle_battery_59" />
-    <item android:maxLevel="60" android:drawable="@drawable/stat_sys_circle_battery_60" />
-    <item android:maxLevel="61" android:drawable="@drawable/stat_sys_circle_battery_61" />
-    <item android:maxLevel="62" android:drawable="@drawable/stat_sys_circle_battery_62" />
-    <item android:maxLevel="63" android:drawable="@drawable/stat_sys_circle_battery_63" />
-    <item android:maxLevel="64" android:drawable="@drawable/stat_sys_circle_battery_64" />
-    <item android:maxLevel="65" android:drawable="@drawable/stat_sys_circle_battery_65" />
-    <item android:maxLevel="66" android:drawable="@drawable/stat_sys_circle_battery_66" />
-    <item android:maxLevel="67" android:drawable="@drawable/stat_sys_circle_battery_67" />
-    <item android:maxLevel="68" android:drawable="@drawable/stat_sys_circle_battery_68" />
-    <item android:maxLevel="69" android:drawable="@drawable/stat_sys_circle_battery_69" />
-    <item android:maxLevel="70" android:drawable="@drawable/stat_sys_circle_battery_70" />
-    <item android:maxLevel="71" android:drawable="@drawable/stat_sys_circle_battery_71" />
-    <item android:maxLevel="72" android:drawable="@drawable/stat_sys_circle_battery_72" />
-    <item android:maxLevel="73" android:drawable="@drawable/stat_sys_circle_battery_73" />
-    <item android:maxLevel="74" android:drawable="@drawable/stat_sys_circle_battery_74" />
-    <item android:maxLevel="75" android:drawable="@drawable/stat_sys_circle_battery_75" />
-    <item android:maxLevel="76" android:drawable="@drawable/stat_sys_circle_battery_76" />
-    <item android:maxLevel="77" android:drawable="@drawable/stat_sys_circle_battery_77" />
-    <item android:maxLevel="78" android:drawable="@drawable/stat_sys_circle_battery_78" />
-    <item android:maxLevel="79" android:drawable="@drawable/stat_sys_circle_battery_79" />
-    <item android:maxLevel="80" android:drawable="@drawable/stat_sys_circle_battery_80" />
-    <item android:maxLevel="81" android:drawable="@drawable/stat_sys_circle_battery_81" />
-    <item android:maxLevel="82" android:drawable="@drawable/stat_sys_circle_battery_82" />
-    <item android:maxLevel="83" android:drawable="@drawable/stat_sys_circle_battery_83" />
-    <item android:maxLevel="84" android:drawable="@drawable/stat_sys_circle_battery_84" />
-    <item android:maxLevel="85" android:drawable="@drawable/stat_sys_circle_battery_85" />
-    <item android:maxLevel="86" android:drawable="@drawable/stat_sys_circle_battery_86" />
-    <item android:maxLevel="87" android:drawable="@drawable/stat_sys_circle_battery_87" />
-    <item android:maxLevel="88" android:drawable="@drawable/stat_sys_circle_battery_88" />
-    <item android:maxLevel="89" android:drawable="@drawable/stat_sys_circle_battery_89" />
-    <item android:maxLevel="90" android:drawable="@drawable/stat_sys_circle_battery_90" />
-    <item android:maxLevel="91" android:drawable="@drawable/stat_sys_circle_battery_91" />
-    <item android:maxLevel="92" android:drawable="@drawable/stat_sys_circle_battery_92" />
-    <item android:maxLevel="93" android:drawable="@drawable/stat_sys_circle_battery_93" />
-    <item android:maxLevel="94" android:drawable="@drawable/stat_sys_circle_battery_94" />
-    <item android:maxLevel="95" android:drawable="@drawable/stat_sys_circle_battery_95" />
-    <item android:maxLevel="96" android:drawable="@drawable/stat_sys_circle_battery_96" />
-    <item android:maxLevel="97" android:drawable="@drawable/stat_sys_circle_battery_97" />
-    <item android:maxLevel="98" android:drawable="@drawable/stat_sys_circle_battery_98" />
-    <item android:maxLevel="99" android:drawable="@drawable/stat_sys_circle_battery_99" />
-    <item android:maxLevel="100" android:drawable="@drawable/stat_sys_circle_battery_100" />
+<level-list
+  xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:drawable="@drawable/stat_sys_battery_circle_0" android:maxLevel="0" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_1" android:maxLevel="1" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_2" android:maxLevel="2" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_3" android:maxLevel="3" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_4" android:maxLevel="4" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_5" android:maxLevel="5" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_6" android:maxLevel="6" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_7" android:maxLevel="7" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_8" android:maxLevel="8" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_9" android:maxLevel="9" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_10" android:maxLevel="10" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_11" android:maxLevel="11" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_12" android:maxLevel="12" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_13" android:maxLevel="13" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_14" android:maxLevel="14" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_15" android:maxLevel="15" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_16" android:maxLevel="16" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_17" android:maxLevel="17" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_18" android:maxLevel="18" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_19" android:maxLevel="19" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_20" android:maxLevel="20" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_21" android:maxLevel="21" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_22" android:maxLevel="22" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_23" android:maxLevel="23" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_24" android:maxLevel="24" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_25" android:maxLevel="25" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_26" android:maxLevel="26" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_27" android:maxLevel="27" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_28" android:maxLevel="28" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_29" android:maxLevel="29" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_30" android:maxLevel="30" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_31" android:maxLevel="31" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_32" android:maxLevel="32" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_33" android:maxLevel="33" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_34" android:maxLevel="34" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_35" android:maxLevel="35" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_36" android:maxLevel="36" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_37" android:maxLevel="37" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_38" android:maxLevel="38" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_39" android:maxLevel="39" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_40" android:maxLevel="40" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_41" android:maxLevel="41" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_42" android:maxLevel="42" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_43" android:maxLevel="43" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_44" android:maxLevel="44" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_45" android:maxLevel="45" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_46" android:maxLevel="46" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_47" android:maxLevel="47" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_48" android:maxLevel="48" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_49" android:maxLevel="49" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_50" android:maxLevel="50" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_51" android:maxLevel="51" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_52" android:maxLevel="52" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_53" android:maxLevel="53" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_54" android:maxLevel="54" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_55" android:maxLevel="55" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_56" android:maxLevel="56" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_57" android:maxLevel="57" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_58" android:maxLevel="58" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_59" android:maxLevel="59" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_60" android:maxLevel="60" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_61" android:maxLevel="61" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_62" android:maxLevel="62" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_63" android:maxLevel="63" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_64" android:maxLevel="64" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_65" android:maxLevel="65" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_66" android:maxLevel="66" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_67" android:maxLevel="67" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_68" android:maxLevel="68" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_69" android:maxLevel="69" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_70" android:maxLevel="70" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_71" android:maxLevel="71" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_72" android:maxLevel="72" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_73" android:maxLevel="73" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_74" android:maxLevel="74" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_75" android:maxLevel="75" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_76" android:maxLevel="76" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_77" android:maxLevel="77" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_78" android:maxLevel="78" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_79" android:maxLevel="79" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_80" android:maxLevel="80" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_81" android:maxLevel="81" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_82" android:maxLevel="82" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_83" android:maxLevel="83" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_84" android:maxLevel="84" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_85" android:maxLevel="85" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_86" android:maxLevel="86" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_87" android:maxLevel="87" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_88" android:maxLevel="88" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_89" android:maxLevel="89" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_90" android:maxLevel="90" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_91" android:maxLevel="91" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_92" android:maxLevel="92" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_93" android:maxLevel="93" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_94" android:maxLevel="94" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_95" android:maxLevel="95" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_96" android:maxLevel="96" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_97" android:maxLevel="97" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_98" android:maxLevel="98" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_99" android:maxLevel="99" />
+    <item android:drawable="@drawable/stat_sys_battery_circle_100" android:maxLevel="100" />
 </level-list>
-
-

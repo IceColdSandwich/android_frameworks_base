@@ -32,6 +32,16 @@
         android:layout_weight="1"
         android:background="@drawable/notification_tracking_bg"
         >
+        
+        <com.android.systemui.statusbar.policy.WeatherText
+            android:textAppearance="@style/TextAppearance.StatusBar.Clock"
+            android:layout_height="wrap_content"
+            android:layout_width="match_parent"
+            android:layout_gravity="bottom"
+            android:gravity="center"
+            android:paddingBottom="40dp"
+            />
+        
         <com.android.systemui.statusbar.phone.CarrierLabel
             android:textAppearance="@style/TextAppearance.StatusBar.Clock"
             android:layout_height="wrap_content"
@@ -41,17 +51,18 @@
             android:paddingBottom="20dp"
             />
     </FrameLayout>
-
+    
     <com.android.systemui.statusbar.phone.CloseDragHandle android:id="@+id/close"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        android:background="#EE000000"
         >
         <ImageView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_gravity="bottom"
-            android:scaleType="fitXY"
+            android:layout_gravity="center"
+            android:scaleType="fitCenter"
             android:src="@drawable/status_bar_close_on"
             />
 

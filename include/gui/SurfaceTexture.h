@@ -136,21 +136,12 @@ public:
     // connected to the specified client API.
     virtual status_t disconnect(int api);
 
-#ifdef QCOM_HARDWARE
-    // In certain cases, we might not want to bind the texture because it
-    // is not going to be used later (surface flinger not using
-    // GPU for composition). During these times "avoidBindTexture" can be
-    // set to true. This will avoid binding textures for formats that are
-    // not directly supported in hardware.
-    status_t updateTexImage(bool avoidBindTexture = false);
-#else
     // updateTexImage sets the image contents of the target texture to that of
     // the most recently queued buffer.
     //
     // This call may only be made while the OpenGL ES context to which the
     // target texture belongs is bound to the calling thread.
     status_t updateTexImage();
-#endif
 
     // setBufferCountServer set the buffer count. If the client has requested
     // a buffer count using setBufferCount, the server-buffer count will
@@ -522,6 +513,9 @@ private:
     uint64_t mFrameCounter;
 
 #ifdef QCOM_HARDWARE
+    // mReqSize is the required buffer size speficied by the client.
+    int mReqSize;
+
     struct BufferInfo {
          int width;
          int height;

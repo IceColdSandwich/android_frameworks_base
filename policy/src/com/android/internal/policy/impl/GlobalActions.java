@@ -17,22 +17,31 @@
 
 package com.android.internal.policy.impl;
 
-import android.app.Activity;
+import java.util.ArrayList;
+
 import android.app.AlertDialog;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.ServiceConnection;
 import android.media.AudioManager;
 import android.os.Handler;
+import android.os.IBinder;
 import android.os.Message;
+import android.os.Messenger;
+import android.os.RemoteException;
 import android.os.SystemProperties;
 import android.provider.Settings;
+import android.provider.Settings.SettingNotFoundException;
+import android.server.PowerSaverService;
 import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.util.Slog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -40,23 +49,11 @@ import android.view.WindowManager;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
+
 import com.android.internal.R;
 import com.android.internal.app.ShutdownThread;
 import com.android.internal.telephony.TelephonyIntents;
 import com.android.internal.telephony.TelephonyProperties;
-import com.google.android.collect.Lists;
-
-import java.util.ArrayList;
-
-/**
- * Needed for takeScreenshot
- */
-import android.content.ServiceConnection;
-import android.content.ComponentName;
-import android.os.IBinder;
-import android.os.Messenger;
-import android.os.RemoteException;
-
 
 /**
  * Helper to show the global actions dialog.  Each item is an {@link Action} that
@@ -77,6 +74,9 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
     private SilentModeAction mSilentModeAction;
     private ToggleAction mAirplaneModeOn;
+    private ToggleAction mPowerSaverOn;
+    private ToggleAction mTorchToggle;
+    private ToggleAction mNavBarHideToggle;
 
     private MyAdapter mAdapter;
 
@@ -84,6 +84,15 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     private boolean mDeviceProvisioned = false;
     private ToggleAction.State mAirplaneState = ToggleAction.State.Off;
     private boolean mIsWaitingForEcmExit = false;
+    private boolean mEnablePowerSaverToggle = true;
+    private boolean mEnableScreenshotToggle = false;
+    private boolean mEnableTorchToggle = true;
+    private boolean mEnableAirplaneToggle = true;
+    private boolean mReceiverRegistered = false;    
+    private boolean mEnableNavBarHideToggle = true;
+
+    public static final String INTENT_TORCH_ON = "com.android.systemui.INTENT_TORCH_ON";
+    public static final String INTENT_TORCH_OFF = "com.android.systemui.INTENT_TORCH_OFF";
 
     /**
      * @param context everything needs a context :(
@@ -112,9 +121,15 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
     public void showDialog(boolean keyguardShowing, boolean isDeviceProvisioned) {
         mKeyguardShowing = keyguardShowing;
         mDeviceProvisioned = isDeviceProvisioned;
-        if (mDialog == null) {
-            mDialog = createDialog();
+        
+        if(mDialog != null) {
+            mReceiverRegistered = false;
+            mDialog.cancel();
+            
         }
+        //always update the PowerMenu dialog
+        mDialog = createDialog();
+
         prepareDialog();
 
         mDialog.show();
@@ -126,6 +141,20 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
      * @return A new dialog.
      */
     private AlertDialog createDialog() {
+        mEnablePowerSaverToggle = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.POWER_DIALOG_SHOW_POWER_SAVER, 1) == 1;
+        
+        mEnableScreenshotToggle = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.POWER_DIALOG_SHOW_SCREENSHOT, 0) == 1;  
+        
+        mEnableTorchToggle = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.POWER_DIALOG_SHOW_TORCH_TOGGLE, 0) == 1;
+        
+        mEnableAirplaneToggle = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.POWER_DIALOG_SHOW_AIRPLANE_TOGGLE, 1) == 1;
+        mEnableNavBarHideToggle= Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.POWER_DIALOG_SHOW_NAVBAR_HIDE, 0) == 1;
+        
         mSilentModeAction = new SilentModeAction(mAudioManager, mHandler);
 
         mAirplaneModeOn = new ToggleAction(
@@ -167,7 +196,81 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                 return false;
             }
         };
+        
+        mPowerSaverOn = new ToggleAction(
+                R.drawable.ic_lock_power_saver,
+                R.drawable.ic_lock_power_saver,
+                R.string.global_actions_toggle_power_saver,
+                R.string.global_actions_power_saver_on_status,
+                R.string.global_actions_power_saver_off_status) {
 
+            void onToggle(boolean on) {
+                Settings.Secure.putInt(mContext.getContentResolver(),
+                        Settings.Secure.POWER_SAVER_MODE,
+                         on ? PowerSaverService.POWER_SAVER_MODE_ON
+                                : PowerSaverService.POWER_SAVER_MODE_OFF);
+            }
+
+            public boolean showDuringKeyguard() {
+                return true;
+            }
+
+            public boolean showBeforeProvisioning() {
+                return false;
+            }
+        };
+        
+        mNavBarHideToggle = new ToggleAction(
+                R.drawable.ic_lock_navbar_hide,
+                R.drawable.ic_lock_navbar_hide,
+                R.string.global_actions_toggle_navbar_hide,
+                R.string.global_actions_navbar_hide_on,
+                R.string.global_actions_navbar_hide_off) {
+
+            void onToggle(boolean on) {
+                Settings.System.putInt(mContext.getContentResolver(),
+                        Settings.System.NAVIGATION_BAR_BUTTONS_HIDE,
+                         on ? 1 : 0);
+            }
+
+            public boolean showDuringKeyguard() {
+                return true;
+            }
+
+            public boolean showBeforeProvisioning() {
+                return false;
+            }
+        };
+        mTorchToggle = new ToggleAction(
+                R.drawable.ic_lock_torch,
+                R.drawable.ic_lock_torch,
+                R.string.global_actions_toggle_torch,
+                R.string.global_actions_torch_on_status,
+                R.string.global_actions_torch_off_status) {
+
+            void onToggle(boolean on) {
+                if (on) {
+                    Intent i = new Intent(INTENT_TORCH_ON);
+                    i.setAction(INTENT_TORCH_ON);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mContext.startActivity(i);
+                } else {
+                    Intent i = new Intent(INTENT_TORCH_OFF);
+                    i.setAction(INTENT_TORCH_OFF);
+                    i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mContext.startActivity(i);
+                }
+            }
+
+            public boolean showDuringKeyguard() {
+                return true;
+            }
+
+            public boolean showBeforeProvisioning() {
+                return false;
+            }
+        };
+        
         mItems = new ArrayList<Action>();
 
         // first: power off
@@ -189,26 +292,53 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                     return true;
                 }
             });
-
+        
         // next: reboot
         mItems.add(
-            new SinglePressAction(com.android.internal.R.drawable.ic_lock_reboot, R.string.global_action_reboot) {
-                public void onPress() {
-                    ShutdownThread.reboot(mContext, "null", true);
-                }
+                new SinglePressAction(com.android.internal.R.drawable.ic_lock_reboot,
+                        R.string.global_action_reboot) {
+                    public void onPress() {
+                        ShutdownThread.reboot(mContext, "null", true);
+                    }
 
-                public boolean showDuringKeyguard() {
-                    return true;
-                }
+                    public boolean showDuringKeyguard() {
+                        return true;
+                    }
 
-                public boolean showBeforeProvisioning() {
-                    return true;
-                }
-            });
+                    public boolean showBeforeProvisioning() {
+                        return true;
+                    }
+                });
 
+        // next: airplane mode
+        if (mEnableAirplaneToggle) {
+            Slog.e(TAG, "Adding AirplaneToggle");
+            mItems.add(mAirplaneModeOn);
+        } else {
+            Slog.e(TAG, "not adding AirplaneToggle");
+        }
+        
+        // next: power saver
+        try {
+            Settings.Secure.getInt(mContext.getContentResolver(),
+                    Settings.Secure.POWER_SAVER_MODE);
+            if(mEnablePowerSaverToggle) {
+                Slog.e(TAG, "Adding powersaver");
+                mItems.add(mPowerSaverOn); 
+            } else {
+                Slog.e(TAG, "not adding power saver");
+            }
+        } catch (SettingNotFoundException e) {
+            //Power Saver hasn't yet been initialized so we don't want to make it easy for the user without
+            //  them reading any warnings that could be presented by enabling the power saver through ROM Control
+        }
+       
+        
         // next: screenshot
-        mItems.add(
-            new SinglePressAction(com.android.internal.R.drawable.ic_lock_screenshot, R.string.global_action_screenshot) {
+        if (mEnableScreenshotToggle) {
+            Slog.e(TAG, "Adding screenshot");
+            mItems.add(new SinglePressAction(com.android.internal.R.drawable.ic_lock_screenshot,
+                    R.string.global_action_screenshot) {
                 public void onPress() {
                     takeScreenshot();
                 }
@@ -221,15 +351,30 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
                     return true;
                 }
             });
+        } else {
+            Slog.e(TAG, "Not adding screenshot");
+        }
+        
+        // Next NavBar Hide
+        if(mEnableNavBarHideToggle) {
+            Slog.e(TAG, "Adding NavBarhHideToggle");
+            mItems.add(mNavBarHideToggle); 
+        } else {
+            Slog.e(TAG, "not adding NavBarHideToggle");
+        }
 
-        // next: airplane mode
-        mItems.add(mAirplaneModeOn);
-
+        // Next Torch
+        if(mEnableTorchToggle) {
+            Slog.e(TAG, "Adding TorchToggle");
+            mItems.add(mTorchToggle); 
+        } else {
+            Slog.e(TAG, "not adding TorchToggle");
+        }
+        
         // last: silent mode
         if (SHOW_SILENT_TOGGLE) {
             mItems.add(mSilentModeAction);
         }
-
 
         mAdapter = new MyAdapter();
 
@@ -246,113 +391,123 @@ class GlobalActions implements DialogInterface.OnDismissListener, DialogInterfac
 
         return dialog;
     }
-
-    /**
-     * functions needed for taking screenhots.  
-     * This leverages the built in ICS screenshot functionality 
-     */
-    final Object mScreenshotLock = new Object();
-    ServiceConnection mScreenshotConnection = null;
-
-    final Runnable mScreenshotTimeout = new Runnable() {
-        @Override public void run() {
-            synchronized (mScreenshotLock) {
-                if (mScreenshotConnection != null) {
-                    mContext.unbindService(mScreenshotConnection);
-                    mScreenshotConnection = null;
-                }
-            }
-        }
-    };
-
-    private void takeScreenshot() {
-        synchronized (mScreenshotLock) {
-            if (mScreenshotConnection != null) {
-                return;
-            }
-            ComponentName cn = new ComponentName("com.android.systemui",
-                    "com.android.systemui.screenshot.TakeScreenshotService");
-            Intent intent = new Intent();
-            intent.setComponent(cn);
-            ServiceConnection conn = new ServiceConnection() {
-                @Override
-                public void onServiceConnected(ComponentName name, IBinder service) {
-                    synchronized (mScreenshotLock) {
-                        if (mScreenshotConnection != this) {
-                            return;
-                        }
-                        Messenger messenger = new Messenger(service);
-                        Message msg = Message.obtain(null, 1);
-                        final ServiceConnection myConn = this;
-                        Handler h = new Handler(mHandler.getLooper()) {
-                            @Override
-                            public void handleMessage(Message msg) {
-                                synchronized (mScreenshotLock) {
-                                    if (mScreenshotConnection == myConn) {
-                                        mContext.unbindService(mScreenshotConnection);
-                                        mScreenshotConnection = null;
-                                        mHandler.removeCallbacks(mScreenshotTimeout);
-                                    }
-                                }
-                            }
-                        };
-                        msg.replyTo = new Messenger(h);
-                        msg.arg1 = msg.arg2 = 0;
-
-                        /*  remove for the time being
-                        if (mStatusBar != null && mStatusBar.isVisibleLw())
-                            msg.arg1 = 1;
-                        if (mNavigationBar != null && mNavigationBar.isVisibleLw())
-                            msg.arg2 = 1;
-                         */                        
-
-                        /* wait for the dislog box to close */
-                        try {
-                            Thread.sleep(1000); 
-                        } catch (InterruptedException ie) {
-                        }
-                        
-                        /* take the screenshot */
-                        try {
-                            messenger.send(msg);
-                        } catch (RemoteException e) {
-                        }
-                    }
-                }
-                @Override
-                public void onServiceDisconnected(ComponentName name) {}
-            };
-            if (mContext.bindService(intent, conn, Context.BIND_AUTO_CREATE)) {
-                mScreenshotConnection = conn;
-                mHandler.postDelayed(mScreenshotTimeout, 10000);
-            }
-        }
-    }
     
+    /**
+    * functions needed for taking screenhots.  
+    * This leverages the built in ICS screenshot functionality 
+    */
+   final Object mScreenshotLock = new Object();
+   ServiceConnection mScreenshotConnection = null;
+
+   final Runnable mScreenshotTimeout = new Runnable() {
+       @Override public void run() {
+           synchronized (mScreenshotLock) {
+               if (mScreenshotConnection != null) {
+                   mContext.unbindService(mScreenshotConnection);
+                   mScreenshotConnection = null;
+               }
+           }
+       }
+   };
+
+   private void takeScreenshot() {
+       synchronized (mScreenshotLock) {
+           if (mScreenshotConnection != null) {
+               return;
+           }
+           ComponentName cn = new ComponentName("com.android.systemui",
+                   "com.android.systemui.screenshot.TakeScreenshotService");
+           Intent intent = new Intent();
+           intent.setComponent(cn);
+           ServiceConnection conn = new ServiceConnection() {
+               @Override
+               public void onServiceConnected(ComponentName name, IBinder service) {
+                   synchronized (mScreenshotLock) {
+                       if (mScreenshotConnection != this) {
+                           return;
+                       }
+                       Messenger messenger = new Messenger(service);
+                       Message msg = Message.obtain(null, 1);
+                       final ServiceConnection myConn = this;
+                       Handler h = new Handler(mHandler.getLooper()) {
+                           @Override
+                           public void handleMessage(Message msg) {
+                               synchronized (mScreenshotLock) {
+                                   if (mScreenshotConnection == myConn) {
+                                       mContext.unbindService(mScreenshotConnection);
+                                       mScreenshotConnection = null;
+                                       mHandler.removeCallbacks(mScreenshotTimeout);
+                                   }
+                               }
+                           }
+                       };
+                       msg.replyTo = new Messenger(h);
+                       msg.arg1 = msg.arg2 = 0;
+
+                       /*  remove for the time being
+                       if (mStatusBar != null && mStatusBar.isVisibleLw())
+                           msg.arg1 = 1;
+                       if (mNavigationBar != null && mNavigationBar.isVisibleLw())
+                           msg.arg2 = 1;
+                        */                        
+
+                       /* wait for the dislog box to close */
+                       try {
+                           Thread.sleep(1000); 
+                       } catch (InterruptedException ie) {
+                       }
+                       
+                       /* take the screenshot */
+                       try {
+                           messenger.send(msg);
+                       } catch (RemoteException e) {
+                       }
+                   }
+               }
+               @Override
+               public void onServiceDisconnected(ComponentName name) {}
+           };
+           if (mContext.bindService(intent, conn, Context.BIND_AUTO_CREATE)) {
+               mScreenshotConnection = conn;
+               mHandler.postDelayed(mScreenshotTimeout, 10000);
+           }
+       }
+   }
+
     private void prepareDialog() {
         final boolean silentModeOn =
                 mAudioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL;
         mAirplaneModeOn.updateState(mAirplaneState);
+
         mAdapter.notifyDataSetChanged();
         if (mKeyguardShowing) {
             mDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_KEYGUARD_DIALOG);
         } else {
             mDialog.getWindow().setType(WindowManager.LayoutParams.TYPE_SYSTEM_DIALOG);
         }
-
-        mDialog.setTitle(R.string.global_actions);
-
         if (SHOW_SILENT_TOGGLE) {
             IntentFilter filter = new IntentFilter(AudioManager.RINGER_MODE_CHANGED_ACTION);
             mContext.registerReceiver(mRingerModeReceiver, filter);
+            mReceiverRegistered = true;
         }
+        final boolean powerSaverOn = Settings.Secure.getInt(mContext.getContentResolver(),
+                Settings.Secure.POWER_SAVER_MODE, PowerSaverService.POWER_SAVER_MODE_OFF) == PowerSaverService.POWER_SAVER_MODE_ON;
+        mPowerSaverOn.updateState(powerSaverOn ? ToggleAction.State.On : ToggleAction.State.Off);
+        
+        final boolean navbarHideOn = Settings.System.getInt(mContext.getContentResolver(),
+                Settings.System.NAVIGATION_BAR_BUTTONS_HIDE, 0) == 1;
+        mNavBarHideToggle.updateState(navbarHideOn ? ToggleAction.State.On : ToggleAction.State.Off);
+
     }
 
 
     /** {@inheritDoc} */
     public void onDismiss(DialogInterface dialog) {
         if (SHOW_SILENT_TOGGLE) {
-            mContext.unregisterReceiver(mRingerModeReceiver);
+            if(mReceiverRegistered) {
+                mContext.unregisterReceiver(mRingerModeReceiver);
+                mReceiverRegistered = false;
+            }
         }
     }
 

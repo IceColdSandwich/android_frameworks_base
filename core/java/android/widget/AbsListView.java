@@ -16,11 +16,11 @@
 
 package android.widget;
 
-import com.android.internal.R;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Canvas;
 import android.graphics.Rect;
@@ -58,15 +58,13 @@ import android.view.ViewGroup;
 import android.view.ViewParent;
 import android.view.ViewTreeObserver;
 import android.view.accessibility.AccessibilityEvent;
-import android.view.accessibility.AccessibilityNodeInfo;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputConnectionWrapper;
 import android.view.inputmethod.InputMethodManager;
 
-import java.util.ArrayList;
-import java.util.List;
+import com.android.internal.R;
 
 /**
  * Base class that can be used to implement virtualized lists of items. A list does
@@ -409,7 +407,7 @@ public abstract class AbsListView extends AdapterView<ListAdapter> implements Te
      * the top edge.
      */
     boolean mStackFromBottom;
-
+    
     /**
      * Indicates whether to system-wide-override to enable/disable or not.
      * 0 = force to enable scrollingCacheEnabled regardless of app setting

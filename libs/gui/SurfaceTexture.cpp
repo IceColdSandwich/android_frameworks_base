@@ -142,6 +142,9 @@ SurfaceTexture::SurfaceTexture(GLuint tex, bool allowSynchronousMode,
     mUseFenceSync(false),
 #endif
     mTexTarget(texTarget),
+#ifdef QCOM_HARDWARE
+    mReqSize(0),
+#endif
     mFrameCounter(0) {
     // Choose a name using the PID and a process-unique ID.
     mName = String8::format("unnamed-%d-%d", getpid(), createProcessUniqueId());
@@ -503,11 +506,6 @@ status_t SurfaceTexture::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
 #endif
 	   ((uint32_t(buffer->usage) & usage) != usage))
 	{
-#ifdef QCOM_HARDWARE
-            if (buffer != NULL) {
-                mGraphicBufferAlloc->freeGraphicBufferAtIndex(buf);
-            }
-#endif
             usage |= GraphicBuffer::USAGE_HW_TEXTURE;
             status_t error;
             sp<GraphicBuffer> graphicBuffer(
@@ -521,6 +519,9 @@ status_t SurfaceTexture::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             if (updateFormat) {
                 mPixelFormat = format;
             }
+#ifdef QCOM_HARDWARE
+	    checkBuffer((native_handle_t *)graphicBuffer->handle, mReqSize, usage);
+#endif
             mSlots[buf].mGraphicBuffer = graphicBuffer;
             mSlots[buf].mRequestBufferCalled = false;
             mSlots[buf].mFence = EGL_NO_SYNC_KHR;
@@ -801,15 +802,16 @@ status_t SurfaceTexture::performQcomOperation(int operation, int arg1, int arg2,
      ST_LOGV("SurfaceTexture::performQcomOperation operation=%d", operation);
 
      switch(operation) {
-        case NATIVE_WINDOW_SET_BUFFERS_SIZE: {
-            int size = arg1;
-            mGraphicBufferAlloc->setGraphicBufferSize(size);
-        } break;
-        case NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY: {
+#ifdef QCOM_HARDWARE
+	case NATIVE_WINDOW_SET_BUFFERS_SIZE:
+	    mReqSize = arg1;
+	    break;
+	case NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY:
             mNextBufferInfo.width = arg1;
             mNextBufferInfo.height = arg2;
             mNextBufferInfo.format = arg3;
-        } break;
+            break;
+#endif
         default: return BAD_VALUE;
      };
      return OK;
@@ -833,11 +835,7 @@ status_t SurfaceTexture::setScalingMode(int mode) {
     return OK;
 }
 
-#ifdef QCOM_HARDWARE
-status_t SurfaceTexture::updateTexImage(bool avoidBindTexture) {
-#else
 status_t SurfaceTexture::updateTexImage() {
-#endif
     ST_LOGV("updateTexImage");
     Mutex::Autolock lock(mMutex);
 
@@ -856,10 +854,8 @@ status_t SurfaceTexture::updateTexImage() {
         EGLImageKHR image = mSlots[buf].mEglImage;
         EGLDisplay dpy = eglGetCurrentDisplay();
 #ifdef QCOM_HARDWARE
-        if (isGPUSupportedFormat(mSlots[buf].mGraphicBuffer->format) &&
-            ((avoidBindTexture == false) ||
-            (isGPUSupportedFormatInHW(mSlots[buf].mGraphicBuffer->format)))) {
-
+	if (isGPUSupportedFormat(mSlots[buf].mGraphicBuffer->format)) {
+            // Update the GL texture object.
             EGLImageKHR image = mSlots[buf].mEglImage;
 #else
         if (image == EGL_NO_IMAGE_KHR) {

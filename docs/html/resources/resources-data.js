@@ -508,16 +508,6 @@ var ANDROID_RESOURCES = [
     }
   },
   {
-    tags: ['sample', 'new'],
-    path: 'samples/training/device-management-policy/index.html',
-    title: {
-      en: 'Device Policy Management'
-    },
-    description: {
-      en: 'This is a security-aware sample application that demonstrates the enforcement of device administration policies on Android 2.2 or above platforms.'
-    }
-  },
-  {
     tags: ['sample'],
     path: 'samples/Home/index.html',
     title: {
@@ -555,16 +545,6 @@ var ANDROID_RESOURCES = [
     },
     description: {
       en: 'A classic Lunar Lander game.'
-    }
-  },
-  {
-    tags: ['sample', 'new'],
-    path: 'samples/training/ads-and-ux/index.html',
-    title: {
-      en: 'Mobile Advertisement Integration'
-    },
-    description: {
-      en: 'This sample demonstrates the integration of a mobile ad SDK with your application.'
     }
   },
   {
@@ -883,7 +863,7 @@ var ANDROID_RESOURCES = [
     }
   },
   {
-    tags: ['tutorial', 'gl'],
+    tags: ['tutorial', 'gl', 'new'],
     path: 'tutorials/opengl/opengl-es10.html',
     title: {
       en: 'OpenGL ES 1.0'
@@ -893,7 +873,7 @@ var ANDROID_RESOURCES = [
     }
   },
   {
-    tags: ['tutorial', 'gl'],
+    tags: ['tutorial', 'gl', 'new'],
     path: 'tutorials/opengl/opengl-es20.html',
     title: {
       en: 'OpenGL ES 2.0'

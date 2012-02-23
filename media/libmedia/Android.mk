@@ -4,12 +4,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
     AudioParameter.cpp
-
-ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
-    LOCAL_CFLAGS += -DQCOM_HARDWARE
-endif
-
-
 LOCAL_MODULE:= libmedia_helper
 LOCAL_MODULE_TAGS := optional
 
@@ -52,10 +46,6 @@ LOCAL_SRC_FILES:= \
     MemoryLeakTrackUtil.cpp \
     fixedfft.cpp.arm
 
-ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
-    LOCAL_CFLAGS += -DQCOM_HARDWARE
-endif
-
 ifeq ($(BOARD_USES_AUDIO_LEGACY),true)
     LOCAL_SRC_FILES+= \
         AudioParameter.cpp
@@ -64,10 +54,6 @@ ifeq ($(BOARD_USES_AUDIO_LEGACY),true)
     ifeq ($(BOARD_USE_KINETO_COMPATIBILITY),true)
         LOCAL_CFLAGS += -DUSE_KINETO_COMPATIBILITY
     endif
-endif
-
-ifeq ($(BOARD_USE_YAMAHAPLAYER),true)
-    LOCAL_CFLAGS += -DYAMAHAPLAYER
 endif
 
 LOCAL_SHARED_LIBRARIES := \

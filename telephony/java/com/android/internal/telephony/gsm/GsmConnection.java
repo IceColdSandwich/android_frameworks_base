@@ -26,7 +26,6 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.ServiceState;
-import android.text.TextUtils;
 
 import com.android.internal.telephony.*;
 
@@ -47,7 +46,6 @@ public class GsmConnection extends Connection {
     boolean isIncoming;
     boolean disconnected;
 
-    String cnapName;
     int index;          // index in GsmCallTracker.connections[], -1 if unassigned
                         // The GSM index is 1 + this
 
@@ -74,7 +72,6 @@ public class GsmConnection extends Connection {
     DisconnectCause cause = DisconnectCause.NOT_DISCONNECTED;
     PostDialState postDialState = PostDialState.NOT_STARTED;
     int numberPresentation = Connection.PRESENTATION_ALLOWED;
-    int cnapNamePresentation = Connection.PRESENTATION_ALLOWED;
     UUSInfo uusInfo;
 
     Handler h;
@@ -128,8 +125,6 @@ public class GsmConnection extends Connection {
 
         isIncoming = dc.isMT;
         createTime = System.currentTimeMillis();
-        cnapName = dc.name;
-        cnapNamePresentation = dc.namePresentation;
         numberPresentation = dc.numberPresentation;
         uusInfo = dc.uusInfo;
 
@@ -156,9 +151,6 @@ public class GsmConnection extends Connection {
         index = -1;
 
         isIncoming = false;
-        cnapName = null;
-        cnapNamePresentation = Connection.PRESENTATION_ALLOWED;
-        numberPresentation = Connection.PRESENTATION_ALLOWED;
         createTime = System.currentTimeMillis();
 
         this.parent = parent;
@@ -195,14 +187,6 @@ public class GsmConnection extends Connection {
 
     public GsmCall getCall() {
         return parent;
-    }
-
-    public String getCnapName() {
-        return cnapName;
-    }
-
-    public int getCnapNamePresentation() {
-        return cnapNamePresentation;
     }
 
     public long getCreateTime() {
@@ -452,21 +436,6 @@ public class GsmConnection extends Connection {
             address = dc.number;
             changed = true;
         }
-
-        // A null cnapName should be the same as ""
-        if (TextUtils.isEmpty(dc.name)) {
-            if (!TextUtils.isEmpty(cnapName)) {
-                changed = true;
-                cnapName = "";
-            }
-	} else if (!dc.name.equals(cnapName)) {
-                changed = true;
-                cnapName = dc.name;
-        }
-
-        if (Phone.DEBUG_PHONE) log("--dssds----"+cnapName);
-        cnapNamePresentation = dc.namePresentation;
-        numberPresentation = dc.numberPresentation;
 
         if (newParent != parent) {
             if (parent != null) {

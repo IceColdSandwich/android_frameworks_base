@@ -12722,18 +12722,6 @@ package android.nfc.tech {
     method public byte[] transceive(byte[]) throws java.io.IOException;
   }
 
-  public final class IsoPcdA extends android.nfc.tech.BasicTagTechnology {
-    method public static android.nfc.tech.IsoPcdA get(android.nfc.Tag);
-    method public int getMaxTransceiveLength();
-    method public byte[] transceive(byte[]) throws java.io.IOException;
-  }
-
-  public final class IsoPcdB extends android.nfc.tech.BasicTagTechnology {
-    method public static android.nfc.tech.IsoPcdB get(android.nfc.Tag);
-    method public int getMaxTransceiveLength();
-    method public byte[] transceive(byte[]) throws java.io.IOException;
-  }
-
   public final class MifareClassic extends android.nfc.tech.BasicTagTechnology {
     method public boolean authenticateSectorWithKeyA(int, byte[]) throws java.io.IOException;
     method public boolean authenticateSectorWithKeyB(int, byte[]) throws java.io.IOException;
@@ -14401,6 +14389,7 @@ package android.os {
     field public static final java.lang.String ID;
     field public static final java.lang.String MANUFACTURER;
     field public static final java.lang.String MODEL;
+    field public static final java.lang.String MODVERSION;
     field public static final java.lang.String PRODUCT;
     field public static final deprecated java.lang.String RADIO;
     field public static final java.lang.String SERIAL;
@@ -15373,12 +15362,6 @@ package android.preference {
     method public void setEntryValues(int);
     method public void setValue(java.lang.String);
     method public void setValueIndex(int);
-  }
-
-  public class ListPreferenceMultiSelect extends android.preference.ListPreference {
-    ctor public ListPreferenceMultiSelect(android.content.Context);
-    ctor public ListPreferenceMultiSelect(android.content.Context, android.util.AttributeSet);
-    method public static java.lang.String[] parseStoredValue(java.lang.CharSequence);
   }
 
   public class MultiSelectListPreference extends android.preference.DialogPreference {
@@ -16367,6 +16350,7 @@ package android.provider {
   }
 
   protected static abstract interface ContactsContract.BaseSyncColumns {
+    field public static final java.lang.String IS_RESTRICTED = "is_restricted";
     field public static final java.lang.String SYNC1 = "sync1";
     field public static final java.lang.String SYNC2 = "sync2";
     field public static final java.lang.String SYNC3 = "sync3";
@@ -19252,6 +19236,8 @@ package android.telephony {
     method public boolean hasIccCard();
     method public boolean isNetworkRoaming();
     method public void listen(android.telephony.PhoneStateListener, int);
+    method public void toggle2G(boolean);
+    method public void toggleLTE(boolean);
     field public static final java.lang.String ACTION_PHONE_STATE_CHANGED = "android.intent.action.PHONE_STATE";
     field public static final int CALL_STATE_IDLE = 0; // 0x0
     field public static final int CALL_STATE_OFFHOOK = 2; // 0x2

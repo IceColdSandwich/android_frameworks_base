@@ -44,7 +44,6 @@ import android.telephony.PhoneStateListener;
 import android.telephony.ServiceState;
 import android.telephony.SignalStrength;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.util.Slog;
 import android.view.View;
 import android.widget.ImageView;
@@ -446,31 +445,15 @@ public class NetworkController extends BroadcastReceiver {
     }
 
     private final void updateTelephonySignalStrength() {
-    	//TODO: Correctly make this a setting.
-    	boolean useSixBar = true;
-
         if (!hasService()) {
             if (CHATTY) Slog.d(TAG, "updateTelephonySignalStrength: !hasService()");
-
-            if (useSixBar) {
-                mPhoneSignalIconId = R.drawable.stat_sys_signal_0_6bar;
-                mDataSignalIconId = R.drawable.stat_sys_signal_0_6bar;
-            } else {
-                mPhoneSignalIconId = R.drawable.stat_sys_signal_0;
-                mDataSignalIconId = R.drawable.stat_sys_signal_0;
-            }
+            mPhoneSignalIconId = R.drawable.stat_sys_signal_0;
+            mDataSignalIconId = R.drawable.stat_sys_signal_0;
         } else {
             if (mSignalStrength == null) {
                 if (CHATTY) Slog.d(TAG, "updateTelephonySignalStrength: mSignalStrength == null");
-
-                if (useSixBar) {
-                    mPhoneSignalIconId = R.drawable.stat_sys_signal_0_6bar;
-                    mDataSignalIconId = R.drawable.stat_sys_signal_0_6bar;
-                } else {
-                    mPhoneSignalIconId = R.drawable.stat_sys_signal_0;
-                    mDataSignalIconId = R.drawable.stat_sys_signal_0;
-                }
-
+                mPhoneSignalIconId = R.drawable.stat_sys_signal_0;
+                mDataSignalIconId = R.drawable.stat_sys_signal_0;
                 mContentDescriptionPhoneSignal = mContext.getString(
                         AccessibilityContentDescriptions.PHONE_SIGNAL_STRENGTH[0]);
             } else {
@@ -479,43 +462,23 @@ public class NetworkController extends BroadcastReceiver {
                 mLastSignalLevel = iconLevel = mSignalStrength.getLevel();
                 if (isCdma()) {
                     if (isCdmaEri()) {
-                    	if (useSixBar) {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_6BAR[mInetCondition];
-                    	} else {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
-                    	}
+                        iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
                     } else {
-                    	if (useSixBar) {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_6BAR[mInetCondition];
-                    	} else {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
-                    	}
+                        iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH[mInetCondition];
                     }
                 } else {
                     // Though mPhone is a Manager, this call is not an IPC
                     if (mPhone.isNetworkRoaming()) {
-                    	if (useSixBar) {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_6BAR[mInetCondition];
-                    	} else {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
-                    	}
+                        iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
                     } else {
-                    	if (useSixBar) {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_6BAR[mInetCondition];
-                    	} else {
-                    		iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_ROAMING[mInetCondition];
-                    	}
+                        iconList = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH[mInetCondition];
                     }
                 }
                 mPhoneSignalIconId = iconList[iconLevel];
                 mContentDescriptionPhoneSignal = mContext.getString(
                         AccessibilityContentDescriptions.PHONE_SIGNAL_STRENGTH[iconLevel]);
-                
-                if (useSixBar) {
-                	mDataSignalIconId = TelephonyIcons.TELEPHONY_SIGNAL_STRENGTH_6BAR[mInetCondition][iconLevel]; 
-                } else {
-                	mDataSignalIconId = TelephonyIcons.DATA_SIGNAL_STRENGTH[mInetCondition][iconLevel];
-                }
+
+                mDataSignalIconId = TelephonyIcons.DATA_SIGNAL_STRENGTH[mInetCondition][iconLevel];
             }
         }
     }
@@ -641,7 +604,7 @@ public class NetworkController extends BroadcastReceiver {
         if (!isCdma()) {
             // GSM case, we have to check also the sim state
             if (mSimState == IccCard.State.READY || mSimState == IccCard.State.UNKNOWN) {
-                if (mDataState == TelephonyManager.DATA_CONNECTED) {
+                if (hasService() && mDataState == TelephonyManager.DATA_CONNECTED) {
                     switch (mDataActivity) {
                         case TelephonyManager.DATA_ACTIVITY_IN:
                             iconId = mDataIconList[1];
@@ -667,7 +630,7 @@ public class NetworkController extends BroadcastReceiver {
             }
         } else {
             // CDMA case, mDataActivity can be also DATA_ACTIVITY_DORMANT
-            if (mDataState == TelephonyManager.DATA_CONNECTED) {
+            if (hasService() && mDataState == TelephonyManager.DATA_CONNECTED) {
                 switch (mDataActivity) {
                     case TelephonyManager.DATA_ACTIVITY_IN:
                         iconId = mDataIconList[1];
@@ -934,8 +897,6 @@ public class NetworkController extends BroadcastReceiver {
             combinedActivityIconId = mMobileActivityIconId;
             combinedSignalIconId = mDataSignalIconId; // set by updateDataIcon()
             mContentDescriptionCombinedSignal = mContentDescriptionDataType;
-        } else {
-            mMobileActivityIconId = 0;
         }
 
         if (mWifiConnected) {
@@ -960,7 +921,7 @@ public class NetworkController extends BroadcastReceiver {
                 }
             }
 
-	    mDataTypeIconId = 0;
+            mDataTypeIconId = 0;
             combinedActivityIconId = mWifiActivityIconId;
             combinedSignalIconId = mWifiIconId; // set by updateWifiIcons()
             mContentDescriptionCombinedSignal = mContentDescriptionWifi;

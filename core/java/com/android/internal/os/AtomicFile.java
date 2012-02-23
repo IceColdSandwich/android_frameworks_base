@@ -86,18 +86,7 @@ public class AtomicFile {
             }
         }
     }
-
-    public void finishWriteNoSync(FileOutputStream str) {
-        if (str != null) {
-            try {
-                 str.close();
-                 mBackupName.delete();
-             } catch (IOException e) {
-                 Log.w("AtomicFile", "finishWriteNoSync: Got exception:", e);
-             }
-         }
-     }
-
+    
     public void failWrite(FileOutputStream str) {
         if (str != null) {
             FileUtils.sync(str);

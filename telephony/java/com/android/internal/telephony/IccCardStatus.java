@@ -29,8 +29,7 @@ public class IccCardStatus {
     public enum CardState {
         CARDSTATE_ABSENT,
         CARDSTATE_PRESENT,
-        CARDSTATE_ERROR,
-        CARDSTATE_NOT_READY;
+        CARDSTATE_ERROR;
 
         boolean isCardPresent() {
             return this == CARDSTATE_PRESENT;
@@ -82,9 +81,6 @@ public class IccCardStatus {
             break;
         case 2:
             mCardState = CardState.CARDSTATE_ERROR;
-            break;
-        case 3:
-            mCardState = CardState.CARDSTATE_NOT_READY;
             break;
         default:
             throw new RuntimeException("Unrecognized RIL_CardState: " + state);

@@ -17,144 +17,132 @@
 package com.android.systemui.statusbar.policy;
 
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.AsyncTask;
-import android.os.RemoteException;
-import android.os.ServiceManager;
-import android.provider.Settings;
-import android.util.Slog;
-import android.widget.CompoundButton;
-import android.net.NetworkInfo;
-import android.net.wifi.SupplicantState;
-import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import java.util.concurrent.atomic.AtomicBoolean;
+import android.os.AsyncTask;
+import android.util.Log;
+import android.widget.CompoundButton;
 
-public class WifiController extends BroadcastReceiver
-        implements CompoundButton.OnCheckedChangeListener {
+/**
+ * TODO: Listen for changes to the setting.
+ */
+public class WifiController extends BroadcastReceiver implements
+        CompoundButton.OnCheckedChangeListener {
     private static final String TAG = "StatusBar.WifiController";
 
     private Context mContext;
     private CompoundButton mCheckBox;
-    private boolean mStateMachineEvent;
-    private final WifiManager mWifiManager;
-    private AtomicBoolean mConnected = new AtomicBoolean(false);
 
     private boolean mWifi;
 
+    private boolean systemChangedWifi = false;
+
+    private IntentFilter wifiFilter;
+
+    private boolean mStateMachineEvent;
+
     public WifiController(Context context, CompoundButton checkbox) {
         mContext = context;
-        mWifi = getWifi();
         mCheckBox = checkbox;
+        mWifi = isWifiOn(context);
         checkbox.setChecked(mWifi);
         checkbox.setOnCheckedChangeListener(this);
-        mWifiManager = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(WifiManager.WIFI_STATE_CHANGED_ACTION);
-        filter.addAction(WifiManager.SUPPLICANT_STATE_CHANGED_ACTION);
-        filter.addAction(WifiManager.NETWORK_STATE_CHANGED_ACTION);
-        context.registerReceiver(this, filter);
 
-    }
+        wifiFilter = new IntentFilter(WifiManager.WIFI_STATE_CHANGED_ACTION);
 
-    public void release() {
-        mContext.unregisterReceiver(this);
+        context.registerReceiver(this, wifiFilter);
     }
 
     public void onCheckedChanged(CompoundButton view, boolean checked) {
-        //Do nothing if called as a result of a state machine event
-        if (mStateMachineEvent) {
+        if (mStateMachineEvent)
             return;
-        }
-        // Show toast message if Wi-Fi is not allowed in airplane mode
 
-        // Disable tethering if enabling Wifi
-        int wifiApState = mWifiManager.getWifiApState();
-        if (mCheckBox.isChecked() && ((wifiApState == WifiManager.WIFI_AP_STATE_ENABLING) ||
-                (wifiApState == WifiManager.WIFI_AP_STATE_ENABLED))) {
-            mWifiManager.setWifiApEnabled(null, false);
-        }
-
-        if (mWifiManager.setWifiEnabled(mCheckBox.isChecked())) {
-            // Intent has been taken into account, disable until new state is active
-            mCheckBox.setChecked(false);
+        if (checked != mWifi) {
+            changeWifiState(checked);
         }
     }
 
-    public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-            if (WifiManager.WIFI_STATE_CHANGED_ACTION.equals(action)) {
-                handleWifiStateChanged(intent.getIntExtra(
-                        WifiManager.EXTRA_WIFI_STATE, WifiManager.WIFI_STATE_UNKNOWN));
-            } else if (WifiManager.SUPPLICANT_STATE_CHANGED_ACTION.equals(action)) {
-                if (!mConnected.get()) {
-                    handleStateChanged(WifiInfo.getDetailedStateOf((SupplicantState)
-                            intent.getParcelableExtra(WifiManager.EXTRA_NEW_STATE)));
-                }
-            } else if (WifiManager.NETWORK_STATE_CHANGED_ACTION.equals(action)) {
-                NetworkInfo info = (NetworkInfo) intent.getParcelableExtra(
-                        WifiManager.EXTRA_NETWORK_INFO);
-                mConnected.set(info.isConnected());
-                handleStateChanged(info.getDetailedState());
+    public boolean isWifiOn(Context context) {
+        WifiManager wifiManager = (WifiManager) context
+                .getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager != null) {
+            switch (wifiManager.getWifiState()) {
+                case WifiManager.WIFI_STATE_ENABLED:
+                case WifiManager.WIFI_STATE_ENABLING:
+                    return true;
+                default:
+                    return false;
             }
         }
-    private void handleStateChanged(@SuppressWarnings("unused") NetworkInfo.DetailedState state) {
+        return false;
     }
 
-    private void handleWifiStateChanged(int state) {
-        switch (state) {
-            case WifiManager.WIFI_STATE_ENABLING:
-                mCheckBox.setEnabled(false);
-                break;
-            case WifiManager.WIFI_STATE_ENABLED:
-                setSwitchChecked(true);
-                mCheckBox.setEnabled(true);
-                break;
-            case WifiManager.WIFI_STATE_DISABLING:
-                mCheckBox.setEnabled(false);
-                break;
-            case WifiManager.WIFI_STATE_DISABLED:
-                setSwitchChecked(false);
-                mCheckBox.setEnabled(true);
-                break;
-            default:
-                setSwitchChecked(false);
-                mCheckBox.setEnabled(true);
-                break;
+    private void changeWifiState(final boolean desiredState) {
+        final WifiManager wifiManager = (WifiManager) mContext
+                .getSystemService(Context.WIFI_SERVICE);
+        if (wifiManager == null) {
+            Log.d("WifiButton", "No wifiManager.");
+            return;
         }
+
+        AsyncTask.execute(new Runnable() {
+            public void run() {
+                int wifiApState = wifiManager.getWifiApState();
+                if (desiredState
+                        && ((wifiApState == WifiManager.WIFI_AP_STATE_ENABLING) || (wifiApState == WifiManager.WIFI_AP_STATE_ENABLED))) {
+                    wifiManager.setWifiApEnabled(null, false);
+                }
+
+                wifiManager.setWifiEnabled(desiredState);
+                return;
+            }
+        });
     }
 
     private void setSwitchChecked(boolean checked) {
-        if (checked != mCheckBox.isChecked()) {
-            mStateMachineEvent = true;
-            mCheckBox.setChecked(checked);
-            mStateMachineEvent = false;
+        mStateMachineEvent = true;
+        mCheckBox.setChecked(checked);
+        mStateMachineEvent = false;
+    }
+
+    @Override
+    public void onReceive(Context context, Intent intent) {
+        if (!WifiManager.WIFI_STATE_CHANGED_ACTION.equals(intent
+                .getAction())) {
+            return;
         }
-    }
+        int wifiState = intent
+                .getIntExtra(WifiManager.EXTRA_WIFI_STATE, -1);
 
-    private boolean getWifi() {
-        ContentResolver cr = mContext.getContentResolver();
-        return 0 != Settings.System.getInt(cr, Settings.System.AIRPLANE_MODE_ON, 0);
-    }
+        switch (wifiState) {
+            case WifiManager.WIFI_STATE_ENABLED:
+                mWifi = true;
+                setSwitchChecked(true);
+                mCheckBox.setEnabled(true);
+                break;
+            case WifiManager.WIFI_STATE_DISABLED:
+                mWifi = false;
+                setSwitchChecked(false);
+                mCheckBox.setEnabled(true);
+                break;
+            case WifiManager.WIFI_STATE_DISABLING:
+                mWifi = false;
+                setSwitchChecked(false);
+                mCheckBox.setEnabled(false);
+                break;
+            case WifiManager.WIFI_STATE_ENABLING:
+                mWifi = false;
+                setSwitchChecked(true);
+                mCheckBox.setEnabled(false);
+                break;
+            case WifiManager.WIFI_STATE_UNKNOWN:
+            default:
+                setSwitchChecked(false);
+                mCheckBox.setEnabled(false);
+                break;
+        }
 
-    // TODO: Fix this racy API by adding something better to TelephonyManager or
-    // ConnectivityService.
-    private void unsafe(final boolean enabled) {
-        AsyncTask.execute(new Runnable() {
-                public void run() {
-                    Settings.System.putInt(
-                            mContext.getContentResolver(),
-                            Settings.System.AIRPLANE_MODE_ON,
-                            enabled ? 1 : 0);
-                    Intent intent = new Intent(Intent.ACTION_AIRPLANE_MODE_CHANGED);
-                    intent.addFlags(Intent.FLAG_RECEIVER_REPLACE_PENDING);
-                    intent.putExtra("state", enabled);
-                    mContext.sendBroadcast(intent);
-                }
-            });
     }
 }
-

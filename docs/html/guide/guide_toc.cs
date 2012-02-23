@@ -85,7 +85,7 @@
       <li class="toggle-list">
           <div><a href="<?cs var:toroot ?>guide/topics/providers/content-providers.html">
             <span class="en">Content Providers</span>
-          </a></div>
+          </a><span class="new">updated</span></div>
           <ul>
             <li><a href="<?cs var:toroot ?>guide/topics/providers/calendar-provider.html">
                   <span class="en">Calendar Provider</span></a>
@@ -119,7 +119,7 @@
               </a></li>
           <li><a href="<?cs var:toroot ?>guide/topics/ui/actionbar.html">
                <span class="en">Action Bar</span>
-              </a></li>
+              </a> <span class="new">updated</span></li>
           <li><a href="<?cs var:toroot ?>guide/topics/ui/dialogs.html">
                 <span class="en">Dialogs</span>
               </a></li>
@@ -244,7 +244,7 @@
     <li class="toggle-list">
         <div><a href="<?cs var:toroot ?>guide/topics/graphics/index.html">
             <span class="en">Graphics</span>
-          </a> <span class="new-child">new!</span></div>
+          </a><span class="new-child">new!</span></div>
         <ul>
           <li><a href="<?cs var:toroot ?>guide/topics/graphics/2d-graphics.html">
               <span class="en">Canvas and Drawables</span></a></li>
@@ -253,7 +253,7 @@
             <span class="new">new!</span></li>
           <li><a href="<?cs var:toroot ?>guide/topics/graphics/opengl.html">
               <span class="en">OpenGL</span>
-            </a></li>
+            </a><span class="new">updated</span></li>
         </ul>
       </li>
       <li class="toggle-list">
@@ -288,7 +288,7 @@
       <li class="toggle-list">
           <div><a href="<?cs var:toroot ?>guide/topics/media/index.html">
             <span class="en">Multimedia and Camera</span>
-          </a></div>
+          </a><span class="new">updated</span></div>
           <ul>
             <li><a href="<?cs var:toroot ?>guide/topics/media/mediaplayer.html">
                   <span class="en">Media Playback</span></a>
@@ -662,7 +662,7 @@
     <ul>
       <li><a href="<?cs var:toroot ?>guide/publishing/publishing_overview.html">
             <span class="en">Publishing Overview</span>
-          </a></li>
+          </a><span class="new">new!</span></li>
       <li><a href="<?cs var:toroot ?>guide/publishing/preparing.html">
             <span class="en">Preparing for Release</span>
             <span class="de" style="display:none">Vorbereitung auf die Veröffentlichung</span>
@@ -672,7 +672,7 @@
             <span class="ja" style="display:none">公開の準備</span>
             <span class="zh-CN" style="display:none">准备发布</span>
             <span class="zh-TW" style="display:none">準備發佈</span>
-          </a></li>
+          </a><span class="new">updated</span></li>
       <li><a href="<?cs var:toroot ?>guide/publishing/app-signing.html">
             <span class="en">Signing Your Applications</span>
             <span class="de" style="display:none">Signieren Ihrer Anwendungen</span>
@@ -735,7 +735,7 @@ applications</span>
       <li class="toggle-list">
         <div><a href="<?cs var:toroot ?>guide/practices/ui_guidelines/index.html">
                <span class="en">UI Guidelines</span>
-             </a></div>
+             </a> <span class="new-child">updated</span></div>
         <ul>
           <li class="toggle-list">
             <div><a href="<?cs var:toroot ?>guide/practices/ui_guidelines/icon_design.html">
@@ -767,7 +767,7 @@ applications</span>
           </li>
           <li><a href="<?cs var:toroot ?>guide/practices/ui_guidelines/widget_design.html">
                 <span class="en">App Widget Design</span>
-              </a></li>
+              </a> <span class="new">updated</span></li>
           <li><a href="<?cs var:toroot ?>guide/practices/ui_guidelines/activity_task_design.html">
                 <span class="en">Activity and Task Design</span>
               </a></li>
@@ -799,7 +799,8 @@ applications</span>
           </a></li>
       <li><a href="<?cs var:toroot ?>guide/practices/security.html">
             <span class="en">Designing for Security</span></a>
-            </li>
+            <span class="new">new!</span><!-- 11/7/10 -->
+          </li>
     </ul>
   </li>
 
@@ -844,7 +845,7 @@ applications</span>
           </a></li>
       <li><a href="<?cs var:toroot ?>guide/appendix/media-formats.html">
             <span class="en">Supported Media Formats</span>
-          </a></li>
+          </a> <span class="new">updated</span></li>
       <li><a href="<?cs var:toroot ?>guide/appendix/g-app-intents.html">
             <span class="en">Intents List: Google Apps</span>
           </a></li>

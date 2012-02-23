@@ -26,8 +26,6 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.IPackageManager;
 import android.content.res.Configuration;
-import android.database.ContentObserver;
-import android.database.Cursor;
 import android.media.AudioService;
 import android.net.wifi.p2p.WifiP2pService;
 import android.os.Looper;
@@ -39,6 +37,7 @@ import android.os.SystemProperties;
 import android.provider.Settings;
 import android.server.BluetoothA2dpService;
 import android.server.BluetoothService;
+import android.server.PowerSaverService;
 import android.server.search.SearchManagerService;
 import android.util.DisplayMetrics;
 import android.util.EventLog;
@@ -74,19 +73,6 @@ class ServerThread extends Thread {
     void reportWtf(String msg, Throwable e) {
         Slog.w(TAG, "***********************************************");
         Log.wtf(TAG, "BOOT FAILURE " + msg, e);
-    }
-
-    private class AdbPortObserver extends ContentObserver {
-        public AdbPortObserver() {
-            super(null);
-        }
-        @Override
-        public void onChange(boolean selfChange) {
-            int adbPort = Settings.Secure.getInt(mContentResolver,
-                Settings.Secure.ADB_PORT, 0);
-            // setting this will control whether ADB runs on TCP/IP or USB
-            SystemProperties.set("service.adb.tcp.port", Integer.toString(adbPort));
-        }
     }
 
     @Override
@@ -197,11 +183,9 @@ class ServerThread extends Thread {
                 Slog.e(TAG, "Failure starting Account Manager", e);
             }
 
-
             Slog.i(TAG, "Content Manager");
             ContentService.main(context,
                     factoryTest == SystemServer.FACTORY_TEST_LOW_LEVEL);
-
 
             Slog.i(TAG, "System Content Providers");
             ActivityManagerService.installSystemProviders();
@@ -276,6 +260,7 @@ class ServerThread extends Thread {
         LocationManagerService location = null;
         CountryDetectorService countryDetector = null;
         TextServicesManagerService tsms = null;
+        PowerSaverService powerSaver = null;
 
         // Bring up services needed for UI.
         if (factoryTest != SystemServer.FACTORY_TEST_LOW_LEVEL) {
@@ -579,16 +564,14 @@ class ServerThread extends Thread {
             } catch (Throwable e) {
                 reportWtf("starting NetworkTimeUpdate service", e);
             }
+            
+            try {
+                Slog.i(TAG, "PowerSaverService");
+                powerSaver = new PowerSaverService(context);
+            } catch(Throwable e) {
+                reportWtf("starting PowerSaver service", e);
+            }
         }
-
-        // make sure the ADB_ENABLED setting value matches the secure property value
-        Settings.Secure.putInt(mContentResolver, Settings.Secure.ADB_PORT,
-                Integer.parseInt(SystemProperties.get("service.adb.tcp.port", "-1")));
-
-        // register observer to listen for settings changes
-        mContentResolver.registerContentObserver(
-            Settings.Secure.getUriFor(Settings.Secure.ADB_PORT),
-            false, new AdbPortObserver());
 
         // Before things start rolling, be sure we have decided whether
         // we are in safe mode.
@@ -668,6 +651,7 @@ class ServerThread extends Thread {
         final NetworkTimeUpdateService networkTimeUpdaterF = networkTimeUpdater;
         final TextServicesManagerService textServiceManagerServiceF = tsms;
         final StatusBarManagerService statusBarF = statusBar;
+        final PowerSaverService powerSaverF = powerSaver;
 
         // We now tell the activity manager it is okay to run third party
         // code.  It will call back into us once it has gotten to the state
@@ -768,6 +752,11 @@ class ServerThread extends Thread {
                     if (textServiceManagerServiceF != null) textServiceManagerServiceF.systemReady();
                 } catch (Throwable e) {
                     reportWtf("making Text Services Manager Service ready", e);
+                }
+                try {
+                    if(powerSaverF != null) powerSaverF.systemReady();
+                }catch (Throwable e) {
+                    reportWtf("making PowerSaverService ready", e);
                 }
             }
         });

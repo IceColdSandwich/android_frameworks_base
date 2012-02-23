@@ -789,7 +789,7 @@ void AwesomePlayer::onStreamDone() {
     mStreamDoneEventPending = false;
 
     if (mStreamDoneStatus != ERROR_END_OF_STREAM) {
-        LOGE("MEDIA_ERROR %d", mStreamDoneStatus);
+        LOGV("MEDIA_ERROR %d", mStreamDoneStatus);
 
         notifyListener_l(
                 MEDIA_ERROR, MEDIA_ERROR_UNKNOWN, mStreamDoneStatus);
@@ -1323,7 +1323,7 @@ status_t AwesomePlayer::seekTo_l(int64_t timeUs) {
         notifyListener_l(MEDIA_SEEK_COMPLETE);
         mSeekNotificationSent = true;
 
-        if ((mFlags & PREPARED) && mVideoSource != NULL && mVideoBuffer!= NULL) {
+        if ((mFlags & PREPARED) && mVideoSource != NULL) {
             modifyFlags(SEEK_PREVIEW, SET);
             postVideoEvent_l();
         }
@@ -1435,12 +1435,11 @@ status_t AwesomePlayer::initVideoDecoder(uint32_t flags) {
     //   (mSurface->getFlags() & ISurfaceComposer::eProtectedByApp))
     // will be true, but that part is already handled by SurfaceFlinger.
 
-    char value[PROPERTY_VALUE_MAX];
-
 #ifdef DEBUG_HDCP
     // For debugging, we allow a system property to control the protected usage.
     // In case of uninitialized or unexpected property, we default to "DRM only".
     bool setProtectionBit = false;
+    char value[PROPERTY_VALUE_MAX];
     if (property_get("persist.sys.hdcp_checking", value, NULL)) {
         if (!strcmp(value, "never")) {
             // nop
@@ -1471,13 +1470,6 @@ status_t AwesomePlayer::initVideoDecoder(uint32_t flags) {
         flags |= OMXCodec::kEnableGrallocUsageProtected;
     }
 #endif
-
-    property_get("sys.media.vdec.sw", value, "0");
-    if (atoi(value)) {
-        LOGW("Software Codec is preferred for Video");
-        flags |= OMXCodec::kPreferSoftwareCodecs;
-    }
-
     LOGV("initVideoDecoder flags=0x%x", flags);
     mVideoSource = OMXCodec::Create(
             mClient.interface(), mVideoTrack->getFormat(),
