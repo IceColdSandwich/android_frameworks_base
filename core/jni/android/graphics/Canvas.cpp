@@ -67,7 +67,7 @@ public:
     static void freeCaches(JNIEnv* env, jobject) {
         // these are called in no particular order
         SkImageRef_GlobalPool::SetRAMUsed(0);
-        SkGraphics::PurgeFontCache();
+        SkGraphics::SetFontCacheUsed(0);
     }
     
     static jboolean isOpaque(JNIEnv* env, jobject jcanvas) {
@@ -442,7 +442,7 @@ public:
 #endif
         canvas->drawPicture(*picture);
 #ifdef TIME_DRAW
-        ALOGD("---- picture playback %d ms\n", get_thread_msec() - now);
+        LOGD("---- picture playback %d ms\n", get_thread_msec() - now);
 #endif
     }
 
@@ -770,7 +770,7 @@ public:
         value = TextLayoutCache::getInstance().getValue(paint, textArray, start, count,
                 contextCount, flags);
         if (value == NULL) {
-            ALOGE("Cannot get TextLayoutCache value");
+            LOGE("Cannot get TextLayoutCache value");
             return ;
         }
 #else
