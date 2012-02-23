@@ -2021,7 +2021,6 @@ void AwesomePlayer::onCheckAudioStatus() {
     if (mWatchForAudioEOS && mAudioPlayer->reachedEOS(&finalStatus)) {
         mWatchForAudioEOS = false;
         modifyFlags(AUDIO_AT_EOS, SET);
-        modifyFlags(FIRST_FRAME, SET);
         postStreamDoneEvent_l(finalStatus);
     }
 }
@@ -2379,6 +2378,7 @@ uint32_t AwesomePlayer::flags() const {
 
 void AwesomePlayer::postAudioEOS(int64_t delayUs) {
     mAudioEOD = true;
+    modifyFlags(FIRST_FRAME, SET);
     postCheckAudioStatusEvent(delayUs);
 }
 
