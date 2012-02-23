@@ -2478,8 +2478,10 @@ status_t SurfaceFlinger::captureScreenImplLocked(DisplayID dpy,
         glClear(GL_COLOR_BUFFER_BIT);
 
         const LayerVector& layers(mDrawingState.layersSortedByZ);
-        const size_t count = layers.size();
-        for (size_t i=0 ; i<count ; ++i) {
+        //if we have secure windows, do not draw any layers.
+        const size_t count = mSecureFrameBuffer ? 0: layers.size();
+
+        for (size_t i=0 ; i<count; ++i) {
             const sp<LayerBase>& layer(layers[i]);
             const uint32_t flags = layer->drawingState().flags;
             if (!(flags & ISurfaceComposer::eLayerHidden)) {
@@ -2581,10 +2583,6 @@ status_t SurfaceFlinger::captureScreen(DisplayID dpy,
         }
         virtual bool handler() {
             Mutex::Autolock _l(flinger->mStateLock);
-
-            // if we have secure windows, never allow the screen capture
-            if (flinger->mSecureFrameBuffer)
-                return true;
 
             result = flinger->captureScreenImplLocked(dpy,
                     heap, w, h, f, sw, sh, minLayerZ, maxLayerZ);
