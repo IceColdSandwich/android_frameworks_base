@@ -567,6 +567,15 @@ public class SurfaceView extends View {
                 }
             } catch (RemoteException ex) {
             }
+            catch (NullPointerException ex) {
+                Log.e(TAG, "NullPointerException while updating window. mSession = " + mSession + ", mWindow = " + mWindow);
+                if ((mSession != null) && (mWindow != null)) {
+                    Log.e(TAG, "Unexpected NullPointerException.");
+                    throw new NullPointerException();
+                }
+                else
+                    Log.e(TAG, "NullPointerException handled.");
+            }
             if (DEBUG) Log.v(
                 TAG, "Layout: x=" + mLayout.x + " y=" + mLayout.y +
                 " w=" + mLayout.width + " h=" + mLayout.height +
