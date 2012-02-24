@@ -16,15 +16,11 @@
 
 package android.view;
 
-import android.content.ContentResolver;
 import android.content.Context;
-import android.database.ContentObserver;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.os.Handler;
-import android.provider.Settings;
 import android.util.Log;
 import android.util.Slog;
 
@@ -59,7 +55,7 @@ public abstract class WindowOrientationListener {
     private SensorEventListenerImpl mSensorEventListener;
     boolean mLogEnabled;
     int mCurrentRotation = -1;
-    
+
     /**
      * Creates a new WindowOrientationListener.
      * 
@@ -86,7 +82,7 @@ public abstract class WindowOrientationListener {
         mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         if (mSensor != null) {
             // Create listener only if sensors do exist
-            mSensorEventListener = new SensorEventListenerImpl(this, context);
+            mSensorEventListener = new SensorEventListenerImpl(this);
         }
     }
 
@@ -326,7 +322,7 @@ public abstract class WindowOrientationListener {
         // The number of milliseconds for which the device posture must be stable
         // before we perform an orientation change.  If the device appears to be rotating
         // (being picked up, put down) then we keep waiting until it settles.
-        private static final int SETTLE_TIME_MS = 50;
+        private static final int SETTLE_TIME_MS = 200;
 
         // The maximum change in magnitude that can occur during the settle time.
         // Tuning this constant particularly helps to filter out situations where the
@@ -339,20 +335,13 @@ public abstract class WindowOrientationListener {
 
         // The maximum change in orientation angle that can occur during the settle time.
         private static final int SETTLE_ORIENTATION_ANGLE_MAX_DELTA = 5;
-        
-        protected Context mContext;
-        
-        private int mSettleTimeMs = SETTLE_TIME_MS;
 
-        public SensorEventListenerImpl(WindowOrientationListener orientationListener, Context context) {
+        public SensorEventListenerImpl(WindowOrientationListener orientationListener) {
             mOrientationListener = orientationListener;
-            mContext = context;
-            SettingsObserver settingsObserver = new SettingsObserver(new Handler());
-            settingsObserver.observe();
         }
 
         public int getProposedRotation() {
-            return mProposalAgeMS >= mSettleTimeMs ? mProposalRotation : -1;
+            return mProposalAgeMS >= SETTLE_TIME_MS ? mProposalRotation : -1;
         }
 
         @Override
@@ -482,7 +471,7 @@ public abstract class WindowOrientationListener {
             final int proposedRotation = getProposedRotation();
             if (log) {
                 final float proposalConfidence = Math.min(
-                        mProposalAgeMS * 1.0f / mSettleTimeMs, 1.0f);
+                        mProposalAgeMS * 1.0f / SETTLE_TIME_MS, 1.0f);
                 Slog.v(TAG, "Result: currentRotation=" + mOrientationListener.mCurrentRotation
                         + ", proposedRotation=" + proposedRotation
                         + ", timeDeltaMS=" + timeDeltaMS
@@ -604,7 +593,7 @@ public abstract class WindowOrientationListener {
                     break;
                 }
                 age = timestampMS - mHistoryTimestampMS[olderIndex];
-                if (age >= mSettleTimeMs) {
+                if (age >= SETTLE_TIME_MS) {
                     break;
                 }
             }
@@ -617,32 +606,6 @@ public abstract class WindowOrientationListener {
                 delta = 360 - delta;
             }
             return delta;
-        }
-        
-        class SettingsObserver extends ContentObserver {
-            SettingsObserver(Handler handler) {
-                super(handler);
-            }
-
-            void observe() {
-                ContentResolver resolver = mContext.getContentResolver();
-                resolver.registerContentObserver(
-                        Settings.System.getUriFor(Settings.System.ACCELEROMETER_ROTATION_SETTLE_TIME), false,
-                        this);
-                updateSettings();
-            }
-
-            @Override
-            public void onChange(boolean selfChange) {
-                updateSettings();
-            }
-        }
-
-        protected void updateSettings() {
-            ContentResolver resolver = mContext.getContentResolver();
-
-            mSettleTimeMs = Settings.System.getInt(resolver,
-                    Settings.System.ACCELEROMETER_ROTATION_SETTLE_TIME, SETTLE_TIME_MS);
         }
     }
 }

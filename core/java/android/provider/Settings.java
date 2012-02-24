@@ -1891,20 +1891,6 @@ public final class Settings {
         public static final String NOTIFICATION_LIGHT_PULSE = "notification_light_pulse";
 
         /**
-         * Whether the button backlights should be turned on when a notification came in.
-         *The value is boolean (1 or 0).
-         * @hide
-         */
-        public static final String NOTIFICATION_USE_BUTTON_BACKLIGHT = "notification_use_button_backlight";
-
-        /**
-         * Whether the soft keys should display if device already has hard keys. The
-         * value is boolean (1 or 0).
-         * @hide
-         */
-        public static final String NAVIGATION_BAR_VISIBLE = "navigation_bar_visible";
-        
-        /**
          * Show pointer location on screen?
          * 0 = no
          * 1 = yes
@@ -2208,170 +2194,24 @@ public final class Settings {
         public static final String LOCKSCREEN_QUICK_UNLOCK_CONTROL = "lockscreen_quick_unlock_control";
 
         /**
+         * Boolean value whether to link ringtone and notification volumes
+         * 
+         * @hide
+         */
+        public static final String VOLUME_LINK_NOTIFICATION = "volume_link_notification";
+
+        /**
          * Whether to unlock the menu key.  The value is boolean (1 or 0).
          * @hide
          */
         public static final String MENU_UNLOCK_SCREEN = "menu_unlock_screen";
 
-	/**
-	 * Whether to enable mms and phone lockscreen shortcuts	
-	 *
-	 * @hide
-	 */	
-        public static final String LOCKSCREEN_QUAD_TARGETS = "lockscreen_quad_targets";
-
-	/**
-         * launch a custom app for sms	
-         * 	
-         * @hide
-         */
-        public static final String LOCKSCREEN_CUSTOM_SMS_INTENT = "lockscreen_custom_sms_intent";
-
-	/*
-         * 0: Default no 1%
-         * 1: 1% Mod
-         * 2: 1% Bar
-         * 3: 1% Circle
-         * @hide
-         */
-        public static final String BATTERY_PERCENTAGES = "battery_percentages";
-
-	/**
-         * Hide standard battery
-         * @hide
-         */
-        public static final String HIDE_BATTERY = "hide_battery";
-
         /**
-         * Show/Hide MIUI battery bar
+         * Whether to wake the screen with the volume keys, the value is boolean.
          * @hide
-         */
-        public static final String STATUSBAR_BATTERY_BAR = "statusbar_battery_bar";
-
-        /**
-         * MIUI battery bar color
-         * @hide
-         */
-        public static final String STATUSBAR_BATTERY_BAR_COLOR = "statusbar_battery_bar_color";
-
-	/**
-         * thickness of the batteyr bar (in dp)
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_BATTERY_BAR_THICKNESS = "statusbar_battery_bar_thickness";
-
-        /**
-         * 0 = regular
-         * 1 = mirrored from center
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_BATTERY_BAR_STYLE = "statusbar_battery_bar_style";
-
-        /**
-         * whether to show charging animation
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_BATTERY_BAR_ANIMATE = "statusbar_battery_bar_animate";
-
- 	/**
-         * whether volume keys wake the screen. boolean value
-         * 	
-         * @hide	
          */
         public static final String VOLUME_WAKE_SCREEN = "volume_wake_screen";
 
-        /**
-         * Custom Carrier text on the systemui.
-         * @hide
-         */
-        public static final String CUSTOM_CARRIER_TEXT = "custom_carrier_text";
-
-        /**
-         * Setting to hide clock.
-         * @hide
-         */
-        public static final String HIDE_CLOCK = "hide_clock";
-
-	/**
-	 * Whether volume up/down can be long pressed to skip tracks
-	 * @hide
-	 */
-        public static final String VOLUME_MUSIC_CONTROLS = "volume_music_controls";
-
-	/**
-	 * Link/unlink volume/notification volume
-	 *
-	 * @hide
-	 */
-	public static final String VOLUME_LINK_NOTIFICATION = "volume_link_notification";
-
-        /**
-         * Whether national data roaming should be used.
-         */
-        public static final String MVNO_ROAMING = "mvno_roaming";
-
-	/**
-         * The number of milliseconds for which the device posture must be stable before we perform
-         * an orientation change. If the device appears to be rotating (being picked up, put down)
-         * then we keep waiting until it settles.
-         * default: 200ms
-         * @hide
-         */
-        public static final String ACCELEROMETER_ROTATION_SETTLE_TIME = "accelerometer_rotation_settle_time";
-
-	/**
-         * Control the type of rotation which can be performed using the accelerometer
-         * if ACCELEROMETER_ROTATION is enabled.
-         * Value is a bitwise combination of
-         * 1 = 0 degrees (portrait)
-         * 2 = 90 degrees (left)
-         * 4 = 180 degrees (inverted portrait)
-         * 8 = 270 degrees (right)
-         * Setting to 0 is effectively orientation lock
-         * @hide
-         */
-        public static final String ACCELEROMETER_ROTATION_ANGLES = "accelerometer_rotation_angles";
-
-	/**
-         * Allow Landscape in call
-         */
-        public static final String CALL_ENABLE_LANDSCAPE = "call_enable_landscape";
-        
-        /**
-         * Enable use of statusbar while in call
-         * 
-        */
-        public static final String CALL_ENABLE_STATUSBAR = "call_enable_statusbar";
-
-        /**
-         * Disable Lighouts while in call
-         * 
-         */
-        public static final String CALL_DISABLE_LIGHTSOUT = "call_disable_lightsout";
-
-	/**
-         * Whether to show statusbar signal text
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_SIGNAL_TEXT = "statusbar_signal_text";
-
-        /**
-         * statusbar signal text color
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_SIGNAL_TEXT_COLOR = "statusbar_signal_text_color";
-
-	/**
-         * whether to hide the signal barss
-         * 
-         * @hide
-         */
-        public static final String STATUSBAR_HIDE_SIGNAL_BARS = "statusbar_hide_signal_bars";
 
         /**
          * Settings to backup. This is here so that it's in the same place as the settings
@@ -3705,11 +3545,6 @@ public final class Settings {
         public static final String CDMA_ROAMING_MODE = "roaming_settings";
 
         /**
-         * Whether national data Roming should be used.
-         */
-        public static final String MVNO_ROAMING = "mvno_roaming";
-
-        /**
          * The CDMA subscription mode 0 = RUIM/SIM (default)
          *                                1 = NV
          * @hide
@@ -4630,14 +4465,6 @@ public final class Settings {
             LOCK_SCREEN_OWNER_INFO,
             LOCK_SCREEN_OWNER_INFO_ENABLED
         };
-
-	/**
-         * use the lock screen timeout settings when the user turns the power off manually?
-         * Boolean value.
-         * 
-         * @hide
-         */
-        public static final String LOCK_SCREEN_LOCK_USER_OVERRIDE = "lock_screen_lock_suer_override";
 
         /**
          * Helper method for determining if a location provider is enabled.

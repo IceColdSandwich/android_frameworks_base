@@ -460,8 +460,8 @@ public class AudioService extends IAudioService.Stub {
             mRingerModeAffectedStreams |= (1 << AudioSystem.STREAM_MUSIC);
         }
 
-	boolean linkNotificationWithVolume = Settings.System.getInt(mContentResolver,
-		Settings.System.VOLUME_LINK_NOTIFICATION, 1) == 1;
+        boolean linkNotificationWithVolume = Settings.System.getInt(mContentResolver,
+                Settings.System.VOLUME_LINK_NOTIFICATION, 1) == 1;
         if (linkNotificationWithVolume) {
             STREAM_VOLUME_ALIAS[AudioSystem.STREAM_NOTIFICATION] = AudioSystem.STREAM_RING;
         } else {
@@ -2324,8 +2324,8 @@ public class AudioService extends IAudioService.Stub {
             super(new Handler());
             mContentResolver.registerContentObserver(Settings.System.getUriFor(
                 Settings.System.MODE_RINGER_STREAMS_AFFECTED), false, this);
-	    mContentResolver.registerContentObserver(Settings.System.getUriFor(
-		Settings.System.VOLUME_LINK_NOTIFICATION), false, this);
+            mContentResolver.registerContentObserver(Settings.System.getUriFor(
+                Settings.System.VOLUME_LINK_NOTIFICATION), false, this);
         }
 
         @Override
@@ -2349,9 +2349,8 @@ public class AudioService extends IAudioService.Stub {
                     mRingerModeAffectedStreams = ringerModeAffectedStreams;
                     setRingerModeInt(getRingerMode(), false);
                 }
-
-		boolean linkNotificationWithVolume = Settings.System.getInt(mContentResolver,
-		    Settings.System.VOLUME_LINK_NOTIFICATION, 1) == 1;
+                boolean linkNotificationWithVolume = Settings.System.getInt(mContentResolver,
+                        Settings.System.VOLUME_LINK_NOTIFICATION, 1) == 1;
                 if (linkNotificationWithVolume) {
                     STREAM_VOLUME_ALIAS[AudioSystem.STREAM_NOTIFICATION] = AudioSystem.STREAM_RING;
                 } else {

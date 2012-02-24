@@ -470,7 +470,7 @@ public class LocationManagerService extends ILocationManager.Stub implements Run
 
     public void setGPSSource(String device) {
         synchronized (mLock) {
-            if (mGpsLocationProvider != null && 
+            if (mGpsLocationProvider != null &&
                     mProvidersByName.containsKey(mGpsLocationProvider.getName())) {
                 Slog.i(TAG, "Disable and removing provider " + mGpsLocationProvider.getName());
                 mGpsLocationProvider.disable();

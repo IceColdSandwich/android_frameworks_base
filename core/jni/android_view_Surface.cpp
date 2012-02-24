@@ -572,7 +572,7 @@ static jobject Surface_screenshotAll(JNIEnv* env, jobject clazz, jint width, jin
 }
 
 static jobject Surface_screenshot(JNIEnv* env, jobject clazz, jint width, jint height,
-        jint minLayer, jint maxLayer)
+        jint minLayer, jint maxLayer, bool allLayers)
 {
     return doScreenshot(env, clazz, width, height, minLayer, maxLayer, false);
 }

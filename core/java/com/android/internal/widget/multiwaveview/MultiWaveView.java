@@ -947,13 +947,7 @@ public class MultiWaveView extends View {
                 return null;
             }
         }
-
-        try {
-            String desc = mDirectionDescriptions.get(index);
-            return desc;
-        } catch (Exception e) {
-            return "";
-        }
+        return mDirectionDescriptions.get(index);
     }
 
     private ArrayList<String> loadDescriptions(int resourceId) {

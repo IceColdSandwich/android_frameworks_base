@@ -27,8 +27,6 @@ import android.database.ContentObserver;
 import android.os.BatteryManager;
 import android.os.Handler;
 import android.provider.Settings;
-import android.util.Slog;
-import android.util.AttributeSet;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -41,49 +39,52 @@ public class BatteryController extends BroadcastReceiver {
     private Context mContext;
     private ArrayList<ImageView> mIconViews = new ArrayList<ImageView>();
     private ArrayList<TextView> mLabelViews = new ArrayList<TextView>();
-    private int mBattIcon;
-    private int mChargeIcon;
 
-    private boolean mHideBatt;
-    private boolean mUseBattPercentages;
-    private boolean mUseCircleBatt;
-    private boolean mUseBarBatt;
-    private boolean mUseHoneyBatt;
-    private boolean mUseGenxBatt;
-    private Handler mHandler;
+    private static final int BATTERY_STYLE_NORMAL  = 0;
+    private static final int BATTERY_STYLE_TEXT    = 1;
+    private static final int BATTERY_STYLE_GONE    = 2;
 
-    public BatteryController(Context context) {
-        mContext = context;
+    private static final int BATTERY_ICON_STYLE_NORMAL      = R.drawable.stat_sys_battery;
+    private static final int BATTERY_ICON_STYLE_CHARGE      = R.drawable.stat_sys_battery_charge;
+    private static final int BATTERY_ICON_STYLE_NORMAL_MIN  = R.drawable.stat_sys_battery_min;
+    private static final int BATTERY_ICON_STYLE_CHARGE_MIN  = R.drawable.stat_sys_battery_charge_min;
 
-        mUseBattPercentages = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 1);
-        mUseBarBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 2);
-        mUseCircleBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 3);
-	mUseHoneyBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 4);
-	mUseGenxBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 5);
-        mHideBatt = (Settings.System.getInt(mContext.getContentResolver(), Settings.System.BATTERY_PERCENTAGES, 1) == 6);
+    private static final int BATTERY_TEXT_STYLE_NORMAL  = R.string.status_bar_settings_battery_meter_format;
+    private static final int BATTERY_TEXT_STYLE_MIN     = R.string.status_bar_settings_battery_meter_min_format;
 
-        mHandler = new Handler();
-        SettingsObserver settingsObserver = new SettingsObserver(mHandler);
-        settingsObserver.observe();
+    private boolean mBatteryPlugged = false;
+    private int mBatteryStyle;
+    private int mBatteryIcon = BATTERY_ICON_STYLE_NORMAL;
 
-        IntentFilter filter = new IntentFilter();
-        filter.addAction(Intent.ACTION_BATTERY_CHANGED);
-        context.registerReceiver(this, filter);
-    }
+    Handler mHandler;
 
     class SettingsObserver extends ContentObserver {
         SettingsObserver(Handler handler) {
             super(handler);
         }
+
         void observe() {
             ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(Settings.System.getUriFor(Settings.System.BATTERY_PERCENTAGES), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_BATTERY), false, this);
         }
 
-        @Override
-        public void onChange(boolean selfChange) {
+        @Override public void onChange(boolean selfChange) {
             updateSettings();
         }
+    }
+
+    public BatteryController(Context context) {
+        mContext = context;
+        mHandler = new Handler();
+
+        SettingsObserver settingsObserver = new SettingsObserver(mHandler);
+        settingsObserver.observe();
+        updateSettings();
+
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(Intent.ACTION_BATTERY_CHANGED);
+        context.registerReceiver(this, filter);
     }
 
     public void addIconView(ImageView v) {
@@ -98,57 +99,59 @@ public class BatteryController extends BroadcastReceiver {
         final String action = intent.getAction();
         if (action.equals(Intent.ACTION_BATTERY_CHANGED)) {
             final int level = intent.getIntExtra(BatteryManager.EXTRA_LEVEL, 0);
-            final boolean plugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0;
-            if (mUseBattPercentages) {
-                mBattIcon = R.drawable.stat_sys_battery;
-                mChargeIcon = R.drawable.stat_sys_battery_charge;
-            } else if (mUseCircleBatt) {
-                mBattIcon = R.drawable.stat_sys_battery_circle;
-                mChargeIcon = R.drawable.stat_sys_battery_charge_circle;
-            } else if (mUseBarBatt) {
-                mBattIcon = R.drawable.stat_sys_battery_bar;
-                mChargeIcon = R.drawable.stat_sys_battery_charge_bar;
-	    } else if (mUseHoneyBatt) {
-                mBattIcon = R.drawable.stat_sys_battery_honey;
-                mChargeIcon = R.drawable.stat_sys_battery_charge_honey;
-	    } else if (mUseGenxBatt) {
-                mBattIcon = R.drawable.stat_sys_battery_genx;
-                mChargeIcon = R.drawable.stat_sys_battery_charge_genx;
-	    } else if (!mUseBattPercentages && !mUseCircleBatt && !mUseBarBatt && !mUseHoneyBatt && !mUseGenxBatt) {
-                mBattIcon = R.drawable.stat_sys_battery_normal;
-                mChargeIcon = R.drawable.stat_sys_battery_charge_normal;
-            }
-            final int icon = plugged ? mChargeIcon 
-                                     : mBattIcon;
+            mBatteryPlugged = intent.getIntExtra(BatteryManager.EXTRA_PLUGGED, 0) != 0;
+
             int N = mIconViews.size();
             for (int i=0; i<N; i++) {
                 ImageView v = mIconViews.get(i);
-                v.setImageResource(icon);
                 v.setImageLevel(level);
                 v.setContentDescription(mContext.getString(R.string.accessibility_battery_level,
                         level));
-                if (mHideBatt)
-                    v.setVisibility(View.GONE);
-                else
-                    v.setVisibility(View.VISIBLE);
             }
             N = mLabelViews.size();
             for (int i=0; i<N; i++) {
                 TextView v = mLabelViews.get(i);
-                v.setText(mContext.getString(R.string.status_bar_settings_battery_meter_format,
+                v.setText(mContext.getString(BATTERY_TEXT_STYLE_MIN,
                         level));
             }
+            updateBattery();
+        }
+    }
+
+    private void updateBattery() {
+        int mIcon = View.GONE;
+        int mText = View.GONE;
+        int mIconStyle = BATTERY_ICON_STYLE_NORMAL;
+
+        if (mBatteryStyle == 0) {
+            mIcon = (View.VISIBLE);
+            mIconStyle = mBatteryPlugged ? BATTERY_ICON_STYLE_CHARGE
+                    : BATTERY_ICON_STYLE_NORMAL;
+        } else if (mBatteryStyle == 1) {
+            mIcon = (View.VISIBLE);
+            mText = (View.VISIBLE);
+            mIconStyle = mBatteryPlugged ? BATTERY_ICON_STYLE_CHARGE_MIN
+                    : BATTERY_ICON_STYLE_NORMAL_MIN;
+        }
+
+        int N = mIconViews.size();
+        for (int i=0; i<N; i++) {
+            ImageView v = mIconViews.get(i);
+            v.setVisibility(mIcon);
+            v.setImageResource(mIconStyle);
+        }
+        N = mLabelViews.size();
+        for (int i=0; i<N; i++) {
+            TextView v = mLabelViews.get(i);
+            v.setVisibility(mText);
         }
     }
 
     private void updateSettings() {
         ContentResolver resolver = mContext.getContentResolver();
-        mUseBattPercentages = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 1);
-        mUseBarBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 2);
-        mUseCircleBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 3);
-	mUseHoneyBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 4);
-	mUseGenxBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 5);
-        mHideBatt = (Settings.System.getInt(resolver, Settings.System.BATTERY_PERCENTAGES, 1) == 6);
+
+        mBatteryStyle = (Settings.System.getInt(resolver,
+                Settings.System.STATUS_BAR_BATTERY, 0));
+        updateBattery();
     }
 }
-

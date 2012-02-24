@@ -18,7 +18,6 @@ package com.android.systemui.statusbar.policy;
 
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
-import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -62,12 +61,10 @@ public class Clock extends TextView {
     private static final int AM_PM_STYLE_SMALL   = 1;
     private static final int AM_PM_STYLE_GONE    = 2;
 
-        private static int AM_PM_STYLE = AM_PM_STYLE_GONE;
-
+    private static int AM_PM_STYLE = AM_PM_STYLE_GONE;
 
     private int mAmPmStyle;
     private boolean mShowClock;
-
 
     Handler mHandler;
 
@@ -78,14 +75,13 @@ public class Clock extends TextView {
 
         void observe() {
             ContentResolver resolver = mContext.getContentResolver();
-            resolver.registerContentObserver(
-                Settings.System.getUriFor(Settings.System.STATUS_BAR_AM_PM), false, this);
-            resolver.registerContentObserver(
-                Settings.System.getUriFor(Settings.System.STATUS_BAR_CLOCK), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_AM_PM), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.STATUS_BAR_CLOCK), false, this);
         }
 
-        @Override
-        public void onChange(boolean selfChange) {
+        @Override public void onChange(boolean selfChange) {
             updateSettings();
         }
     }
@@ -104,6 +100,7 @@ public class Clock extends TextView {
         mHandler = new Handler();
         SettingsObserver settingsObserver = new SettingsObserver(mHandler);
         settingsObserver.observe();
+
         updateSettings();
     }
 
@@ -130,7 +127,7 @@ public class Clock extends TextView {
         mCalendar = Calendar.getInstance(TimeZone.getDefault());
 
         // Make sure we update to the current time
-        updateSettings();
+        updateClock();
     }
 
     @Override
@@ -158,8 +155,6 @@ public class Clock extends TextView {
     };
 
     final void updateClock() {
-        AM_PM_STYLE = (Settings.System.getInt(getContext().getContentResolver(),
-                Settings.System.STATUS_BAR_AM_PM, 2));
         mCalendar.setTimeInMillis(System.currentTimeMillis());
         setText(getSmallTime());
     }
@@ -240,17 +235,28 @@ public class Clock extends TextView {
         }
  
         return result;
+
     }
 
-    protected void updateSettings() {
+    private void updateSettings(){
         ContentResolver resolver = mContext.getContentResolver();
-        mClockFormatString = "";
-        if (mAttached) {
-            updateClock();
+
+        mAmPmStyle = (Settings.System.getInt(resolver,
+                Settings.System.STATUS_BAR_AM_PM, 2));
+
+        if (mAmPmStyle != AM_PM_STYLE) {
+            AM_PM_STYLE = mAmPmStyle;
+            mClockFormatString = "";
+
+            if (mAttached) {
+                updateClock();
+            }
         }
 
-        mShowClock = (Settings.System.getInt(resolver, Settings.System.STATUS_BAR_CLOCK, 1) == 1);
-        if (mShowClock)
+        mShowClock = (Settings.System.getInt(resolver,
+                Settings.System.STATUS_BAR_CLOCK, 1) == 1);
+
+        if(mShowClock)
             setVisibility(View.VISIBLE);
         else
             setVisibility(View.GONE);

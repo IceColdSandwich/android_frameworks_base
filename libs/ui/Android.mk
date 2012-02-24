@@ -42,7 +42,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
 	$(commonSources) \
-	Overlay.cpp \
 	EGLUtils.cpp \
 	FramebufferNativeWindow.cpp \
 	GraphicBuffer.cpp \
@@ -68,9 +67,7 @@ LOCAL_C_INCLUDES := \
     external/skia/include/core
 
 ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
-ifneq ($(BOARD_USES_QCOM_LEGACY),true)
 LOCAL_CFLAGS += -DQCOM_HARDWARE
-endif
 endif
 
 LOCAL_MODULE:= libui

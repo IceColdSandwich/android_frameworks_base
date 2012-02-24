@@ -16,30 +16,28 @@
 
 package com.android.internal.policy.impl;
 
-import java.io.File;
-import java.net.URISyntaxException;
+import com.android.internal.R;
+import com.android.internal.widget.LockPatternUtils;
+import com.android.internal.widget.SlidingTab;
+import com.android.internal.widget.WaveView;
+import com.android.internal.widget.multiwaveview.MultiWaveView;
 
 import android.app.ActivityManager;
 import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
-import android.media.AudioManager;
-import android.net.Uri;
-import android.provider.MediaStore;
-import android.provider.Settings;
-import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.LinearLayout;
+import android.widget.*;
+import android.util.Log;
+import android.media.AudioManager;
+import android.provider.MediaStore;
+import android.provider.Settings;
 
-import com.android.internal.R;
-import com.android.internal.widget.LockPatternUtils;
-import com.android.internal.widget.SlidingTab;
-import com.android.internal.widget.WaveView;
-import com.android.internal.widget.multiwaveview.MultiWaveView;
+import java.io.File;
 
 /**
  * The screen within {@link LockPatternKeyguardView} that shows general
@@ -54,7 +52,6 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
     private static final String ENABLE_MENU_KEY_FILE = "/data/local/enable_menu_key";
     private static final int WAIT_FOR_ANIMATION_TIMEOUT = 0;
     private static final int STAY_ON_WHILE_GRABBED_TIMEOUT = 30000;
-    private static final String TOGGLE_FLASHLIGHT = "net.cactii.flash2.TOGGLE_FLASHLIGHT";
 
     private LockPatternUtils mLockPatternUtils;
     private KeyguardUpdateMonitor mUpdateMonitor;
@@ -71,10 +68,6 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
     private KeyguardStatusViewManager mStatusViewManager;
     private UnlockWidgetCommonMethods mUnlockWidgetMethods;
     private View mUnlockWidget;
-
-    private boolean mQuadTargets = (Settings.System.getInt(mContext.getContentResolver(),
-        Settings.System.LOCKSCREEN_QUAD_TARGETS, 0) == 1);
-
 
     private interface UnlockWidgetCommonMethods {
         // Update resources based on phone state
@@ -210,9 +203,7 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
 
         public void updateResources() {
             int resId;
-            if (mQuadTargets) {
-                resId = R.array.quad_lockscreen_targets;
-            } else if (mCameraDisabled) {
+            if (mCameraDisabled) {
                 // Fall back to showing ring/silence if camera is disabled by DPM...
                 resId = mSilentMode ? R.array.lockscreen_targets_when_silent
                     : R.array.lockscreen_targets_when_soundon;
@@ -231,65 +222,19 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
         }
 
         public void onTrigger(View v, int target) {
-            if (mQuadTargets) {
-                if (target == 0) { // right Action = Unlock
+            if (target == 0 || target == 1) { // 0 = unlock/portrait, 1 = unlock/landscape
+                mCallback.goToUnlockScreen();
+            } else if (target == 2 || target == 3) { // 2 = alt/portrait, 3 = alt/landscape
+                if (!mCameraDisabled) {
+                    // Start the Camera
+                    Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
+                    intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+                    mContext.startActivity(intent);
                     mCallback.goToUnlockScreen();
-                } else if (target == 1) { // up Action == Mms
-                    String intentUri = Settings.System.getString(mContext.getContentResolver(), Settings.System.LOCKSCREEN_CUSTOM_SMS_INTENT);
-
-                    if(intentUri == null) {
-                        Intent intent = new Intent(Intent.ACTION_MAIN);
-                        intent.addCategory(Intent.CATEGORY_LAUNCHER);
-                        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                        intent.setClassName("com.android.mms", "com.android.mms.ui.ConversationList");
-                        mContext.startActivity(intent);
-                    } else {
-                        Intent mmsIntent;
-                        try {
-                            mmsIntent = Intent.parseUri(intentUri, 0);
-                            mmsIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                                    | Intent.FLAG_ACTIVITY_RESET_TASK_IF_NEEDED);
-                            mContext.startActivity(mmsIntent);
-                        } catch (URISyntaxException e) {
-                        }
-                    }
-                    mCallback.goToUnlockScreen();
-                } else if (target == 2) { // left Action = Phone
-                    Intent phoneIntent = new Intent(Intent.ACTION_MAIN);
-                    phoneIntent.setClassName("com.android.contacts",
-                                             "com.android.contacts.activities.DialtactsActivity");
-                    phoneIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                    mContext.startActivity(phoneIntent);
-                    mCallback.goToUnlockScreen();
-                } else if (target == 3) {
-                    if (!mCameraDisabled) {
-                        // Start the Camera
-                        Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        mContext.startActivity(intent);
-                        mCallback.goToUnlockScreen();
-                    } else {
-                        toggleRingMode();
-                        mUnlockWidgetMethods.updateResources();
-                        mCallback.pokeWakelock();
-                    }
-                }
-            } else {
-                if (target == 0 || target == 1) { // 0 = unlock/portrait, 1 = unlock/landscape
-                    mCallback.goToUnlockScreen();
-                } else if (target == 2 || target == 3) { // 2 = alt/portrait, 3 = alt/landscape
-                    if (!mCameraDisabled) {
-                        // Start the Camera
-                        Intent intent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
-                        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-                        mContext.startActivity(intent);
-                        mCallback.goToUnlockScreen();
-                    } else {
-                        toggleRingMode();
-                        mUnlockWidgetMethods.updateResources();
-                        mCallback.pokeWakelock();
-                    }
+                } else {
+                    toggleRingMode();
+                    mUnlockWidgetMethods.updateResources();
+                    mCallback.pokeWakelock();
                 }
             }
         }
@@ -353,10 +298,8 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
         final boolean configDisabled = res.getBoolean(R.bool.config_disableMenuKeyInLockScreen);
         final boolean isTestHarness = ActivityManager.isRunningInTestHarness();
         final boolean fileOverride = (new File(ENABLE_MENU_KEY_FILE)).exists();
-        boolean defaultValue = !configDisabled || isTestHarness || fileOverride;
-        
-	return (Settings.System.getInt(getContext().getContentResolver(),
-                Settings.System.MENU_UNLOCK_SCREEN, defaultValue ? 1 : 0) == 1);
+        final boolean menuOverride = Settings.System.getInt(getContext().getContentResolver(), Settings.System.MENU_UNLOCK_SCREEN, 0) == 1;
+        return !configDisabled || isTestHarness || fileOverride || menuOverride;
     }
 
     /**
@@ -443,31 +386,10 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
         return mAudioManager.getRingerMode() != AudioManager.RINGER_MODE_NORMAL;
     }
 
-    private void toggleFlashLight() {
-        Intent intent = new Intent(LockScreen.TOGGLE_FLASHLIGHT);
-        intent.putExtra("strobe", false);
-        intent.putExtra("period", 0);
-        intent.putExtra("bright", false);
-        getContext().sendBroadcast(intent);
-    }
-
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_MENU && mEnableMenuKeyInLockScreen) {
             mCallback.goToUnlockScreen();
-	    return false;
-
-        } else if (keyCode == KeyEvent.KEYCODE_HOME) {
-            event.startTracking();
-            return true;
-        }
-        return false;
-    }
-
-    @Override
-    public boolean onKeyLongPress(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_HOME) {
-          toggleFlashLight();
         }
         return false;
     }
@@ -506,11 +428,6 @@ class LockScreen extends LinearLayout implements KeyguardScreen {
                     + ", new config=" + newConfig);
         }
         updateConfiguration();
-    }
-
-    /** {@inheritDoc} */
-    public boolean checkInProgress() {
-        return false;
     }
 
     /** {@inheritDoc} */
