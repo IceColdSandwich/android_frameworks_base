@@ -292,6 +292,7 @@ private:
     bool isStreamingHTTP() const;
     void sendCacheStats();
 
+    bool mBufferingDone;
     enum FlagMode {
         SET,
         CLEAR,

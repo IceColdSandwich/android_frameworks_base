@@ -121,6 +121,7 @@ private:
     bool mDisconnectAtHighwatermark;
     int64_t mAVOffset;
 
+    bool mIsDownloadComplete;
     void onMessageReceived(const sp<AMessage> &msg);
     void onFetch();
     void onRead(const sp<AMessage> &msg);
