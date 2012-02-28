@@ -361,6 +361,7 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     break;
                 case AIRPLANE_MODE_ON:
                 case TURN_COLD:
+                    finishSwitchingOff();
                     shutoffBluetooth();
                     transitionTo(mPowerOff);
                     broadcastState(BluetoothAdapter.STATE_OFF);
@@ -431,8 +432,9 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     removeMessages(POWER_DOWN_TIMEOUT);
                     if (!((Boolean) message.obj)) {
                         if (mPublicState == BluetoothAdapter.STATE_TURNING_OFF) {
-                            transitionTo(mHotOff);
                             finishSwitchingOff();
+                            transitionTo(mHotOff);
+                            broadcastState(BluetoothAdapter.STATE_OFF);
                             if (!mContext.getResources().getBoolean
                             (com.android.internal.R.bool.config_bluetooth_adapter_quick_switch)) {
                                 deferMessage(obtainMessage(TURN_COLD));
@@ -466,7 +468,6 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                     break;
                 case POWER_DOWN_TIMEOUT:
                     transitionTo(mHotOff);
-                    finishSwitchingOff();
                     // reset the hardware for error recovery
                     Log.e(TAG, "Devices failed to power down, reseting...");
                     deferMessage(obtainMessage(TURN_COLD));
@@ -650,9 +651,9 @@ final class BluetoothAdapterStateMachine extends StateMachine {
                 case ALL_DEVICES_DISCONNECTED:
                     removeMessages(DEVICES_DISCONNECT_TIMEOUT);
                     finishSwitchingOff();
+                    broadcastState(BluetoothAdapter.STATE_OFF);
                     break;
                 case DEVICES_DISCONNECT_TIMEOUT:
-                    finishSwitchingOff();
                     Log.e(TAG, "Devices fail to disconnect, reseting...");
                     transitionTo(mHotOff);
                     deferMessage(obtainMessage(TURN_COLD));
@@ -687,8 +688,11 @@ final class BluetoothAdapterStateMachine extends StateMachine {
     }
 
     private void finishSwitchingOff() {
+        if (mPublicState == BluetoothAdapter.STATE_OFF) {
+            Log.i(TAG, "Already switched Off");
+            return;
+        }
         mBluetoothService.finishDisable();
-        broadcastState(BluetoothAdapter.STATE_OFF);
         mBluetoothService.cleanupAfterFinishDisable();
     }
 
