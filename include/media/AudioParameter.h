@@ -46,7 +46,7 @@ public:
     static const char *keyChannels;
     static const char *keyFrameCount;
     static const char *keyInputSource;
-
+    static const char *keyHandleFm;
     String8 toString();
 
     status_t add(const String8& key, const String8& value);
