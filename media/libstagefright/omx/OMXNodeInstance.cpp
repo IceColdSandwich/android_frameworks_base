@@ -622,7 +622,7 @@ status_t OMXNodeInstance::freeBuffer(
             buffer_meta = NULL;
         }
     } else {
-        ALOGE("OMX_FreeBuffer failed with err 0x%08x", err);
+        LOGE("OMX_FreeBuffer failed with err 0x%08x", err);
     }
 #else
     delete buffer_meta;
