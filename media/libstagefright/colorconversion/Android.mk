@@ -10,8 +10,8 @@ LOCAL_C_INCLUDES := \
         $(TOP)/hardware/msm7k
 
 ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
-        LOCAL_C_INCLUDES += $(TOP)/hardware/qcom/media/mm-core/omxcore/inc
-        LOCAL_CFLAGS += -DQCOM_HARDWARE
+LOCAL_C_INCLUDES += \
+	$(TOP)/vendor/qcom/opensource/omx/mm-core/omxcore/inc
 endif
 
 LOCAL_MODULE:= libstagefright_color_conversion
