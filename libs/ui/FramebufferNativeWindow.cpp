@@ -414,3 +414,14 @@ EGLNativeWindowType android_createDisplaySurface(void)
     }
     return (EGLNativeWindowType)w;
 }
+
+extern "C" status_t _ZN7android7Overlay13dequeueBufferEPPv(void* buffer)
+{
+    return NO_ERROR;
+}
+
+extern "C" void _ZN7android7Overlay7destroyEv(void)
+{
+    return;
+}
+
