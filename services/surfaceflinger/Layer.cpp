@@ -448,8 +448,8 @@ void Layer::lockPageFlip(bool& recomputeVisibleRegions)
 
         if (mSurfaceTexture->updateTexImage(avoidTex) < NO_ERROR) {
 #else
-
         if (mSurfaceTexture->updateTexImage() < NO_ERROR) {
+#endif
             // something happened!
             recomputeVisibleRegions = true;
             return;
@@ -605,12 +605,7 @@ uint32_t Layer::getEffectiveUsage(uint32_t usage) const
         // need a hardware-protected path to external video sink
         usage |= GraphicBuffer::USAGE_PROTECTED;
     }
-#ifdef MISSING_GRALLOC_BUFFERS
-    usage |= GraphicBuffer::USAGE_HW_TEXTURE;
-#else
     usage |= GraphicBuffer::USAGE_HW_COMPOSER;
-#endif
-
     return usage;
 }
 
@@ -629,3 +624,4 @@ uint32_t Layer::getTransformHint() const {
 
 
 }; // namespace android
+
