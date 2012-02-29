@@ -1154,6 +1154,25 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
                     LOGW("Failed to set frame packing format on component");
                 }
             }
+
+            // Enable timestamp reordering only for AVI/mpeg4 and vc1 clips
+            const char *fileFormat;
+            success = meta->findCString(kKeyFileFormat, &fileFormat);
+            if (!strcmp(mComponentName, "OMX.qcom.video.decoder.vc1") ||
+                    (success && !strncmp(fileFormat, "video/avi", 9) &&
+                    !strcmp(mComponentName, "OMX.qcom.video.decoder.mpeg4"))) {
+                CODEC_LOGI("Enabling timestamp reordering");
+                QOMX_INDEXTIMESTAMPREORDER reorder;
+                InitOMXParams(&reorder);
+                reorder.nPortIndex = kPortIndexOutput;
+                reorder.bEnable = OMX_TRUE;
+                err = mOMX->setParameter(
+                        mNode, (OMX_INDEXTYPE)OMX_QcomIndexParamEnableTimeStampReorder,
+                        (void *)&reorder, sizeof(reorder));
+                if(err != OK) {
+                    LOGW("Failed to enable timestamp reordering");
+                }
+            }
         }
     }
 
