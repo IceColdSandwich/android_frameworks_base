@@ -319,7 +319,8 @@ public class BluetoothService extends IBluetooth.Stub {
         mBluetoothState = new BluetoothAdapterStateMachine(mContext, this, mAdapter);
         mBluetoothState.start();
         if (mContext.getResources().getBoolean
-            (com.android.internal.R.bool.config_bluetooth_adapter_quick_switch)) {
+            (com.android.internal.R.bool.config_bluetooth_adapter_quick_switch) &&
+            mBluetoothState.is_hot_off_enabled()) {
             mBluetoothState.sendMessage(BluetoothAdapterStateMachine.TURN_HOT);
         }
         mEventLoop = mBluetoothState.getBluetoothEventLoop();
