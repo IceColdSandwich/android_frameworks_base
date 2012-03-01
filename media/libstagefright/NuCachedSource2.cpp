@@ -131,6 +131,7 @@ size_t PageCache::releaseFromStart(size_t maxBytes) {
     }
 
     mTotalSize -= bytesReleased;
+    LOGV("Size of cache after release %d", mTotalSize);
     return bytesReleased;
 }
 
@@ -194,7 +195,8 @@ NuCachedSource2::NuCachedSource2(
       mHighwaterThresholdBytes(kDefaultHighWaterThreshold),
       mLowwaterThresholdBytes(kDefaultLowWaterThreshold),
       mKeepAliveIntervalUs(kDefaultKeepAliveIntervalUs),
-      mDisconnectAtHighwatermark(disconnectAtHighwatermark) {
+      mDisconnectAtHighwatermark(disconnectAtHighwatermark),
+      mAVOffset(kMinAVInterleavingOffset){
     // We are NOT going to support disconnect-at-highwatermark indefinitely
     // and we are not guaranteeing support for client-specified cache
     // parameters. Both of these are temporary measures to solve a specific
@@ -255,6 +257,15 @@ uint32_t NuCachedSource2::flags() {
     // Remove HTTP related flags since NuCachedSource2 is not HTTP-based.
     uint32_t flags = mSource->flags() & ~(kWantsPrefetching | kIsHTTPBasedSource);
     return (flags | kIsCachingDataSource);
+}
+
+void NuCachedSource2::setAVInterleavingOffset(int64_t av_offset){
+    Mutex::Autolock autoLock(mLock);
+
+    mAVOffset = av_offset > kMaxAVInterleavingOffset ? kMaxAVInterleavingOffset: av_offset;
+    mAVOffset = mAVOffset < kMinAVInterleavingOffset ? kMinAVInterleavingOffset: mAVOffset;
+
+    LOGV("setAVOffset %lld", mAVOffset);
 }
 
 void NuCachedSource2::onMessageReceived(const sp<AMessage> &msg) {
@@ -425,30 +436,25 @@ void NuCachedSource2::restartPrefetcherIfNecessary_l(
         bool ignoreLowWaterThreshold, bool force) {
     static const size_t kGrayArea = 1024 * 1024;
 
-    if (mFetching || (mFinalStatus != OK && mNumRetriesLeft == 0)) {
+    if ((!force && mFetching) || (mFinalStatus != OK && mNumRetriesLeft == 0)) {
         return;
     }
 
     if (!ignoreLowWaterThreshold && !force
             && mCacheOffset + mCache->totalSize() - mLastAccessPos
-                >= mLowwaterThresholdBytes) {
+                >= mLowwaterThresholdBytes + mAVOffset) {
+        int64_t cacheLeft = mCacheOffset + mCache->totalSize() - mLastAccessPos;
+        LOGV("Dont restart prefetcher last access %lld, cache left %lld", mLastAccessPos, cacheLeft);
         return;
     }
 
     size_t maxBytes = mLastAccessPos - mCacheOffset;
 
-    if (!force) {
-        if (maxBytes < kGrayArea) {
-            return;
-        }
-
-        maxBytes -= kGrayArea;
-    }
-
+    maxBytes = (maxBytes > mAVOffset) ? maxBytes - mAVOffset : maxBytes;
     size_t actualBytes = mCache->releaseFromStart(maxBytes);
     mCacheOffset += actualBytes;
 
-    LOGI("restarting prefetcher, totalSize = %d", mCache->totalSize());
+    LOGI("restarting prefetcher, totalSize = %d, offset %lld", mCache->totalSize(), mCacheOffset);
     mFetching = true;
 }
 
@@ -513,11 +519,16 @@ size_t NuCachedSource2::approxDataRemaining_l(status_t *finalStatus) {
         *finalStatus = OK;
     }
 
-    off64_t lastBytePosCached = mCacheOffset + mCache->totalSize();
+    off64_t lastBytePosCached = mCacheOffset + mCache->totalSize() + mAVOffset;
     if (mLastAccessPos < lastBytePosCached) {
         return lastBytePosCached - mLastAccessPos;
     }
     return 0;
+}
+
+bool NuCachedSource2::isCacheFull() {
+    Mutex::Autolock autoLock(mLock);
+    return (mCache->totalSize() >= mHighwaterThresholdBytes);
 }
 
 ssize_t NuCachedSource2::readInternal(off64_t offset, void *data, size_t size) {
@@ -536,13 +547,12 @@ ssize_t NuCachedSource2::readInternal(off64_t offset, void *data, size_t size) {
 
     if (offset < mCacheOffset
             || offset >= (off64_t)(mCacheOffset + mCache->totalSize())) {
-        static const off64_t kPadding = 256 * 1024;
 
         // In the presence of multiple decoded streams, once of them will
         // trigger this seek request, the other one will request data "nearby"
         // soon, adjust the seek position so that that subsequent request
         // does not trigger another seek.
-        off64_t seekOffset = (offset > kPadding) ? offset - kPadding : 0;
+        off64_t seekOffset = (offset > mAVOffset) ? offset - mAVOffset : 0;
 
         seekInternal_l(seekOffset);
     }
@@ -700,3 +710,4 @@ void NuCachedSource2::RemoveCacheSpecificHeaders(
 }
 
 }  // namespace android
+
