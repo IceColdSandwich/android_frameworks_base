@@ -263,8 +263,10 @@ status_t AudioSource::dataCallbackTimestamp(
         return OK;
     }
 
-    // Drop retrieved and previously lost audio data.
-    if (mNumFramesReceived == 0 && timeUs < mStartTimeUs) {
+    int64_t buffUs = ((1000000LL * (audioBuffer.size / (2 * mRecord->channelCount()))) +
+                    (mSampleRate >> 1)) / mSampleRate;
+
+    if (mNumFramesReceived == 0 && timeUs < (mStartTimeUs + buffUs) ) {
         mRecord->getInputFramesLost();
         LOGV("Drop audio data at %lld/%lld us", timeUs, mStartTimeUs);
         return OK;
@@ -274,7 +276,7 @@ status_t AudioSource::dataCallbackTimestamp(
         mInitialReadTimeUs = timeUs;
         // Initial delay
         if (mStartTimeUs > 0) {
-            mStartTimeUs = timeUs - mStartTimeUs;
+            mStartTimeUs = timeUs - buffUs - mStartTimeUs;
         } else {
             // Assume latency is constant.
             mStartTimeUs += mRecord->latency() * 1000;
