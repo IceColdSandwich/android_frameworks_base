@@ -757,6 +757,20 @@ sp<MediaSource> OMXCodec::Create(
         LOGV("Attempting to allocate OMX node '%s'", componentName);
 #endif
 
+#if USE_AAC_HW_DEC
+        int aacformattype = 0;
+        int aacLTPType = 0;
+        sp<MetaData> metadata = source->getFormat();
+        metadata->findInt32(kkeyAacFormatAdif, &aacformattype);
+        metadata->findInt32(kkeyAacFormatLtp, &aacLTPType);
+
+        if ((aacformattype == true)|| aacLTPType == true)  {
+            LOGE("This is ADIF/LTP clip , so using sw decoder ");
+            componentName= "OMX.google.aac.decoder";
+            componentNameBase = "OMX.google.aac.decoder";
+        }
+#endif
+
         uint32_t quirks = getComponentQuirks(componentNameBase, createEncoder);
 #ifdef QCOM_HARDWARE
         if(quirks & kRequiresWMAProComponent)
@@ -776,18 +790,6 @@ sp<MediaSource> OMXCodec::Create(
               componentName= "OMX.qcom.audio.decoder.wmaLossLess";
            }
         }
-#if USE_AAC_HW_DEC
-        int aacformattype = 0;
-        int aacLTPType = 0;
-        sp<MetaData> metadata = source->getFormat();
-        metadata->findInt32(kkeyAacFormatAdif, &aacformattype);
-        metadata->findInt32(kkeyAacFormatLtp, &aacLTPType);
-
-        if ((aacformattype == true)|| aacLTPType == true)  {
-            LOGE("This is ADIF/LTP clip , so using sw decoder ");
-            componentName= "OMX.google.aac.decoder";
-        }
-#endif
 #endif
         if (!createEncoder
                 && (quirks & kOutputBuffersAreUnreadable)
@@ -976,9 +978,8 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
                             data, size, &profile, &level, meta)) != OK) {
 #else
                             data, size, &profile, &level)) != OK) {
-
 #endif
-		LOGE("Malformed AVC codec specific data.");
+                LOGE("Malformed AVC codec specific data.");
                 return err;
             }
 
@@ -3077,7 +3078,7 @@ void OMXCodec::on_message(const omx_message &msg) {
 #else
     if (mState == ERROR) {
 #endif
-	LOGW("Dropping OMX message - we're in ERROR state.");
+        LOGW("Dropping OMX message - we're in ERROR state.");
         return;
     }
 
@@ -3187,7 +3188,6 @@ void OMXCodec::on_message(const omx_message &msg) {
             }
 
             info->mStatus = OWNED_BY_US;
-
 #ifdef QCOM_HARDWARE
             if ((mState == ERROR) && (bInvalidState == true)) {
               CODEC_LOGV("mState ERROR, freeing o/p buffer %p", buffer);
@@ -5201,6 +5201,7 @@ status_t OMXCodec::stop() {
                      mComponentName);
             }
 #endif
+
             if (state != OMX_StateExecuting) {
                 break;
             }
@@ -6458,3 +6459,4 @@ status_t OMXCodec::processSEIData() {
 #endif
 
 }  // namespace android
+
