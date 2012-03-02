@@ -234,6 +234,7 @@ public class WebSettings {
     private boolean         mEnableSmoothTransition = false;
     private boolean         mForceUserScalable = false;
     private boolean         mWOFFEnabled = true;
+    private boolean         mWebGLEnabled = true;
 
     // AutoFill Profile data
     /**
@@ -404,7 +405,7 @@ public class WebSettings {
                 "android.permission.INTERNET", android.os.Process.myPid(),
                 android.os.Process.myUid()) != PackageManager.PERMISSION_GRANTED;
 
-        // proteus: 
+        // proteus:
         try {
           mDataPath = mContext.getPackageManager().getApplicationInfo(
               mContext.getPackageName(), 0).dataDir;
@@ -1831,6 +1832,16 @@ public class WebSettings {
     public synchronized void setWOFFEnabled(boolean flag) {
         if (mWOFFEnabled != flag) {
             mWOFFEnabled = flag;
+            postSync();
+        }
+    }
+
+    /**
+     * @hide
+     */
+    public synchronized void setWebGLEnabled(boolean flag) {
+        if (mWebGLEnabled != flag) {
+            mWebGLEnabled = flag;
             postSync();
         }
     }
