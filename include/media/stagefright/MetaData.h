@@ -135,6 +135,8 @@ enum {
     kKeyWMAVirPktSize     = 'vpks',  // int64_t
 #endif
 
+    kKeyFileFormat        = 'ffmt',  // cstring
+
     // An indication that a video buffer has been rendered.
     kKeyRendered          = 'rend',  // bool (int32_t)
 
