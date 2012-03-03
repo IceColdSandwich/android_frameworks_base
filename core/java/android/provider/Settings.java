@@ -1778,6 +1778,12 @@ public final class Settings {
          */
         public static final String POINTER_LOCATION = "pointer_location";
 
+	/**
+         * Torch state (flashlight)
+         * @hide
+         */
+        public static final String TORCH_STATE = "torch_state";
+
         /**
          * Show touch positions on screen?
          * 0 = no
