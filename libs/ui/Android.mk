@@ -42,7 +42,6 @@ include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES:= \
 	$(commonSources) \
-	Overlay.cpp \
 	EGLUtils.cpp \
 	FramebufferNativeWindow.cpp \
 	GraphicBuffer.cpp \
@@ -69,6 +68,8 @@ LOCAL_C_INCLUDES := \
 
 ifeq ($(TARGET_BOARD_PLATFORM),msm7x30)
     LOCAL_SRC_FILES+= 7x30/Overlay.cpp
+else
+    LOCAL_SRC_FILES+= Overlay.cpp
 endif
 
 ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
