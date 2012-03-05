@@ -145,7 +145,10 @@ class HTML5VideoViewProxy extends Handler
                 mHTML5VideoView.pause();
                 mHTML5VideoView.release();
                 mHTML5VideoView = null;
-                isVideoSelfEnded = true;
+                // isVideoSelfEnded is false when video playback
+                // has ended but is not complete.
+                // isVideoSelfEnded is true only when playback is complete.
+                isVideoSelfEnded = false;
                 end();
             }
         }
