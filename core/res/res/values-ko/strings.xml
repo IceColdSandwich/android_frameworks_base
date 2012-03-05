@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <!-- 
 /* //device/apps/common/assets/res/any/strings.xml
 **
@@ -157,7 +157,7 @@
     <string name="global_action_silent_mode_on_status" msgid="3289841937003758806">"소리 꺼짐"</string>
     <string name="global_action_silent_mode_off_status" msgid="1506046579177066419">"소리 켜짐"</string>
     <string name="global_actions_toggle_airplane_mode" msgid="5884330306926307456">"비행기 모드"</string>
-    <string name="global_actions_airplane_mode_on_status" msgid="2719557982608919750">"비행기 모드 사용"</string>
+    <string name="global_actions_airplane_mode_on_status" msgid="2719557982608919750">"비행기 모드 사용 중"</string>
     <string name="global_actions_airplane_mode_off_status" msgid="5075070442854490296">"비행기 모드 사용 안함"</string>
     <string name="status_bar_notification_info_overflow" msgid="5301981741705354993">"999+"</string>
     <string name="safeMode" msgid="2788228061547930246">"안전 모드"</string>
@@ -1241,11 +1241,13 @@
     <string name="global_action_screenshot">스크린샷</string>
 
     <!-- Button to reboot the phone, within the Reboot Options dialog -->
-    <string name="reboot_reboot">다시 시작</string>
+    <string name="reboot_reboot">시스템 재시작</string>
     <!-- Button to reboot the phone into recovery, within the Reboot Options dialog -->
-    <string name="reboot_recovery">복구 모드</string>
+    <string name="reboot_recovery">복구모드</string>
     <!-- Button to reboot the phone into bootloader, within the Reboot Options dialog -->
     <string name="reboot_bootloader">부트로더</string>
+    <!-- Button to reboot the phone into bootmenu, within the Reboot Options dialog -->
+    <string name="reboot_hot">빠른 재시작</string>
     <!-- Button to reboot the phone into bootmenu, within the Reboot Options dialog -->
     <string name="reboot_bootmenu">부트 메뉴</string>
     <!-- Button to reboot the phone into fastboot, within the Reboot Options dialog -->
@@ -1255,6 +1257,8 @@
 
     <!-- Reboot Progress Dialog. This is shown if the user chooses to reboot the phone. -->
     <string name="reboot_progress">다시 시작하는 중\u2026</string>
+    <!-- Reboot Progress Dialog. This is shown if the user chooses to reboot the phone. -->
+    <string name="hot_reboot_progress">빠른 재시작 중\u2026</string>
     <!-- Reboot Confirmation Dialog.  When the user chooses to reboot the phone, there will be a confirmation dialog.  This is the message. -->
     <string name="reboot_confirm">휴대전화가 다시 시작됩니다.</string>
 
@@ -1266,8 +1270,23 @@
     <string name="silent_mode_ring">소리 켜기</string>
     <!-- Title of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permlab_preventpower">전원 버튼 작동 제한</string>
-
+    <!-- label for item that reboots the phone in phone options dialog -->
+    <string name="global_action_reboot">다시 시작</string>
+    
     <!-- Description of an application permission, listed so the user can choose whether they want to allow the application to do this. -->
     <string name="permdesc_preventpower">어플리케이션이 전원 버튼의 작동을 제한 할 수 있도록 허용합니다.</string>
 
+    <!-- label for item that toggles power saver mode -->
+    <string name="global_actions_toggle_power_saver">절전 모드</string>
+    <!-- status message in phone options dialog for when power saver is on -->
+    <string name="global_actions_power_saver_on_status">절전 모드 켜짐</string>
+    <!-- status message in phone options dialog for when power saver is off -->
+    <string name="global_actions_power_saver_off_status">절전 모드 꺼짐</string>
+    <!-- label for item that toggles torch -->
+    <string name="global_actions_toggle_torch">손전등</string>
+    <!-- status message in phone options dialog for when torch is on -->
+    <string name="global_actions_torch_on_status">손전등 켜짐</string>
+    <!-- status message in phone options dialog for when torch is off -->
+    <string name="global_actions_torch_off_status">손전등 꺼짐</string>
+    
 </resources>
