@@ -5110,6 +5110,7 @@ status_t OMXCodec::start(MetaData *meta) {
             while (mState != EXECUTING && mState != ERROR) {
                 mAsyncCompletion.wait(mLock);
             }
+            drainInputBuffers();
             return mState == ERROR ? UNKNOWN_ERROR : OK;
         } else {   // SW Codec
             mPaused = false;
