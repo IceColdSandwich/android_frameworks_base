@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
+ * Copyright (C) 2011-2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -642,6 +643,19 @@ void StagefrightMetadataRetriever::parseMetaData() {
             }
         }
 #endif
+        // Allow Audio only 3gp clips to be considered as audio clips
+        if (!strcasecmp(fileMIME, "video/3gpp") ||
+                !strcasecmp(fileMIME, "audio/mp4a-latm")) {
+            sp<MetaData> trackMeta = mExtractor->getTrackMetaData(0);
+            const char *trackMIME;
+            CHECK(trackMeta->findCString(kKeyMIMEType, &trackMIME));
+
+            if (!strcasecmp("audio/mp4a-latm", trackMIME)) {
+                mMetaData.add(
+                        METADATA_KEY_MIMETYPE, String8("audio/aac"));
+            }
+
+        }
     }
 
     // To check whether the media file is drm-protected
