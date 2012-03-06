@@ -2194,7 +2194,9 @@ OMXCodec::OMXCodec(
               || !strcmp(componentName, "OMX.Nvidia.mpeg2v.decode"))
                         ? NULL : nativeWindow),
       mNumBFrames(0),
-      mUseArbitraryMode(true) {
+      mUseArbitraryMode(true),
+      mDeferReason(0) {
+
     parseFlags();
     mPortStatus[kPortIndexInput] = ENABLED;
     mPortStatus[kPortIndexOutput] = ENABLED;
@@ -3365,6 +3367,8 @@ void OMXCodec::onEvent(OMX_EVENTTYPE event, OMX_U32 data1, OMX_U32 data2) {
             }
 
             if (data2 == 0 || data2 == OMX_IndexParamPortDefinition) {
+
+#if 0
                 // There is no need to check whether mFilledBuffers is empty or not
                 // when the OMX_EventPortSettingsChanged is not meant for reallocating
                 // the output buffers.
@@ -3373,8 +3377,27 @@ void OMXCodec::onEvent(OMX_EVENTTYPE event, OMX_U32 data1, OMX_U32 data2) {
                     setState(ERROR);
                     break;
                 }
+#endif
 
-                onPortSettingsChanged(data1);
+                if ((data1 == kPortIndexOutput) && !mFilledBuffers.empty()) {
+                    mOutputPortSettingsChangedPending = true;
+                    mDeferReason |= FILLED_BUFFERS_PRESENT;
+                }
+
+                if (countOutputBuffers(OWNED_BY_CLIENT) > 0) {
+                    mOutputPortSettingsChangedPending = true;
+                    mDeferReason |= BUFFER_WITH_CLIENT;
+                }
+
+                if (mDeferReason & (FILLED_BUFFERS_PRESENT|
+                                    BUFFER_WITH_CLIENT)) {
+                    CODEC_LOGV("defer port settings changed handling as "
+                               "mDeferReason %d != 0", mDeferReason);
+                    mBufferFilled.signal();
+                    mAsyncCompletion.signal();
+                } else {
+                    onPortSettingsChanged(data1);
+                }
             } else if (data1 == kPortIndexOutput &&
                         (data2 == OMX_IndexConfigCommonOutputCrop ||
                          data2 == OMX_IndexConfigCommonScale)) {
@@ -3493,6 +3516,11 @@ void OMXCodec::onCmdComplete(OMX_COMMANDTYPE cmd, OMX_U32 data) {
                 // wasn't of importance to them, i.e. it may be that just the
                 // number of buffers has changed and nothing else.
                 bool formatChanged = formatHasNotablyChanged(oldOutputFormat, mOutputFormat);
+
+                if (formatChanged) {
+                    CODEC_LOGV("reconfig handling, formatHasNotablyChanged");
+                }
+
                 if (!mOutputPortSettingsHaveChanged) {
                     mOutputPortSettingsHaveChanged = formatChanged;
                 }
@@ -3595,10 +3623,21 @@ void OMXCodec::onCmdComplete(OMX_COMMANDTYPE cmd, OMX_U32 data) {
                 }
 
                 if (mOutputPortSettingsChangedPending) {
+
+                    mOutputPortSettingsChangedPending = false; //no need to unset mDeferReason
+                    if (countOutputBuffers(OWNED_BY_CLIENT) > 0) {
+                        mOutputPortSettingsChangedPending = true;
+                        mDeferReason |= BUFFER_WITH_CLIENT;
+                        mBufferFilled.signal();
+                        mAsyncCompletion.signal();
+                        break;
+                    }
+
                     CODEC_LOGV(
                             "Honoring deferred output port settings change.");
-
-                    mOutputPortSettingsChangedPending = false;
+                    //since this after flush, safe to assume
+                    //mfilledbuffers is empty?
+                    CHECK(mFilledBuffers.empty());
                     onPortSettingsChanged(kPortIndexOutput);
                 }
             }
@@ -3831,13 +3870,14 @@ status_t OMXCodec::freeBuffer(OMX_U32 portIndex, size_t bufIndex) {
 void OMXCodec::onPortSettingsChanged(OMX_U32 portIndex) {
     CODEC_LOGV("PORT_SETTINGS_CHANGED(%ld)", portIndex);
 
-    CHECK_EQ((int)mState, (int)EXECUTING);
+    CHECK((mState == EXECUTING) ||
+          (mState == FLUSHING));
     CHECK_EQ(portIndex, (OMX_U32)kPortIndexOutput);
     CHECK(!mOutputPortSettingsChangedPending);
 
     if (mPortStatus[kPortIndexOutput] != ENABLED) {
         CODEC_LOGV("Deferring output port settings change.");
-        mOutputPortSettingsChangedPending = true;
+        mOutputPortSettingsChangedPending = true; //no need to set mDeferReason
         return;
     }
 
@@ -5204,6 +5244,7 @@ status_t OMXCodec::read(
         mSeekMode = seekMode;
 
         mFilledBuffers.clear();
+        mDeferReason &= ~FILLED_BUFFERS_PRESENT;
 
         CHECK_EQ((int)mState, (int)EXECUTING);
         setState(FLUSHING);
@@ -5277,7 +5318,9 @@ status_t OMXCodec::read(
           mOMX->setConfig(mNode, index, &LC_level, sizeof(LC_level));
         }
     }
-    while (mState != ERROR && !mNoMoreOutputData && mFilledBuffers.empty()) {
+
+    while (mState != ERROR && !mNoMoreOutputData &&
+           mFilledBuffers.empty() && !mOutputPortSettingsChangedPending) {
         if ((err = waitForBufferFilled_l()) != OK) {
             setState(ERROR);
             return err;
@@ -5287,12 +5330,26 @@ status_t OMXCodec::read(
     if (mState == ERROR) {
         return UNKNOWN_ERROR;
     }
-    if(seeking) {
-        CHECK_EQ((int)mState, (int)FLUSHING);
-        setState(EXECUTING);
+
+    if (seeking) {
+        if (mState == FLUSHING) {
+            setState(EXECUTING);
+        } else {
+            CHECK(mState == EXECUTING);
+        }
     }
 
     if (mFilledBuffers.empty()) {
+        if (mOutputPortSettingsChangedPending) {
+            mDeferReason &= ~FILLED_BUFFERS_PRESENT;
+
+            if (countOutputBuffers(OWNED_BY_CLIENT) == 0) {
+                mDeferReason &= ~BUFFER_WITH_CLIENT;
+                mOutputPortSettingsChangedPending = false;
+                onPortSettingsChanged(kPortIndexOutput);
+            }
+            return INFO_FORMAT_CHANGED;
+        }
         return mSignalledEOS ? mFinalStatus : ERROR_END_OF_STREAM;
     }
 
@@ -5329,7 +5386,11 @@ void OMXCodec::signalBufferReturned(MediaBuffer *buffer) {
             info->mStatus = OWNED_BY_US;
 
             if (buffer->graphicBuffer() == 0) {
-                fillOutputBuffer(info);
+                //skip FTB if port settings handling is pending
+                if (!mOutputPortSettingsChangedPending) {
+                    fillOutputBuffer(info);
+                }
+
             } else {
                 sp<MetaData> metaData = info->mMediaBuffer->meta_data();
                 int32_t rendered = 0;
@@ -5347,6 +5408,9 @@ void OMXCodec::signalBufferReturned(MediaBuffer *buffer) {
 
                 info->mStatus = OWNED_BY_NATIVE_WINDOW;
 
+                //skip FTB if port settings handling is pending
+                if (mOutputPortSettingsChangedPending) break;
+
                 // Dequeue the next buffer from the native window.
                 BufferInfo *nextBufInfo = dequeueBufferFromNativeWindow();
                 if (nextBufInfo == 0) {
@@ -5358,6 +5422,18 @@ void OMXCodec::signalBufferReturned(MediaBuffer *buffer) {
             }
             return;
         }
+    }
+
+    if (mOutputPortSettingsChangedPending) {
+        if (countOutputBuffers(OWNED_BY_CLIENT) == 0) {
+            mDeferReason &= ~BUFFER_WITH_CLIENT;
+        }
+
+        if (!mFilledBuffers.empty()) return;
+
+        mOutputPortSettingsChangedPending = false;
+        onPortSettingsChanged(kPortIndexOutput);
+        return;
     }
 
     CHECK(!"should not be here.");
@@ -6298,4 +6374,18 @@ status_t OMXCodec::processSEIData() {
     }
     return OK;
 }
-}  // namespace android
+
+size_t OMXCodec::countOutputBuffers(BufferStatus status) {
+    size_t count = 0;
+    Vector<BufferInfo> *buffers = &mPortBuffers[kPortIndexOutput];
+
+    for (size_t i = buffers->size(); i-- > 0;) {
+        BufferInfo *info = &buffers->editItemAt(i);
+        if (info->mStatus == status)
+            ++count;
+    }
+
+    return count;
+}
+
+}
