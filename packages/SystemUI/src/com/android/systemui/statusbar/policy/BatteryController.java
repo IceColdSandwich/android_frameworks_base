@@ -67,7 +67,8 @@ public class BatteryController extends LinearLayout {
     public static final int STYLE_ICON_GUMMY = 5;
     public static final int STYLE_ICON_HONEY = 6;
     public static final int STYLE_ICON_GENX = 7;
-    public static final int STYLE_HIDE = 8;
+    public static final int STYLE_ICON_BW = 8;
+    public static final int STYLE_HIDE = 9;
 
     public BatteryController(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -140,6 +141,9 @@ public class BatteryController extends LinearLayout {
 	} else if (mBatteryStyle == STYLE_ICON_GENX) {
             icon = plugged ? R.drawable.stat_sys_battery_charge_genx
                     : R.drawable.stat_sys_battery_genx;
+	} else if (mBatteryStyle == STYLE_ICON_BW) {
+            icon = plugged ? R.drawable.stat_sys_battery_charge_bw
+                    : R.drawable.stat_sys_battery_bw;
         } else {
             icon = plugged ? R.drawable.stat_sys_battery_charge
                     : R.drawable.stat_sys_battery;
@@ -273,6 +277,13 @@ public class BatteryController extends LinearLayout {
                 setVisibility(View.VISIBLE);
                 break;
 	    case STYLE_ICON_GENX:
+                mBatteryText.setVisibility(View.GONE);
+                mBatteryCenterText.setVisibility(View.GONE);
+                mBatteryIcon.setVisibility(View.VISIBLE);
+                mBatteryTextOnly.setVisibility(View.GONE);
+                setVisibility(View.VISIBLE);
+                break;
+	    case STYLE_ICON_BW:
                 mBatteryText.setVisibility(View.GONE);
                 mBatteryCenterText.setVisibility(View.GONE);
                 mBatteryIcon.setVisibility(View.VISIBLE);
