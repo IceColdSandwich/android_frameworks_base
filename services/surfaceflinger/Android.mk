@@ -53,6 +53,12 @@ LOCAL_SHARED_LIBRARIES += \
 	libnvdispmgr_d
 endif
 
+ifeq ($(TARGET_HAVE_BYPASS),true)
+    LOCAL_CFLAGS += -DBUFFER_COUNT_SERVER=3
+else
+    LOCAL_CFLAGS += -DBUFFER_COUNT_SERVER=2
+endif
+
 LOCAL_C_INCLUDES := \
 	$(call include-path-for, corecg graphics)
 
