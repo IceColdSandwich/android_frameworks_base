@@ -1763,6 +1763,13 @@ public final class Settings {
          */
         public static final String NOTIFICATION_LIGHT_PULSE = "notification_light_pulse";
 
+        /**
+         * Whether the button backlights should be turned on when a notification came in.
+         * The value is boolean (1 or 0).
+         * @hide
+         */
+         public static final String NOTIFICATION_USE_BUTTON_BACKLIGHT = "notification_use_button_backlight";
+
 	/**
          * Whether the battery LED should repeatedly flash when the battery is low
          * on charge. The value is boolean (1 or 0).
@@ -1916,7 +1923,7 @@ public final class Settings {
         public static final String POINTER_SPEED = "pointer_speed";
 
 	/**
-         * Whether national data Roming should be used.
+         * Whether national data roaming should be used.
          */
         public static final String MVNO_ROAMING = "mvno_roaming";
 
