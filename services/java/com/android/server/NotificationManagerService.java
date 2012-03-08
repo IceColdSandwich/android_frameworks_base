@@ -1127,7 +1127,7 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
                 // turn on button backlights
-                if (mButtonBackLightsEnabled) {
+                if (mButtonBackLightEnabled) {
                     mButtonBackLight.setBrightness(255);
                 }
             }
