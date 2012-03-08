@@ -89,6 +89,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private StatusBarManagerService mStatusBar;
     private LightsService.Light mNotificationLight;
     private LightsService.Light mAttentionLight;
+    private LightsService.Light mButtonBackLight;
 
     private int mDefaultNotificationColor;
     private int mDefaultNotificationLedOn;
@@ -106,6 +107,7 @@ public class NotificationManagerService extends INotificationManager.Stub
     private boolean mScreenOn = true;
     private boolean mInCall = false;
     private boolean mNotificationPulseEnabled;
+    private boolean mButtonBackLightEnabled;
 
     private final ArrayList<NotificationRecord> mNotificationList =
             new ArrayList<NotificationRecord>();
@@ -384,6 +386,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                     Settings.System.NOTIFICATION_LIGHT_ON), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.NOTIFICATION_LIGHT_COLOR), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT), false, this);
             update();
         }
 
@@ -400,6 +404,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationPulseEnabled = pulseEnabled;
                 updateNotificationPulse();
             }
+            mButtonBackLightEnabled = Settings.System.getInt(resolver,
+                    Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT, 0) != 0;
 
             Resources resources = mContext.getResources();
             mDefaultNotificationColor = Settings.System
@@ -438,6 +444,7 @@ public class NotificationManagerService extends INotificationManager.Stub
 
         mNotificationLight = lights.getLight(LightsService.LIGHT_ID_NOTIFICATIONS);
         mAttentionLight = lights.getLight(LightsService.LIGHT_ID_ATTENTION);
+        mButtonBackLight = lights.getLight(LightsService.LIGHT_ID_BUTTONS);
 
         // Don't start allowing notifications until the setup wizard has run once.
         // After that, including subsequent boots, init with notifications turned on.
@@ -1103,6 +1110,9 @@ public class NotificationManagerService extends INotificationManager.Stub
 				// Depending on ROMControl "Screen ON flash" flag
         if (mLedNotification == null || mInCall || (mScreenOn && !ledScreenOn)) {
             mNotificationLight.turnOff();
+            if (!mScreenOn) {
+                mButtonBackLight.setBrightness(0);
+            }
         } else {
             int ledARGB = mLedNotification.notification.ledARGB;
             int ledOnMS = mLedNotification.notification.ledOnMS;
@@ -1116,6 +1126,10 @@ public class NotificationManagerService extends INotificationManager.Stub
                 // pulse repeatedly
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
+                // turn on button backlights
+                if (mButtonBackLightsEnabled) {
+                    mButtonBackLight.setBrightness(255);
+                }
             }
         }
     }
