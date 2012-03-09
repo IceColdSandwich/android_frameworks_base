@@ -418,11 +418,6 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
     LOGV("In seekTo(), mSeekTimeUs %lld",mSeekTimeUs);
     if (!bIsA2DPEnabled) {
         if(mIsDriverStarted) {
-            if (!isPaused) {
-                if (ioctl(afd, AUDIO_PAUSE, 1) < 0) {
-                    LOGE("Audio Pause failed");
-                }
-            }
             if (ioctl(afd, AUDIO_FLUSH, 0) < 0) {
                 LOGE("Audio Flush failed");
             }
