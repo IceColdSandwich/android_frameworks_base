@@ -140,6 +140,7 @@ public:
     status_t    unlockAndPost();
 
     sp<IBinder> asBinder() const;
+    status_t    setStereoscopic3DFormat(int format);
 
 private:
     // this is just to be able to write some unit tests

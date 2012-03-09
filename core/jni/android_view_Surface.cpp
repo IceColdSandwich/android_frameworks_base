@@ -610,6 +610,18 @@ static void Surface_setSize(
     }
 }
 
+static void Surface_setStereoscopic3DFormat(JNIEnv* env, jobject clazz, jint f)
+{
+    const sp<Surface>& surface(getSurface(env, clazz));
+    if (!Surface::isValid(surface))
+        return;
+
+    status_t err = surface->setStereoscopic3DFormat(f);
+    if (err<0 && err!=NO_INIT) {
+        doThrowIAE(env);
+    }
+}
+
 static void Surface_hide(
         JNIEnv* env, jobject clazz)
 {

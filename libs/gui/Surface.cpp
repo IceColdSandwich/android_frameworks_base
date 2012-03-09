@@ -38,6 +38,7 @@
 #include <surfaceflinger/ISurfaceComposer.h>
 #include <surfaceflinger/Surface.h>
 #include <surfaceflinger/SurfaceComposerClient.h>
+#include <qcom_ui.h>
 
 namespace android {
 
@@ -381,6 +382,10 @@ status_t Surface::lock(SurfaceInfo* other, Region* inOutDirtyRegion) {
 
 status_t Surface::unlockAndPost() {
     return SurfaceTextureClient::unlockAndPost();
+}
+
+status_t Surface::setStereoscopic3DFormat(int format) {
+    return SurfaceTextureClient::performQcomOperation( NATIVE_WINDOW_SET_S3D_FORMAT, format, 0, 0);
 }
 
 // ----------------------------------------------------------------------------
