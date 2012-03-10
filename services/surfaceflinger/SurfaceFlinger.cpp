@@ -2723,6 +2723,7 @@ status_t Client::destroySurface(SurfaceID sid) {
 #ifdef QCOM_HARDWARE
 GraphicBufferAlloc::GraphicBufferAlloc() {
     mFreedIndex = -1;
+    mSize = 0;
 }
 #else
 GraphicBufferAlloc::GraphicBufferAlloc() {}
@@ -2745,6 +2746,7 @@ sp<GraphicBuffer> GraphicBufferAlloc::createGraphicBuffer(uint32_t w, uint32_t h
         return 0;
     }
 #ifdef QCOM_HARDWARE
+    checkBuffer((native_handle_t *)graphicBuffer->handle, mSize, usage);
     Mutex::Autolock _l(mLock);
     if (-1 != mFreedIndex) {
         mBuffers.insertAt(graphicBuffer, mFreedIndex);
@@ -2777,6 +2779,10 @@ void GraphicBufferAlloc::freeGraphicBufferAtIndex(int bufIdx) {
      } else {
         mFreedIndex = -1;
      }
+}
+
+void GraphicBufferAlloc::setGraphicBufferSize(int size) {
+    mSize = size;
 }
 #endif
 // ---------------------------------------------------------------------------
