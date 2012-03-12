@@ -1289,4 +1289,24 @@
     <!-- status message in phone options dialog for when torch is off -->
     <string name="global_actions_torch_off_status">손전등 꺼짐</string>
     
+    <!-- Names of default profiles. -->
+    <string name="profileNameDefault">기본</string>
+    <string name="profileNameWork">업무</string>
+    <string name="profileNameHome">집</string>
+    <string name="profileNameSilent">합죽이</string>
+    <string name="profileNameNight">취침</string>
+
+    <!-- Names of application groups. -->
+    <string name="profileGroupPhone">휴대전화</string>
+    <string name="profileGroupCalendar">달력</string>
+    <string name="profileGroupGmail">지메일</string>
+    <string name="profileGroupEmail">이메일</string>
+    <string name="profileGroupSMS">메시지</string>
+
+    <!-- Name of wildcard profile. -->
+    <string name="wildcardProfile">기타</string>
+    
+    <!-- label for item that reboots the phone in phone options dialog -->
+    <string name="global_action_choose_profile">프로필 선택</string>
+    
 </resources>
