@@ -19,8 +19,8 @@ import com.android.systemui.R;
 
 public class FChargeToggle extends Toggle {
 	
-	public static final String FAST_CHARGE_DIR = "/sys/kernel/fast_charge";
-	public static final String FAST_CHARGE_FILE = "force_fast_charge";
+	public static final String FAST_CHARGE_DIR = "/sys/devices/platform/rs30100001:00000000/power_supply/battery";
+	public static final String FAST_CHARGE_FILE = "force_high_power_charging";
 
     public FChargeToggle(Context context) {
         super(context);
