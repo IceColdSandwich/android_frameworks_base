@@ -170,6 +170,41 @@
     <string name="global_actions_toggle_airplane_mode" msgid="5884330306926307456">"Mode Avion"</string>
     <string name="global_actions_airplane_mode_on_status" msgid="2719557982608919750">"Le mode Avion est activé."</string>
     <string name="global_actions_airplane_mode_off_status" msgid="5075070442854490296">"Le mode Avion est désactivé."</string>
+
+    <!-- Names of default profiles. -->
+    <string name="profileNameDefault">Défaut</string>
+    <string name="profileNameWork">Travail</string>
+    <string name="profileNameHome">Maison</string>
+    <string name="profileNameSilent">Silencieux</string>
+    <string name="profileNameNight">Nuit</string>
+
+    <!-- Names of application groups. -->
+    <string name="profileGroupPhone">Téléphone</string>
+    <string name="profileGroupCalendar">Calendrier</string>
+    <string name="profileGroupGmail">Gmail</string>
+    <string name="profileGroupEmail">Courriel</string>
+    <string name="profileGroupSMS">SMS</string>
+
+    <!-- label for item that reboots the phone in phone options dialog -->
+    <string name="global_action_choose_profile">Choisir le profil</string>
+
+    <!-- label for item that toggles power saver mode -->
+    <string name="global_actions_toggle_power_saver">Mode Economie d\'énergie</string>
+
+    <!-- status message in phone options dialog for when power saver is on -->
+    <string name="global_actions_power_saver_on_status">Le mode Economie d\'énergie est activé</string>
+
+    <!-- status message in phone options dialog for when power saver is off -->
+    <string name="global_actions_power_saver_off_status">Le mode Economie d\'énergie est désactivé</string>
+
+    <!-- label for item that toggles torch -->
+    <string name="global_actions_toggle_torch">Torche Utilisation du flash</string>
+
+    <!-- status message in phone options dialog for when torch is on -->
+    <string name="global_actions_torch_on_status">La torche est activée</string>
+
+    <!-- status message in phone options dialog for when torch is off -->
+    <string name="global_actions_torch_off_status">La torche est désactivée</string>
     <string name="status_bar_notification_info_overflow" msgid="5301981741705354993">"&gt;999"</string>
     <string name="safeMode" msgid="2788228061547930246">"Mode sécurisé"</string>
     <string name="android_system_label" msgid="6577375335728551336">"Système Android"</string>
