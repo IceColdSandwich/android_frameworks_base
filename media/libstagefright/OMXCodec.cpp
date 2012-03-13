@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2009 The Android Open Source Project
- * Copyright (C) 2011-2012 Code Aurora Forum
+ * Copyright (c) 2011 - 2012, Code Aurora Forum. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1048,17 +1048,8 @@ status_t OMXCodec::configureCodec(const sp<MetaData> &meta) {
         } else {
             paramDivX.eFormat = QOMX_VIDEO_DIVXFormatUnused;
         }
-        paramDivX.eProfile = (QOMX_VIDEO_DIVXPROFILETYPE)0;//Not used for now.
+        paramDivX.eProfile = (QOMX_VIDEO_DIVXPROFILETYPE)0;    //Not used for now.
 
-        paramDivX.pDrmHandle = NULL;
-        if (meta->findPointer(kKeyDivXDrm, &paramDivX.pDrmHandle) ) {
-            if( paramDivX.pDrmHandle != NULL ) {
-                LOGV("This DivX Clip is DRM encrypted, set the DRM handle ");
-            }
-            else {
-                LOGV("This DivX Clip is not DRM encrypted ");
-            }
-        }
         status_t err =  mOMX->setParameter(mNode,
                          (OMX_INDEXTYPE)OMX_QcomIndexParamVideoDivx,
                          &paramDivX, sizeof(paramDivX));
