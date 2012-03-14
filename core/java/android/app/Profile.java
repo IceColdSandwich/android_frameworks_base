@@ -232,7 +232,7 @@ public final class Profile implements Parcelable {
     }
 
     public void setScreenLockMode(int screenLockMode) {
-        if (screenLockMode < LockMode.DEFAULT || screenLockMode > LockMode.INSECURE) {
+        if (screenLockMode < LockMode.DEFAULT || screenLockMode > LockMode.DISABLE) {
             mScreenLockMode = LockMode.DEFAULT;
         } else {
             mScreenLockMode = screenLockMode;
