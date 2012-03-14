@@ -315,6 +315,11 @@ public class ProfileManagerService extends IProfileManager.Stub {
             /* no need to set mDirty, if the profile was actually changed,
              * it's marked as dirty by itself */
             persistIfDirty();
+
+            // Also update we changed the active profile
+            if (mActiveProfile != null && mActiveProfile.getUuid().equals(profile.getUuid())) {
+                setActiveProfile(profile, true);
+            }
         }
     }
 
@@ -325,7 +330,12 @@ public class ProfileManagerService extends IProfileManager.Stub {
 
     @Override
     public boolean profileExistsByName(String profileName) throws RemoteException {
-        return mProfileNames.containsKey(profileName);
+        for (Map.Entry<String, UUID> entry : mProfileNames.entrySet()) {
+            if (entry.getKey().equalsIgnoreCase(profileName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override
