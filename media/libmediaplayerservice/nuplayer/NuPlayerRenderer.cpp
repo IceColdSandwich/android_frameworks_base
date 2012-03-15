@@ -69,6 +69,9 @@ void NuPlayer::Renderer::queueBuffer(
 void NuPlayer::Renderer::queueEOS(bool audio, status_t finalResult) {
     CHECK_NE(finalResult, (status_t)OK);
 
+    if(mSyncQueues)
+      syncQueuesDone();
+
     sp<AMessage> msg = new AMessage(kWhatQueueEOS, id());
     msg->setInt32("audio", static_cast<int32_t>(audio));
     msg->setInt32("finalResult", finalResult);

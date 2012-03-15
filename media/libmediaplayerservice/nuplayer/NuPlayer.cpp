@@ -558,6 +558,7 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
             }
             else if ( (mLiveSourceType == kHttpDashSource) && (nRet == OK)) // if seek success then flush the audio,video decoder and renderer
             {
+                mTimeDiscontinuityPending = true;
                 if( (mVideoDecoder != NULL) &&
                     (mFlushingVideo == NONE || mFlushingVideo == AWAITING_DISCONTINUITY) ) {
                     flushDecoder( false, false ); // flush video, do not shutdown
