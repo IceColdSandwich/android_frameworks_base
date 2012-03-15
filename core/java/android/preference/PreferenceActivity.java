@@ -31,6 +31,8 @@ import android.os.Handler;
 import android.os.Message;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.provider.Settings;
+import android.provider.Settings.System;
 import android.text.TextUtils;
 import android.util.AttributeSet;
 import android.util.TypedValue;
@@ -56,6 +58,8 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+
+import static android.provider.Settings.System.DUAL_PANE_SETTINGS;
 
 /**
  * This is the base class for an activity to show a hierarchy of preferences
@@ -664,8 +668,11 @@ public abstract class PreferenceActivity extends ListActivity implements
      * enough.
      */
     public boolean onIsMultiPane() {
+        boolean preferMultiPane = Settings.System.getInt(getApplicationContext().getContentResolver(), DUAL_PANE_SETTINGS, 0) != 0;
+        /*
         boolean preferMultiPane = getResources().getBoolean(
                 com.android.internal.R.bool.preferences_prefer_dual_pane);
+        */
         return preferMultiPane;
     }
 
