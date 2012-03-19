@@ -197,7 +197,7 @@ public final class GsmDataConnectionTracker extends DataConnectionTracker {
 
     @Override
     public void dispose() {
-        cleanUpAllConnections(false, null);
+        cleanUpAllConnections(true, null);
 
         super.dispose();
 
