@@ -250,6 +250,12 @@ void DisplayHardware::init(uint32_t dpy)
         mDpiX = mDpiY = atoi(property);
     }
     mDensity = atoi(property) * (1.0f/160.0f);
+	if (property_get("persist.sys.force.tablet", property, NULL) > 0) {
+	    if (strcmp(property, "true") == 0) {
+			strcpy(property, "160");
+			mDensity = atoi(property) * (1.0f/160.0f);
+	    }
+	}
 
 
     /*

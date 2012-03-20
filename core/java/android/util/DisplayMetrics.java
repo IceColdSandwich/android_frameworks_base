@@ -190,6 +190,12 @@ public class DisplayMetrics {
     }
 
     private static int getDeviceDensity() {
+		String forceTablet = SystemProperties.get("persist.sys.force.tablet");
+        if (! "".equals(forceTablet)) {
+            if (forceTablet.equals("true")) {
+				return DENSITY_DEFAULT;
+			}
+        }
         // qemu.sf.lcd_density can be used to override ro.sf.lcd_density
         // when running in the emulator, allowing for dynamic configurations.
         // The reason for this is that ro.sf.lcd_density is write-once and is
