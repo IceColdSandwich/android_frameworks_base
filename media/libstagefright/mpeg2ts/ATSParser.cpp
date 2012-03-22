@@ -1025,7 +1025,12 @@ status_t ATSParser::parseTS(ABitReader *br) {
     LOGV("---");
 
     unsigned sync_byte = br->getBits(8);
-    CHECK_EQ(sync_byte, 0x47u);
+    //CHECK_EQ(sync_byte, 0x47u);
+
+    if(sync_byte != 0x47u) {
+        LOGE("parseTS --> sync_byte != 0x47u --- sending DEAD_OBJECT");
+        return DEAD_OBJECT;
+    }
 
     MY_LOGV("transport_error_indicator = %u", br->getBits(1));
 
@@ -1095,7 +1100,12 @@ status_t ATSParser::parseTSToGetPTS(const void *data, size_t size,
     ABitReader br((const uint8_t *)data, kTSPacketSize);
 
     unsigned sync_byte = br.getBits(8);
-    CHECK_EQ(sync_byte, 0x47u);
+    //CHECK_EQ(sync_byte, 0x47u);
+    if(sync_byte != 0x47u) {
+        LOGE("parseTSToGetPTS --> sync_byte != 0x47u FOUND --> bad Packet");
+        return DEAD_OBJECT;
+    }
+
     br.skipBits(1);
 
     unsigned payload_unit_start_indicator = br.getBits(1);
@@ -1220,7 +1230,13 @@ status_t ATSParser::parseTSToGetPID(const void *data, size_t size,
     ABitReader br((const uint8_t *)data, kTSPacketSize);
 
     unsigned sync_byte = br.getBits(8);
-    CHECK_EQ(sync_byte, 0x47u);
+    //CHECK_EQ(sync_byte, 0x47u);
+
+    if(sync_byte != 0x47u) {
+        LOGE("parseTSToGetPID --> sync_byte != 0x47u --- sending DEAD_OBJECT");
+        return DEAD_OBJECT;
+    }
+
     br.skipBits(1);
 
     unsigned payload_unit_start_indicator = br.getBits(1);

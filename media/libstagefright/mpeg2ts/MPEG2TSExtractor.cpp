@@ -133,7 +133,6 @@ private:
     sp<MetaData>              mFormat;
     sp<StreamInfo>            mStream;
     sp<DataSource>            mDataSource;
-    bool                      mSeekable;
     bool                      mIsVideo;
     sp<TSBuffer>              mTSBuffer;
 
@@ -203,7 +202,9 @@ status_t MPEG2TSSource::read(
     int64_t seekTimeUs;
     ReadOptions::SeekMode seekMode;
     status_t err = OK;
-    if (mSeekable && options && options->getSeekTo(&seekTimeUs, &seekMode)) {
+    bool seekAble = mExtractor->isSeekable();
+
+    if (seekAble && options && options->getSeekTo(&seekTimeUs, &seekMode)) {
 
         // Get file offset for seek position
         uint64_t seekPTS = ((seekTimeUs*9/100) + mStream->mFirstPTS);
@@ -251,7 +252,6 @@ status_t MPEG2TSSource::findStreamDuration(){
      Mutex::Autolock autoLock(mLock);
 
      if (mExtractor->mClipSize == 0){
-         mSeekable = false;
          return INVALID_OPERATION;
      }
 
@@ -279,6 +279,11 @@ status_t MPEG2TSSource::findStreamDuration(){
 
          status = mExtractor->parseTSToGetPTS(packet, kTSPacketSize,
                                            mStream->mStreamPID, PTS);
+         if (status == DEAD_OBJECT) {
+             LOGE("findStreamDuration:: Hit an invalid TS packet .. bailing out gracefully");
+             return status;
+         }
+
          if (status == OK) {
              mStream->mLastPTS = PTS;
              mStream->mLastPTSOffset = offset;
@@ -299,7 +304,7 @@ status_t MPEG2TSSource::findStreamDuration(){
      if (mFormat != NULL) {
          mFormat->setInt64(kKeyDuration, mStream->mDurationUs);
      }
-     mSeekable = true;
+
      return status;
 }
 
@@ -381,6 +386,12 @@ status_t MPEG2TSSource::findOffsetForPTS(off64_t& seekOffset, uint64_t seekPTS){
         }
         status = mExtractor->parseTSToGetPTS(packet, kTSPacketSize,
                                           mStream->mStreamPID, currPTS);
+
+        if (status == DEAD_OBJECT) {
+            LOGE("findOffsetForPTS:: bad TS packet found");
+            return status;
+        }
+
         if (status == OK){
              if ((seekPTS == currPTS) ||
                  ((prevOffset != 0) && ((seekPTS < currPTS && seekPTS > prevPTS) ||
@@ -665,6 +676,11 @@ status_t MPEG2TSExtractor::parseTSToGetPTS(const void *data, size_t size,
     Mutex::Autolock autoLock(mLock);
 
     return mParser->parseTSToGetPTS(data,size,streamPID,PTS);
+}
+
+bool MPEG2TSExtractor::isSeekable() {
+    Mutex::Autolock autoLock(mLock);
+    return mSeekable;
 }
 
 status_t MPEG2TSExtractor::parseTSToGetPID(const void *data, size_t size,

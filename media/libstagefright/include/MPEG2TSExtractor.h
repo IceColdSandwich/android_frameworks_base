@@ -56,6 +56,7 @@ struct MPEG2TSExtractor : public MediaExtractor {
     status_t parseTSToGetPTS(const void *data, size_t size,
                                                unsigned streamPID, uint64_t& PTS);
 
+    bool     isSeekable();
 private:
     friend struct MPEG2TSSource;
 
