@@ -2901,6 +2901,20 @@ public final class Settings {
 
         public static final String QUIET_HOURS_END = "quiet_hours_end";
 
+       /**
+         * Whether to show statusbar WiFi signal text
+         * 
+         * @hide
+         */
+        public static final String STATUSBAR_WIFI_SIGNAL_TEXT = "statusbar_signal_text";
+
+        /**
+         * statusbar WIFI signal text color
+         * 
+         * @hide
+         */
+        public static final String STATUSBAR_WIFI_SIGNAL_TEXT_COLOR = "statusbar_signal_text_color";
+
         /**
          * Whether to remove the sound from outgoing notifications during quiet hours.
          * @hide
