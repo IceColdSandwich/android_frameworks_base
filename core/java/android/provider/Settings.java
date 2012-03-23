@@ -2906,14 +2906,14 @@ public final class Settings {
          * 
          * @hide
          */
-        public static final String STATUSBAR_WIFI_SIGNAL_TEXT = "statusbar_signal_text";
+         public static final String STATUSBAR_WIFI_SIGNAL_TEXT = "statusbar_wifi_signal_text";
 
         /**
          * statusbar WIFI signal text color
          * 
          * @hide
          */
-        public static final String STATUSBAR_WIFI_SIGNAL_TEXT_COLOR = "statusbar_signal_text_color";
+        public static final String STATUSBAR_WIFI_SIGNAL_TEXT_COLOR = "statusbar_wifi_signal_text_color";
 
         /**
          * Whether to remove the sound from outgoing notifications during quiet hours.
