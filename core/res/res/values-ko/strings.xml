@@ -1309,4 +1309,9 @@
     <!-- label for item that reboots the phone in phone options dialog -->
     <string name="global_action_choose_profile">프로필 선택</string>
     
+    <!-- Displayed on lock screen's top left tab - phone shortcut -->
+    <string name="lockscreen_phone_label">휴대전화</string>
+    <!-- Displayed on lock screen's top right tab - custom text -->
+    <string name="lockscreen_custom_label">커스텀롬</string>
+    
 </resources>
