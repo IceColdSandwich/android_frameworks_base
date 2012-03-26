@@ -1,6 +1,7 @@
 /*
 **
 ** Copyright 2008, The Android Open Source Project
+** Copyright (c) 2011, Code Aurora Forum. All rights reserved.
 **
 ** Licensed under the Apache License, Version 2.0 (the "License");
 ** you may not use this file except in compliance with the License.
@@ -214,13 +215,45 @@ status_t AudioRecord::set(
     }
 
     // validate framecount
-    int minFrameCount = 0;
-    status_t status = getMinFrameCount(&minFrameCount, sampleRate, format, channelCount);
-    if (status != NO_ERROR) {
-        return status;
+    size_t inputBuffSizeInBytes = -1;
+    if (AudioSystem::getInputBufferSize(sampleRate, format, channelCount, &inputBuffSizeInBytes)
+            != NO_ERROR) {
+        LOGE("AudioSystem could not query the input buffer size.");
+        return NO_INIT;
     }
+    LOGV("AudioRecord::set() inputBuffSizeInBytes = %d", inputBuffSizeInBytes );
+
+    if (inputBuffSizeInBytes == 0) {
+        LOGE("Recording parameters are not supported: sampleRate %d, channelCount %d, format %d",
+            sampleRate, channelCount, format);
+        return BAD_VALUE;
+    }
+
     LOGV("AudioRecord::set() minFrameCount = %d", minFrameCount);
 
+    mFirstread = false;
+    // Change for Codec type
+    int frameSizeInBytes = 0;
+    if (format ==AUDIO_FORMAT_AMR_NB) {
+        frameSizeInBytes = channelCount * 32; // Full rate framesize
+    } else if (format ==AUDIO_FORMAT_EVRC) {
+        frameSizeInBytes = channelCount * 23; // Full rate framesize
+    } else if (format ==AUDIO_FORMAT_QCELP) {
+        frameSizeInBytes = channelCount * 35; // Full rate framesize
+    } else if (format ==AUDIO_FORMAT_AAC) {
+        frameSizeInBytes = 2048;
+    } else if ((format ==AUDIO_FORMAT_PCM_16_BIT) || (format ==AUDIO_FORMAT_PCM_8_BIT)) {
+                if (audio_is_linear_pcm(format)) {
+                    frameSizeInBytes = channelCount * (format == AUDIO_FORMAT_PCM_16_BIT ? sizeof(int16_t) : sizeof(int8_t));
+               } else {
+                    frameSizeInBytes = sizeof(int8_t);
+               }
+               mFirstread = true;
+    }
+
+    // We use 2* size of input buffer for ping pong use of record buffer.
+    int minFrameCount = 2 * inputBuffSizeInBytes / frameSizeInBytes;
+    LOGV("AudioRecord::set() minFrameCount = %d", minFrameCount);
     if (frameCount == 0) {
         frameCount = minFrameCount;
     } else if (frameCount < minFrameCount) {
@@ -232,7 +265,7 @@ status_t AudioRecord::set(
     }
 
     // create the IAudioRecord
-    status = openRecord_l(sampleRate, format, channelMask,
+    status_t status = openRecord_l(sampleRate, format, channelMask,
                         frameCount, flags, input);
     if (status != NO_ERROR) {
         return status;
@@ -266,6 +299,7 @@ status_t AudioRecord::set(
     mInputSource = (uint8_t)inputSource;
     mFlags = flags;
     mInput = input;
+    mFirstread = false;
     AudioSystem::acquireAudioSessionId(mSessionId);
 
     return NO_ERROR;
@@ -300,7 +334,20 @@ uint32_t AudioRecord::frameCount() const
 
 int AudioRecord::frameSize() const
 {
-    if (audio_is_linear_pcm(mFormat)) {
+
+    if (format() ==AUDIO_FORMAT_AMR_NB) {
+        return channelCount() * 32; // Full rate framesize
+    } else if (format() == AUDIO_FORMAT_EVRC) {
+        return channelCount() * 23; // Full rate framesize
+    } else if (format() == AUDIO_FORMAT_QCELP) {
+        return channelCount() * 35; // Full rate framesize
+
+    } else if (format() == AUDIO_FORMAT_AAC) {
+        // Not actual framsize but for variable frame rate AAC encoding,
+        // buffer size is treated as a frame size
+        return 2048;
+   }
+   if (audio_is_linear_pcm(mFormat)) {
         return channelCount()*audio_bytes_per_sample(mFormat);
     } else {
         return sizeof(uint8_t);
@@ -310,7 +357,9 @@ int AudioRecord::frameSize() const
 int AudioRecord::inputSource() const
 {
     return (int)mInputSource;
+
 }
+
 
 // -------------------------------------------------------------------------
 
@@ -693,6 +742,11 @@ ssize_t AudioRecord::read(void* buffer, size_t userSize)
         read += bytesRead;
 
         releaseBuffer(&audioBuffer);
+        if(!mFirstread)
+        {
+           mFirstread = true;
+           break;
+        }
     } while (userSize);
 
     return read;
@@ -765,6 +819,11 @@ bool AudioRecord::processAudioBuffer(const sp<ClientRecordThread>& thread)
         frames -= audioBuffer.frameCount;
 
         releaseBuffer(&audioBuffer);
+        if(!mFirstread)
+        {
+           mFirstread = true;
+           break;
+        }
 
     } while (frames);
 
