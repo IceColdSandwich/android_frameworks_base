@@ -136,16 +136,13 @@ public:
     // connected to the specified client API.
     virtual status_t disconnect(int api);
 
-#ifdef QCOM_HARDWARE
-    status_t updateTexImage(bool isComposition  = false);
-#else
     // updateTexImage sets the image contents of the target texture to that of
     // the most recently queued buffer.
     //
     // This call may only be made while the OpenGL ES context to which the
     // target texture belongs is bound to the calling thread.
+    //
     status_t updateTexImage();
-#endif
 
     // setBufferCountServer set the buffer count. If the client has requested
     // a buffer count using setBufferCount, the server-buffer count will
@@ -510,7 +507,7 @@ private:
     // glCopyTexSubImage to read from the texture.  This is a hack to work
     // around a GL driver limitation on the number of FBO attachments, which the
     // browser's tile cache exceeds.
-    GLenum mTexTarget;
+    const GLenum mTexTarget;
 
     // mFrameCounter is the free running counter, incremented for every buffer queued
     // with the surface Texture.
