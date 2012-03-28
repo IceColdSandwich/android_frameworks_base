@@ -797,7 +797,8 @@ void LPAPlayer::decoderThreadEntry() {
 
     pthread_mutex_lock(&decoder_mutex);
 
-    setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_AUDIO);
+    pid_t tid  = gettid();
+    androidSetThreadPriority(tid, ANDROID_PRIORITY_AUDIO);
     prctl(PR_SET_NAME, (unsigned long)"LPA DecodeThread", 0, 0, 0);
 
     LOGV("decoderThreadEntry wait for signal \n");
@@ -942,7 +943,8 @@ void LPAPlayer::eventThreadEntry() {
     int avail = 0;
     int i = 0;
 
-    setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_AUDIO);
+    pid_t tid  = gettid();
+    androidSetThreadPriority(tid, ANDROID_PRIORITY_AUDIO);
     prctl(PR_SET_NAME, (unsigned long)"LPA EventThread", 0, 0, 0);
 
 
@@ -1069,7 +1071,8 @@ void *LPAPlayer::A2DPThreadWrapper(void *me) {
 }
 
 void LPAPlayer::A2DPThreadEntry() {
-    setpriority(PRIO_PROCESS, 0, ANDROID_PRIORITY_AUDIO);
+    pid_t tid  = gettid();
+    androidSetThreadPriority(tid,ANDROID_PRIORITY_URGENT_AUDIO);
     prctl(PR_SET_NAME, (unsigned long)"LPA A2DPThread", 0, 0, 0);
 
     while (1) {
