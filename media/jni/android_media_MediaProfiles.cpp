@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-//#define LOG_NDEBUG 0
+#define LOG_NDEBUG 0
 #define LOG_TAG "MediaProfilesJNI"
 #include <utils/Log.h>
 
@@ -38,10 +38,13 @@ android_media_MediaProfiles_native_init(JNIEnv *env)
 {
     LOGV("native_init");
     Mutex::Autolock lock(sLock);
+    LOGE("After native_init lock");
 
     if (sProfiles == NULL) {
+        LOGE("Guru : native_init profiles");
         sProfiles = MediaProfiles::getInstance();
     }
+    LOGE("retun sProfiles");
 }
 
 static jint
