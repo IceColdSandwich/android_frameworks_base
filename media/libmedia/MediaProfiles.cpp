@@ -1128,7 +1128,7 @@ int MediaProfiles::getCamcorderProfileIndex(int cameraId, camcorder_quality qual
             break;
         }
     }
-    ALOGE("Guru : quality = %d, index = %d",quality,index);
+    LOGE("Guru : quality = %d, index = %d",quality,index);
     return index;
 }
 
