@@ -1,6 +1,7 @@
 package android.app;
 
 import android.bluetooth.BluetoothAdapter;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.location.LocationManager;
 import android.net.ConnectivityManager;
@@ -28,6 +29,7 @@ public final class ConnectionSettings implements Parcelable {
     public static final int PROFILE_CONNECTION_WIFIAP = 2;
     public static final int PROFILE_CONNECTION_WIMAX = 3;
     public static final int PROFILE_CONNECTION_GPS = 4;
+    public static final int PROFILE_CONNECTION_SYNC = 5;
     public static final int PROFILE_CONNECTION_BLUETOOTH = 7;
 
     /** @hide */
@@ -147,6 +149,14 @@ public final class ConnectionSettings implements Parcelable {
                     cm.setMobileDataEnabled(true);
                 } else if (!forcedState && currentState) {
                     cm.setMobileDataEnabled(false);
+                }
+                break;
+            case PROFILE_CONNECTION_SYNC:
+                currentState = ContentResolver.getMasterSyncAutomatically();
+                if (forcedState && !currentState) {
+                    ContentResolver.setMasterSyncAutomatically(true);
+                } else if (!forcedState && currentState) {
+                    ContentResolver.setMasterSyncAutomatically(false);
                 }
                 break;
         }
