@@ -561,17 +561,22 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
                 mTimeDiscontinuityPending = true;
                 if( (mVideoDecoder != NULL) &&
                     (mFlushingVideo == NONE || mFlushingVideo == AWAITING_DISCONTINUITY) ) {
-                    flushDecoder( false, false ); // flush video, do not shutdown
+                    flushDecoder( false, true ); // flush video, shutdown
                 }
 
                if( (mAudioDecoder != NULL) &&
                    (mFlushingAudio == NONE|| mFlushingAudio == AWAITING_DISCONTINUITY) )
                {
-                   flushDecoder( true, false );  // flush audio, do not shut down
+                   flushDecoder( true, false );  // flush audio,  shutdown
                }
-               // notify the UI about the seeked position, temp fix.. once seek works properly need to find a way to set the correct seeked position
-               //newSeekTime = seekTimeUs;
-
+               if( mAudioDecoder == NULL ) {
+                   LOGV("Audio is not there, set it to shutdown");
+                   mFlushingAudio = SHUT_DOWN;
+               }
+               if( mVideoDecoder == NULL ) {
+                   LOGV("Video is not there, set it to shutdown");
+                   mFlushingVideo = SHUT_DOWN;
+               }
                // get the new seeked position
                newSeekTime = seekTimeUs;
                ALOGV("newSeekTime %lld", newSeekTime);
@@ -762,7 +767,7 @@ status_t NuPlayer::instantiateDecoder(bool audio, sp<Decoder> *decoder) {
     looper()->registerHandler(*decoder);
 
     char value[PROPERTY_VALUE_MAX] = {0};
-    if (mLiveSourceType == kHttpLiveSource){
+    if (mLiveSourceType == kHttpLiveSource || mLiveSourceType == kHttpDashSource){
         //Set flushing state to none
         Mutex::Autolock autoLock(mLock);
         if( audio ) {
