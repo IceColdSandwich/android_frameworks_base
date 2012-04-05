@@ -134,6 +134,8 @@ public class NotificationManagerService extends INotificationManager.Stub
     private boolean mQuietHoursStill = true;
     // Dim LED if hardware supports it.
     private boolean mQuietHoursDim = true;
+    // Don't use Bln.
+    private boolean mQuietHoursBln = true;
 
     private static String idDebugString(Context baseContext, String packageName, int id) {
         Context c = null;
@@ -466,6 +468,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                     Settings.System.QUIET_HOURS_STILL), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QUIET_HOURS_DIM), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_BLN), false, this);
             update();
         }
 
@@ -488,6 +492,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                     Settings.System.QUIET_HOURS_STILL, 0) != 0;
             mQuietHoursDim = Settings.System.getInt(resolver,
                     Settings.System.QUIET_HOURS_DIM, 0) != 0;
+            mQuietHoursBln = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_BLN, 0) != 0;
         }
     }
 
@@ -1240,7 +1246,7 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
                 // turn on button backlights
-                if (mButtonBackLightEnabled) {
+                if (mButtonBackLightEnabled && (!(inQuietHours() && mQuietHoursBln))) {
                     mButtonBackLight.setBrightness(255);
                 }
             }
