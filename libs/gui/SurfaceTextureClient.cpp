@@ -274,10 +274,7 @@ int SurfaceTextureClient::query(int what, int* value) const {
                 *value = mDefaultHeight;
                 return NO_ERROR;
             case NATIVE_WINDOW_TRANSFORM_HINT:
-                if (mSurfaceTexture->query(what, value) != NO_ERROR) {
-                    *value = mTransformHint;
-                }
-                return NO_ERROR;
+                return mSurfaceTexture->query(what, value);
         }
     }
     return mSurfaceTexture->query(what, value);
