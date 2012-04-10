@@ -307,7 +307,7 @@ status_t SampleIterator::findSampleTime(
 
     *time = mTTSSampleTime + (uint64_t)mTTSDuration * ((uint64_t)sampleIndex - (uint64_t)mTTSSampleIndex);
 
-    *time = *time + mTable->getCompositionTimeOffset(sampleIndex);
+    *time = *time + (int32_t)mTable->getCompositionTimeOffset(sampleIndex);
 
     return OK;
 }
