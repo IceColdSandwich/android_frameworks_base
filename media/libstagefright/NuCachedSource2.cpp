@@ -442,7 +442,7 @@ void NuCachedSource2::restartPrefetcherIfNecessary_l(
 
     if (!ignoreLowWaterThreshold && !force
             && mCacheOffset + mCache->totalSize() - mLastAccessPos
-                >= mLowwaterThresholdBytes + mAVOffset) {
+                >= mLowwaterThresholdBytes) {
         int64_t cacheLeft = mCacheOffset + mCache->totalSize() - mLastAccessPos;
         LOGV("Dont restart prefetcher last access %lld, cache left %lld", mLastAccessPos, cacheLeft);
         return;
@@ -519,7 +519,7 @@ size_t NuCachedSource2::approxDataRemaining_l(status_t *finalStatus) {
         *finalStatus = OK;
     }
 
-    off64_t lastBytePosCached = mCacheOffset + mCache->totalSize() + mAVOffset;
+    off64_t lastBytePosCached = mCacheOffset + mCache->totalSize();
     if (mLastAccessPos < lastBytePosCached) {
         return lastBytePosCached - mLastAccessPos;
     }
@@ -587,12 +587,12 @@ ssize_t NuCachedSource2::readInternal(off64_t offset, void *data, size_t size) {
 }
 
 status_t NuCachedSource2::seekInternal_l(off64_t offset) {
-    mLastAccessPos = offset;
 
     if (offset >= mCacheOffset
             && offset <= (off64_t)(mCacheOffset + mCache->totalSize())) {
         return OK;
     }
+    mLastAccessPos = offset;
 
     LOGI("new range: offset= %lld", offset);
 
