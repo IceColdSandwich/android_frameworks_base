@@ -432,6 +432,7 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
                     scaleMatrix.setScale(scale, scale);
                     h.thumbnailViewImage.setScaleType(ScaleType.MATRIX);
                     h.thumbnailViewImage.setImageMatrix(scaleMatrix);
+                    h.thumbnailViewImage.setRotationY(20.0f);
                 }
             }
             if (show && h.thumbnailView.getVisibility() != View.VISIBLE) {

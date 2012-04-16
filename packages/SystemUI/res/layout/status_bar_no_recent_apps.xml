@@ -32,5 +32,6 @@
         android:text="@string/status_bar_no_recent_apps"
         android:gravity="center_horizontal"
         android:layout_gravity="center"
+        android:visibility="gone"
     />
 </FrameLayout>
