@@ -248,6 +248,10 @@ class HTML5VideoViewProxy extends Handler
                 mHTML5VideoView.setVolume(volume);
             }
         }
+
+        public boolean isPrepared() {
+            return mHTML5VideoView.getCurrentState() >= HTML5VideoView.STATE_PREPARED;
+        }
     }
     private VideoPlayer mVideoPlayer;
 
@@ -268,7 +272,10 @@ class HTML5VideoViewProxy extends Handler
     public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
         Message msg = Message.obtain(mWebCoreHandler, SIZE_CHANGED);
         Map<String, Object> map = new HashMap<String, Object>();
-        map.put("dur", new Integer(mp.getDuration()));
+        if (mVideoPlayer.isPrepared())
+            map.put("dur", new Integer(mp.getDuration()));
+        else
+            map.put("dur", new Integer(0));
         map.put("width", new Integer(width));
         map.put("height", new Integer(height));
         msg.obj = map;
