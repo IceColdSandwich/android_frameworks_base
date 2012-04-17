@@ -113,6 +113,7 @@ AudioPlayer(audioSink,observer) {
     LOGV("Registering client with AudioFlinger");
     mAudioFlinger->registerClient(AudioFlingerClient);
     mAudioSinkOpen = false;
+    mIsAudioRouted = false;
     a2dpThreadStarted = true;
     asyncReset = false;
 
