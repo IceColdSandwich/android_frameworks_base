@@ -162,8 +162,12 @@ enum {
 
     //Extractor sets this
     kKeyUseArbitraryMode  = 'ArbM',  //bool (int32_t)
+
     //Enable smooth streaming
-    kKeySmoothStreaming   = 'ESmS' //bool (int32_t)
+    kKeySmoothStreaming   = 'ESmS',  //bool (int32_t)
+
+    //Use Software Decoder
+    kKeyUseSWDec          = 'SwDc'  //bool (int32_t)
 #endif
 };
 
