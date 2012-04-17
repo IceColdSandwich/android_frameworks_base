@@ -65,6 +65,7 @@ struct ATSParser::Program : public RefBase {
     }
 
     unsigned number() const { return mProgramNumber; }
+    unsigned programPID() const { return mProgramMapPID; }
 
     void updateProgramMapPID(unsigned programMapPID) {
         mProgramMapPID = programMapPID;
@@ -101,6 +102,8 @@ struct ATSParser::Stream : public RefBase {
 
     sp<MediaSource> getSource(SourceType type);
 
+    void updateSource();
+
 protected:
     virtual ~Stream();
 
@@ -108,6 +111,9 @@ private:
     Program *mProgram;
     unsigned mElementaryPID;
     unsigned mStreamType;
+
+    bool      mFirstStreamPTSValid;
+    uint64_t  mFirstStreamPTS;
 
     sp<ABuffer> mBuffer;
     sp<AnotherPacketSource> mSource;
@@ -289,7 +295,7 @@ status_t ATSParser::Program::parseProgramMap(ABitReader *br) {
             break;
         }
 
-        for (int j = 0; j < mStreams.size(); j++){
+        for (size_t j = 0; j < mStreams.size(); j++){
 
             sp<Stream> stream = mStreams.editValueAt(j);
             if (infos.itemAt(i).mType == stream->type() &&
@@ -333,8 +339,8 @@ status_t ATSParser::Program::parseProgramMap(ABitReader *br) {
             LOGI("Discontinuity is not enabled, handle PID change");
             //PIDs can change in between due to BW switches
             //Set PID based on stream type
-            for (int i = 0; i < infos.size(); i++) {
-                for (int j = 0; j < mStreams.size(); j++){
+            for (size_t i = 0; i < infos.size(); i++) {
+                for (size_t j = 0; j < mStreams.size(); j++){
 
                     sp<Stream> stream = mStreams.editValueAt(j);
                     if (infos.itemAt(i).mType == stream->type() &&
@@ -344,6 +350,7 @@ status_t ATSParser::Program::parseProgramMap(ABitReader *br) {
                            stream->pid(), infos.itemAt(i).mPID, infos.itemAt(i).mType);
                         mStreams.removeItem(stream->pid());
                         stream->setPID(infos.itemAt(i).mPID);
+                        stream->updateSource();
                         mStreams.add(stream->pid(), stream);
                     }
                 }
@@ -370,7 +377,9 @@ status_t ATSParser::Program::parseProgramMap(ABitReader *br) {
                 unsigned pid1 = s1->pid();
                 unsigned pid2 = s2->pid();
                 s1->setPID(pid2);
+                s1->updateSource();
                 s2->setPID(pid1);
+                s2->updateSource();
 
                 mStreams.clear();
                 mStreams.add(s1->pid(), s1);
@@ -439,6 +448,8 @@ ATSParser::Stream::Stream(
     : mProgram(program),
       mElementaryPID(elementaryPID),
       mStreamType(streamType),
+      mFirstStreamPTSValid(false),
+      mFirstStreamPTS(0),
       mPayloadStarted(false),
       mFormatChanged(false),
       mQueue(NULL) {
@@ -556,6 +567,12 @@ bool ATSParser::Stream::isAudio() const {
     }
 }
 
+void ATSParser::Stream::updateSource() {
+    if (mSource != NULL) {
+        mSource->setStreamInfo(mElementaryPID, mProgram->programPID(), mFirstStreamPTS);
+    }
+}
+
 void ATSParser::Stream::signalDiscontinuity(
         DiscontinuityType type, const sp<AMessage> &extra) {
     if (mQueue == NULL) {
@@ -574,6 +591,9 @@ void ATSParser::Stream::signalDiscontinuity(
         if (type & DISCONTINUITY_VIDEO_FORMAT) {
             clearFormat = true;
         }
+    }
+    if (type & DISCONTINUITY_SEEK) {
+       clearFormat = true;
     }
 
     if (type & DISCONTINUITY_PLAYER_SEEK) {
@@ -681,6 +701,10 @@ status_t ATSParser::Stream::parsePES(ABitReader *br) {
             CHECK_EQ(br->getBits(1), 1u);
 
             LOGV("PTS = %llu", PTS);
+            if (!mFirstStreamPTSValid) {
+                mFirstStreamPTS = PTS;
+                mFirstStreamPTSValid = true;
+            }
             // LOGI("PTS = %.2f secs", PTS / 90000.0f);
 
             optional_bytes_remaining -= 5;
@@ -821,6 +845,7 @@ void ATSParser::Stream::onPayloadData(
 
                 mSource = new AnotherPacketSource(meta);
                 mSource->queueAccessUnit(accessUnit);
+                mSource->setStreamInfo(mElementaryPID, mProgram->programPID(), mFirstStreamPTS);
             }
         } else if (mQueue->getFormat() != NULL) {
             // After a discontinuity we invalidate the queue's format
@@ -1059,5 +1084,168 @@ bool ATSParser::PTSTimeDeltaEstablished() {
 
     return mPrograms.editItemAt(0)->PTSTimeDeltaEstablished();
 }
+
+status_t ATSParser::parseTSToGetPTS(const void *data, size_t size,
+                                    unsigned streamPID, uint64_t& PTSparsed) {
+
+    // Get PID based on source type
+    CHECK_EQ(size, kTSPacketSize);
+
+    ABitReader br((const uint8_t *)data, kTSPacketSize);
+
+    unsigned sync_byte = br.getBits(8);
+    CHECK_EQ(sync_byte, 0x47u);
+    br.skipBits(1);
+
+    unsigned payload_unit_start_indicator = br.getBits(1);
+    br.skipBits(1);
+
+    unsigned PID = br.getBits(13);
+    LOGV("PID = 0x%04x", PID);
+    if (PID != streamPID) {
+        return BAD_VALUE;
+    }
+    if (payload_unit_start_indicator != 1) {
+        return BAD_VALUE;
+    }
+
+    br.skipBits(2);
+
+    unsigned adaptation_field_control = br.getBits(2);
+    br.skipBits(4);
+
+    if (adaptation_field_control == 2 || adaptation_field_control == 3) {
+        parseAdaptationField(&br);
+    }
+
+    if (adaptation_field_control != 1 && adaptation_field_control != 3) {
+        LOGE("TS Packet is corrupt, incorrect adaptation field");
+        return BAD_VALUE;
+    }
+    // parse PES
+    unsigned packet_startcode_prefix = br.getBits(24);
+
+    LOGV("packet_startcode_prefix = 0x%08x", packet_startcode_prefix);
+
+    if (packet_startcode_prefix != 1) {
+        LOGE("Supposedly payload_unit_start=1 unit does not start "
+             "with startcode.");
+
+        return ERROR_MALFORMED;
+    }
+
+    CHECK_EQ(packet_startcode_prefix, 0x000001u);
+
+    unsigned stream_id = br.getBits(8);
+    LOGV("stream_id = 0x%02x", stream_id);
+
+    unsigned PES_packet_length = br.getBits(16);
+    LOGV("PES_packet_length = %u", PES_packet_length);
+
+    if (stream_id != 0xbc  // program_stream_map
+            && stream_id != 0xbe  // padding_stream
+            && stream_id != 0xbf  // private_stream_2
+            && stream_id != 0xf0  // ECM
+            && stream_id != 0xf1  // EMM
+            && stream_id != 0xff  // program_stream_directory
+            && stream_id != 0xf2  // DSMCC
+            && stream_id != 0xf8) {
+            CHECK_EQ(br.getBits(2), 2u);
+
+        MY_LOGV("PES_scrambling_control = %u", br.getBits(2));
+        MY_LOGV("PES_priority = %u", br.getBits(1));
+        MY_LOGV("data_alignment_indicator = %u", br.getBits(1));
+        MY_LOGV("copyright = %u", br.getBits(1));
+        MY_LOGV("original_or_copy = %u", br.getBits(1));
+
+        unsigned PTS_DTS_flags = br.getBits(2);
+        LOGV("PTS_DTS_flags = %u", PTS_DTS_flags);
+
+        unsigned ESCR_flag = br.getBits(1);
+        LOGV("ESCR_flag = %u", ESCR_flag);
+
+        unsigned ES_rate_flag = br.getBits(1);
+        LOGV("ES_rate_flag = %u", ES_rate_flag);
+
+        unsigned DSM_trick_mode_flag = br.getBits(1);
+        LOGV("DSM_trick_mode_flag = %u", DSM_trick_mode_flag);
+
+        unsigned additional_copy_info_flag = br.getBits(1);
+        LOGV("additional_copy_info_flag = %u", additional_copy_info_flag);
+
+        MY_LOGV("PES_CRC_flag = %u", br.getBits(1));
+        MY_LOGV("PES_extension_flag = %u", br.getBits(1));
+
+        unsigned PES_header_data_length = br.getBits(8);
+        LOGV("PES_header_data_length = %u", PES_header_data_length);
+
+        unsigned optional_bytes_remaining = PES_header_data_length;
+
+        uint64_t PTS = 0, DTS = 0;
+
+        if (PTS_DTS_flags == 2 || PTS_DTS_flags == 3) {
+            CHECK_GE(optional_bytes_remaining, 5u);
+
+            CHECK_EQ(br.getBits(4), PTS_DTS_flags);
+
+            PTS = ((uint64_t)br.getBits(3)) << 30;
+            CHECK_EQ(br.getBits(1), 1u);
+            PTS |= ((uint64_t)br.getBits(15)) << 15;
+            CHECK_EQ(br.getBits(1), 1u);
+            PTS |= br.getBits(15);
+            CHECK_EQ(br.getBits(1), 1u);
+
+            LOGV("PTS = %llu", PTS);
+            PTSparsed = PTS;
+            // LOGI("PTS = %.2f secs", PTS / 90000.0f);
+
+            optional_bytes_remaining -= 5;
+
+            if (PTS_DTS_flags == 3) {
+                CHECK_GE(optional_bytes_remaining, 5u);
+
+                CHECK_EQ(br.getBits(4), 1u);
+
+                DTS = ((uint64_t)br.getBits(3)) << 30;
+                CHECK_EQ(br.getBits(1), 1u);
+                DTS |= ((uint64_t)br.getBits(15)) << 15;
+                CHECK_EQ(br.getBits(1), 1u);
+                DTS |= br.getBits(15);
+                CHECK_EQ(br.getBits(1), 1u);
+
+                LOGV("DTS = %llu", DTS);
+
+                optional_bytes_remaining -= 5;
+            }
+        }
+    } else {
+       LOGE("stream id %d not supported", stream_id);
+       return BAD_VALUE;
+    }
+    return OK;
+}
+
+status_t ATSParser::parseTSToGetPID(const void *data, size_t size,
+                                    unsigned& streamPID) {
+
+    CHECK_EQ(size, kTSPacketSize);
+
+    ABitReader br((const uint8_t *)data, kTSPacketSize);
+
+    unsigned sync_byte = br.getBits(8);
+    CHECK_EQ(sync_byte, 0x47u);
+    br.skipBits(1);
+
+    unsigned payload_unit_start_indicator = br.getBits(1);
+    br.skipBits(1);
+
+    unsigned PID = br.getBits(13);
+    LOGV("parseTSToGetPID PID = 0x%04x", PID);
+    streamPID = PID;
+
+    return OK;
+
+}
+
 
 }  // namespace android

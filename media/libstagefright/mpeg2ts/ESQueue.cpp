@@ -479,6 +479,7 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitH264() {
     const uint8_t *nalStart;
     size_t nalSize;
     bool foundSlice = false;
+    bool foundSync = false;
     while ((err = getNextNALUnit(&data, &size, &nalStart, &nalSize)) == OK) {
         CHECK_GT(nalSize, 0u);
 
@@ -511,6 +512,7 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitH264() {
 
             size_t auSize = 4 * nals.size() + totalSize;
             sp<ABuffer> accessUnit = new ABuffer(auSize);
+            foundSync = false;
 
 #if !LOG_NDEBUG
             AString out;
@@ -521,6 +523,20 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitH264() {
                 const NALPosition &pos = nals.itemAt(i);
 
                 unsigned nalType = mBuffer->data()[pos.nalOffset] & 0x1f;
+                if (!foundSync ) {
+                    if (nalType == 5){
+                        foundSync = true;
+                    }
+                    if (nalType ==1) {
+                        unsigned nal_ref_idc = (nalStart[0] >> 5) & 3;
+                        if (nal_ref_idc != 0) {
+                            foundSync = true;
+                        }
+                    }
+                    if (foundSync) {
+                        accessUnit->meta()->setInt32("isSync", 1);
+                    }
+                }
 
 #if !LOG_NDEBUG
                 char tmp[128];
@@ -559,7 +575,6 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitH264() {
             if (mFormat == NULL) {
                 mFormat = MakeAVCCodecSpecificData(accessUnit);
             }
-
             return accessUnit;
         }
 
@@ -687,6 +702,7 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEGVideo() {
     int pprevStartCode = -1;
     int prevStartCode = -1;
     int currentStartCode = -1;
+    bool foundSync = false;
 
     size_t offset = 0;
     while (offset + 3 < size) {
@@ -754,6 +770,14 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEGVideo() {
 
             if (!sawPictureStart) {
                 sawPictureStart = true;
+                //Check if this is reference frame
+                ALOGV("sawPictureStart for MPEG video offset %d", offset);
+                if (offset + 6 < size) {
+                    uint8_t mpeg_pic_type = (data[offset + 5] & 0x38) >> 3;
+                    if (mpeg_pic_type == 1) {
+                        foundSync = true;
+                    }
+                }
             } else {
                 sp<ABuffer> accessUnit = new ABuffer(offset);
                 memcpy(accessUnit->data(), data, offset);
@@ -769,6 +793,9 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEGVideo() {
 
                 offset = 0;
 
+                if (foundSync) {
+                    accessUnit->meta()->setInt32("isSync", 1);
+                }
                 accessUnit->meta()->setInt64("timeUs", timeUs);
 
                 LOGV("returning MPEG video access unit at time %lld us",
@@ -934,6 +961,10 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEG4Video() {
                          timeUs);
 
                     // hexdump(accessUnit->data(), accessUnit->size());
+
+                    //TODO remove this later check for reference frame
+                    //without this seek can block for mpeg4 ts files
+                    accessUnit->meta()->setInt32("isSync", 1);
 
                     return accessUnit;
                 } else if (chunkType != 0xb3) {

@@ -32,6 +32,7 @@ struct DataSource;
 struct MPEG2TSSource;
 struct String8;
 struct LiveSession;
+struct TSBuffer;
 
 struct MPEG2TSExtractor : public MediaExtractor {
     MPEG2TSExtractor(const sp<DataSource> &source);
@@ -47,22 +48,27 @@ struct MPEG2TSExtractor : public MediaExtractor {
     void setLiveSession(const sp<LiveSession> &liveSession);
     void seekTo(int64_t seekTimeUs);
 
+    virtual ~MPEG2TSExtractor();
+
 private:
     friend struct MPEG2TSSource;
 
     mutable Mutex mLock;
 
     sp<DataSource> mDataSource;
-    sp<LiveSession> mLiveSession;
 
     sp<ATSParser> mParser;
 
-    Vector<sp<AnotherPacketSource> > mSourceImpls;
+    Vector<sp<MPEG2TSSource> > mSourceList;
 
     off64_t mOffset;
 
     void init();
     status_t feedMore();
+
+    bool           mSeekable;
+    off64_t        mClipSize;
+    sp<TSBuffer>   mTSBuffer;
 
     DISALLOW_EVIL_CONSTRUCTORS(MPEG2TSExtractor);
 };

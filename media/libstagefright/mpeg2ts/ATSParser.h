@@ -88,6 +88,12 @@ struct ATSParser : public RefBase {
         STREAMTYPE_H264                 = 0x1b,
     };
 
+    status_t parseTSToGetPTS(const void *data, size_t size,
+                             unsigned streamPID, uint64_t& PTS);
+
+    status_t parseTSToGetPID(const void *data, size_t size,
+                             unsigned& streamPID);
+
 protected:
     virtual ~ATSParser();
 
