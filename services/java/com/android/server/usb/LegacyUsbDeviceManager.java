@@ -336,9 +336,11 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
                 }
 
                 // register observer to listen for settings changes
-                mContentResolver.registerContentObserver(
-                    Settings.Secure.getUriFor(Settings.Secure.ADB_ENABLED),
-                    false, new AdbSettingsObserver());
+                if (!mHasUsbService) {
+                    mContentResolver.registerContentObserver(
+                        Settings.Secure.getUriFor(Settings.Secure.ADB_ENABLED),
+                        false, new AdbSettingsObserver());
+                }
 
                 // Watch for USB configuration changes
                 if (mHasUsbService) {
@@ -449,11 +451,13 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
 
         private void setEnabledFunctions(String functions, boolean makeDefault) {
             if (mHasUsbService) {
-                Intent i = new Intent("com.android.internal.usb.request_reconfigure");
-                i.putExtra("functions", functions);
-                i.putExtra("permanent", makeDefault);
-                i.putExtra("enable_adb", mAdbEnabled);
-                mContext.sendBroadcast(i);
+                if (mBootCompleted) {
+                    Intent i = new Intent("com.android.internal.usb.request_reconfigure");
+                    i.putExtra("functions", functions);
+                    i.putExtra("permanent", makeDefault);
+                    i.putExtra("enable_adb", mAdbEnabled);
+                    mContext.sendBroadcast(i);
+                }
             } else if (functions != null && makeDefault) {
                 if (mAdbEnabled) {
                     functions = addFunction(functions, UsbManager.USB_FUNCTION_ADB);
