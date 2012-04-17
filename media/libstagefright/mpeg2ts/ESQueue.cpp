@@ -771,7 +771,7 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEGVideo() {
             if (!sawPictureStart) {
                 sawPictureStart = true;
                 //Check if this is reference frame
-                ALOGV("sawPictureStart for MPEG video offset %d", offset);
+                LOGV("sawPictureStart for MPEG video offset %d", offset);
                 if (offset + 6 < size) {
                     uint8_t mpeg_pic_type = (data[offset + 5] & 0x38) >> 3;
                     if (mpeg_pic_type == 1) {

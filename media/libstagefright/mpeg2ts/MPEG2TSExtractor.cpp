@@ -596,7 +596,7 @@ void MPEG2TSExtractor::init() {
         }
     }
 
-    OGI("haveAudio=%d, haveVideo=%d", haveAudio, haveVideo);
+    LOGI("haveAudio=%d, haveVideo=%d", haveAudio, haveVideo);
 
     if (!haveAudio && !haveVideo) {
         mSeekable = false;
