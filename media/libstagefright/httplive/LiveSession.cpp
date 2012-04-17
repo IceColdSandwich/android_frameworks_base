@@ -711,7 +711,14 @@ rinse_repeat:
                  "we're looking for, switching back to previous bandwidth");
 
             mLastPlaylistFetchTimeUs = -1;
-            mBandwidthIndex = mPrevBandwidthIndex;
+            //Get BW index based on current estimated BW
+            size_t estBWIndex = getBandwidthIndex();
+            if (estBWIndex == mBandwidthIndex) {
+               mBandwidthIndex = mPrevBandwidthIndex;
+            }
+           else {
+               mBandwidthIndex = estBWIndex;
+            }
             goto rinse_repeat;
         }
 
@@ -728,7 +735,7 @@ rinse_repeat:
             // number available and signal a discontinuity.
 
             LOGW("We've missed the boat, restarting playback.");
-            mSeqNumber = lastSeqNumberInPlaylist;
+            mSeqNumber = mFirstSeqNumber;
             explicitDiscontinuity = true;
 
             // fall through

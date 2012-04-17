@@ -54,6 +54,8 @@ struct AnotherPacketSource : public MediaSource {
 
     status_t dequeueAccessUnit(sp<ABuffer> *buffer);
 
+    void updateFormat(const sp<MetaData> &meta);
+
 protected:
     virtual ~AnotherPacketSource();
 

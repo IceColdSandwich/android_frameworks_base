@@ -2868,6 +2868,7 @@ bool ACodec::FlushingOutputState::onMessageReceived(const sp<AMessage> &msg) {
         case kWhatShutdown:
         {
             mCodec->deferMessage(msg);
+            handled = true;
             break;
         }
 
@@ -2875,14 +2876,16 @@ bool ACodec::FlushingOutputState::onMessageReceived(const sp<AMessage> &msg) {
         {
             LOGV("Flush received during port reconfig, deferring it");
             mCodec->deferMessage(msg);
+            handled = true;
             break;
         }
 
         case kWhatInputBufferFilled:
         {
-           mCodec->deferMessage(msg);
-           changeStateIfWeOwnAllBuffers();
-           break;
+            mCodec->deferMessage(msg);
+            changeStateIfWeOwnAllBuffers();
+            handled = true;
+            break;
         }
 
         default:

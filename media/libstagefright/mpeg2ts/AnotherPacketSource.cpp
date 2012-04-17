@@ -43,7 +43,13 @@ AnotherPacketSource::AnotherPacketSource(const sp<MetaData> &meta)
 }
 
 void AnotherPacketSource::setFormat(const sp<MetaData> &meta) {
+    Mutex::Autolock autoLock(mLock);
     CHECK(mFormat == NULL);
+    mFormat = meta;
+}
+
+void AnotherPacketSource::updateFormat(const sp<MetaData> &meta) {
+    Mutex::Autolock autoLock(mLock);
     mFormat = meta;
 }
 
@@ -59,6 +65,7 @@ status_t AnotherPacketSource::stop() {
 }
 
 sp<MetaData> AnotherPacketSource::getFormat() {
+    Mutex::Autolock autoLock(mLock);
     return mFormat;
 }
 
@@ -156,7 +163,7 @@ void AnotherPacketSource::queueDiscontinuity(
 
     Mutex::Autolock autoLock(mLock);
 
-    if (type == ATSParser::DISCONTINUITY_SEEK ) {
+    if (type == ATSParser::DISCONTINUITY_PLAYER_SEEK ) {
         LOGI("Flushing all Access units for seek");
         mBuffers.clear();
         mEOSResult = OK;
