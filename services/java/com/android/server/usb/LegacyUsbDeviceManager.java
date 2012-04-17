@@ -102,6 +102,7 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
     private boolean mUseUsbNotification;
     private boolean mAdbEnabled;
     private boolean mLegacy = false;
+    private boolean mHasUsbService = false;
 
     private class AdbSettingsObserver extends ContentObserver {
         public AdbSettingsObserver() {
@@ -128,12 +129,12 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
             String state = event.get("SWITCH_STATE");
 
             if (name != null && state != null) {
-                if (mLegacy) {
+                if (mLegacy && !mHasUsbService) {
                     if ("usb_mass_storage".equals(name)) {
                         mConnected  = "online".equals(state);
                         mConfigured = "online".equals(state);
                     }
-                } else {
+                } else if (!mHasUsbService) {
                     if ("usb_connected".equals(name))
                         mConnected = "1".equals(state);
                     else if ("usb_configuration".equals(name))
@@ -238,16 +239,43 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
         private int mUsbNotificationId;
         private boolean mAdbNotificationShown;
 
-         final BroadcastReceiver mBootCompletedReceiver = new BroadcastReceiver() {
+        final BroadcastReceiver mBootCompletedReceiver = new BroadcastReceiver() {
             public void onReceive(Context context, Intent intent) {
                 if (DEBUG) Slog.d(TAG, "boot completed");
                 mHandler.sendEmptyMessage(MSG_BOOT_COMPLETED);
             }
         };
 
+        final BroadcastReceiver mUsbReconfiguredReceiver = new BroadcastReceiver() {
+            public void onReceive(Context context, Intent intent) {
+                final String state;
+
+                if (intent.getBooleanExtra("connected", false)) {
+                    if (intent.getBooleanExtra("configured", false)) {
+                        state = "CONFIGURED";
+                    } else {
+                        state = "CONNECTED";
+                    }
+                } else {
+                    state = "DISCONNECTED";
+                }
+                if (intent.hasExtra("functions")) {
+                    mCurrentFunctions = intent.getStringExtra("functions");
+                }
+
+                if (DEBUG) {
+                    Slog.d(TAG, "Got USB reconfiguration event, state = " +
+                            state + ", functions = " + mCurrentFunctions);
+                }
+                updateState(state);
+            }
+        };
+
         public LegacyUsbHandler(Looper looper) {
             super(looper);
             char[] buffer = new char[1024];
+
+            mHasUsbService = SystemProperties.getInt("ro.usb.use_custom_service", 0) != 0;
 
             try {
                 // persist.sys.usb.config should never be unset.  But if it is, set it to "adb"
@@ -313,7 +341,10 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
                     false, new AdbSettingsObserver());
 
                 // Watch for USB configuration changes
-                if (mLegacy) {
+                if (mHasUsbService) {
+                    mContext.registerReceiver(mUsbReconfiguredReceiver,
+                            new IntentFilter("com.android.internal.usb.reconfigured"));
+                } else if (mLegacy) {
                     mUEventObserver.startObserving(USB_LEGACY_MATCH);
                 } else {
                     mUEventObserver.startObserving(USB_CONNECTED_MATCH);
@@ -417,7 +448,13 @@ public class LegacyUsbDeviceManager extends UsbDeviceManager {
         }
 
         private void setEnabledFunctions(String functions, boolean makeDefault) {
-            if (functions != null && makeDefault) {
+            if (mHasUsbService) {
+                Intent i = new Intent("com.android.internal.usb.request_reconfigure");
+                i.putExtra("functions", functions);
+                i.putExtra("permanent", makeDefault);
+                i.putExtra("enable_adb", mAdbEnabled);
+                mContext.sendBroadcast(i);
+            } else if (functions != null && makeDefault) {
                 if (mAdbEnabled) {
                     functions = addFunction(functions, UsbManager.USB_FUNCTION_ADB);
                 } else {
