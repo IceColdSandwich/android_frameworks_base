@@ -189,7 +189,7 @@ status_t NuPlayer::HTTPLiveSource::seekTo(int64_t seekTimeUs) {
     int64_t newSeekTime = -1;
     mLiveSession->seekTo(seekTimeUs, &newSeekTime);
     if( newSeekTime >= 0 ) {
-       mTSParser->signalDiscontinuity( ATSParser::DISCONTINUITY_PLAYER_SEEK, NULL);
+       mTSParser->signalDiscontinuity( ATSParser::DISCONTINUITY_HLS_PLAYER_SEEK, NULL);
     }
 
     mNewSeekTime = newSeekTime;

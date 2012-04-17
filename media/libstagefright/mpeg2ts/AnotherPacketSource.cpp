@@ -180,7 +180,8 @@ void AnotherPacketSource::queueDiscontinuity(
 
     Mutex::Autolock autoLock(mLock);
 
-    if (type == ATSParser::DISCONTINUITY_PLAYER_SEEK ) {
+    if (type == ATSParser::DISCONTINUITY_TS_PLAYER_SEEK ||
+        type == ATSParser::DISCONTINUITY_HLS_PLAYER_SEEK) {
         LOGI("Flushing all Access units for seek");
         mBuffers.clear();
         mEOSResult = OK;

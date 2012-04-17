@@ -645,7 +645,7 @@ void MPEG2TSExtractor::seekTo(int64_t seekTimeUs) {
         return;
     }
     //Flush all PES data in parser
-    mParser->signalDiscontinuity(ATSParser::DISCONTINUITY_PLAYER_SEEK, NULL);
+    mParser->signalDiscontinuity(ATSParser::DISCONTINUITY_TS_PLAYER_SEEK, NULL);
 }
 
 uint32_t MPEG2TSExtractor::flags() const {

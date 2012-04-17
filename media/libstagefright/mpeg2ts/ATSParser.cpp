@@ -592,11 +592,12 @@ void ATSParser::Stream::signalDiscontinuity(
             clearFormat = true;
         }
     }
-    if (type & DISCONTINUITY_SEEK) {
-       clearFormat = true;
+    if (type & DISCONTINUITY_TS_PLAYER_SEEK) {
+        //TODO update format in ESQueue
+        mFormatChanged = true;
     }
 
-    if (type & DISCONTINUITY_PLAYER_SEEK) {
+    if (type & DISCONTINUITY_HLS_PLAYER_SEEK) {
         clearFormat = true;
         mFormatChanged = true;
     }
@@ -1115,7 +1116,10 @@ status_t ATSParser::parseTSToGetPTS(const void *data, size_t size,
     br.skipBits(4);
 
     if (adaptation_field_control == 2 || adaptation_field_control == 3) {
-        parseAdaptationField(&br);
+        unsigned adaptation_field_length = br.getBits(8);
+        if (adaptation_field_length > 0) {
+            br.skipBits(adaptation_field_length * 8);  // XXX
+        }
     }
 
     if (adaptation_field_control != 1 && adaptation_field_control != 3) {
@@ -1152,29 +1156,12 @@ status_t ATSParser::parseTSToGetPTS(const void *data, size_t size,
             && stream_id != 0xf8) {
             CHECK_EQ(br.getBits(2), 2u);
 
-        MY_LOGV("PES_scrambling_control = %u", br.getBits(2));
-        MY_LOGV("PES_priority = %u", br.getBits(1));
-        MY_LOGV("data_alignment_indicator = %u", br.getBits(1));
-        MY_LOGV("copyright = %u", br.getBits(1));
-        MY_LOGV("original_or_copy = %u", br.getBits(1));
+        br.skipBits(6);
 
         unsigned PTS_DTS_flags = br.getBits(2);
         LOGV("PTS_DTS_flags = %u", PTS_DTS_flags);
 
-        unsigned ESCR_flag = br.getBits(1);
-        LOGV("ESCR_flag = %u", ESCR_flag);
-
-        unsigned ES_rate_flag = br.getBits(1);
-        LOGV("ES_rate_flag = %u", ES_rate_flag);
-
-        unsigned DSM_trick_mode_flag = br.getBits(1);
-        LOGV("DSM_trick_mode_flag = %u", DSM_trick_mode_flag);
-
-        unsigned additional_copy_info_flag = br.getBits(1);
-        LOGV("additional_copy_info_flag = %u", additional_copy_info_flag);
-
-        MY_LOGV("PES_CRC_flag = %u", br.getBits(1));
-        MY_LOGV("PES_extension_flag = %u", br.getBits(1));
+        br.skipBits(6);
 
         unsigned PES_header_data_length = br.getBits(8);
         LOGV("PES_header_data_length = %u", PES_header_data_length);
