@@ -50,6 +50,12 @@ struct MPEG2TSExtractor : public MediaExtractor {
 
     virtual ~MPEG2TSExtractor();
 
+    status_t feedTSPacket(const void *data, size_t size);
+    status_t parseTSToGetPID(const void *data, size_t size,
+                                               unsigned& streamPID);
+    status_t parseTSToGetPTS(const void *data, size_t size,
+                                               unsigned streamPID, uint64_t& PTS);
+
 private:
     friend struct MPEG2TSSource;
 

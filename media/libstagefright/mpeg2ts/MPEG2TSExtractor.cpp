@@ -29,6 +29,7 @@
 #include <media/stagefright/MediaSource.h>
 #include <media/stagefright/MetaData.h>
 #include <utils/String8.h>
+#include <cutils/properties.h>
 
 #include "AnotherPacketSource.h"
 #include "ATSParser.h"
@@ -276,7 +277,7 @@ status_t MPEG2TSSource::findStreamDuration(){
              return ERROR_END_OF_STREAM;
          }
 
-         status = mExtractor->mParser->parseTSToGetPTS(packet, kTSPacketSize,
+         status = mExtractor->parseTSToGetPTS(packet, kTSPacketSize,
                                            mStream->mStreamPID, PTS);
          if (status == OK) {
              mStream->mLastPTS = PTS;
@@ -316,7 +317,7 @@ status_t MPEG2TSSource::feedMoreForStream() {
             return status;
         }
 
-        if (mExtractor->mParser->parseTSToGetPID(packet,kTSPacketSize,PID) != OK) {
+        if (mExtractor->parseTSToGetPID(packet,kTSPacketSize,PID) != OK) {
             LOGE("Error parsing PID");
             return BAD_VALUE;
         }
@@ -332,7 +333,7 @@ status_t MPEG2TSSource::feedMoreForStream() {
         offset += kTSPacketSize;
     }
     mStream->mOffset = offset;
-    return mExtractor->mParser->feedTSPacket(packet, kTSPacketSize);
+    return mExtractor->feedTSPacket(packet, kTSPacketSize);
 }
 
 status_t MPEG2TSSource::findOffsetForPTS(off64_t& seekOffset, uint64_t seekPTS){
@@ -378,7 +379,7 @@ status_t MPEG2TSSource::findOffsetForPTS(off64_t& seekOffset, uint64_t seekPTS){
             status = (retVal < 0) ? status_t(retVal) : ERROR_END_OF_STREAM;
             break;
         }
-        status = mExtractor->mParser->parseTSToGetPTS(packet, kTSPacketSize,
+        status = mExtractor->parseTSToGetPTS(packet, kTSPacketSize,
                                           mStream->mStreamPID, currPTS);
         if (status == OK){
              if ((seekPTS == currPTS) ||
@@ -592,16 +593,25 @@ void MPEG2TSExtractor::init() {
         return;
     }
 
-    mSeekable = true;
+    bool mAudioSeekable = true ,mvideoSeekable = true;
+
     if (audioSource != NULL) {
         if (audioSource->findStreamDuration() != OK) {
-            mSeekable = false;
+            mAudioSeekable = false;
         }
     }
     if (videoSource != NULL) {
         if (videoSource->findStreamDuration() != OK){
-            mSeekable = false;
+            mvideoSeekable = false;
         }
+    }
+
+    char value[PROPERTY_VALUE_MAX];
+    if(property_get("TSParser.disable.seek", value, NULL) &&
+            (!strcasecmp(value, "true") || !strcmp(value, "1"))) {
+        mSeekable = false;
+    } else if(mAudioSeekable && mvideoSeekable) {
+        mSeekable = true;
     }
 }
 
@@ -649,6 +659,27 @@ uint32_t MPEG2TSExtractor::flags() const {
 
     return flags;
 }
+
+status_t MPEG2TSExtractor::parseTSToGetPTS(const void *data, size_t size,
+                                           unsigned streamPID, uint64_t& PTS) {
+    Mutex::Autolock autoLock(mLock);
+
+    return mParser->parseTSToGetPTS(data,size,streamPID,PTS);
+}
+
+status_t MPEG2TSExtractor::parseTSToGetPID(const void *data, size_t size,
+                             unsigned& streamPID) {
+    Mutex::Autolock autoLock(mLock);
+
+    return mParser->parseTSToGetPID(data,size,streamPID);
+}
+
+status_t MPEG2TSExtractor::feedTSPacket(const void *data, size_t size) {
+    Mutex::Autolock autoLock(mLock);
+
+    return mParser->feedTSPacket(data,size);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
