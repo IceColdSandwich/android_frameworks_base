@@ -227,16 +227,12 @@ public class SamsungRIL extends RIL implements CommandsInterface {
         }
 
         if (error != 0) {
-            //ugly fix for Samsung messing up SMS_SEND request fail in binary RIL
-            if(!(error == -1 && rr.mRequest == RIL_REQUEST_SEND_SMS))
+            // Ugly fix for Samsung messing up SMS_SEND request fail in binary RIL
+            if (error == -1 && rr.mRequest == RIL_REQUEST_SEND_SMS)
             {
-                rr.onError(error, ret);
-                rr.release();
-                return;
-            } else {
                 try
                 {
-                    ret =  responseSMS(p);
+                    ret = responseSMS(p);
                 } catch (Throwable tr) {
                     Log.w(LOG_TAG, rr.serialString() + "< "
                             + requestToString(rr.mRequest)
@@ -245,6 +241,10 @@ public class SamsungRIL extends RIL implements CommandsInterface {
                     rr.release();
                     return;
                 }
+            } else {
+                rr.onError(error, ret);
+                rr.release();
+                return;
             }
         }
 
