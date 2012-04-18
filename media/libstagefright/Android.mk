@@ -121,6 +121,11 @@ LOCAL_CFLAGS += -DQCOM_HARDWARE
 #        LOCAL_SHARED_LIBRARIES += libalsa-intf
 #else
 #        LOCAL_SRC_FILES += LPAPlayer.cpp
+#        ifeq ($(call is-board-platform,msm8660),true)
+#            LOCAL_SRC_FILES += LPAPlayerION.cpp
+#        else
+#            LOCAL_SRC_FILES += LPAPlayerPMEM.cpp
+#        endif
 #endif
 
 ifeq ($(TARGET_BOARD_PLATFORM),msm7627a)
