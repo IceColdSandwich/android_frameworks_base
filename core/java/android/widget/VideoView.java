@@ -77,6 +77,8 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
     private int         mVideoHeight;
     private int         mSurfaceWidth;
     private int         mSurfaceHeight;
+    private int         mPreviousWidth;
+    private int         mPreviousHeight;
     private MediaController mMediaController;
     private OnCompletionListener mOnCompletionListener;
     private MediaPlayer.OnPreparedListener mOnPreparedListener;
@@ -119,6 +121,11 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
                         //width+"/"+height+"="+
                         //mVideoWidth+"/"+mVideoHeight);
             }
+            mPreviousWidth = width;
+            mPreviousHeight = height;
+        } else if (mPreviousWidth > 0 && mPreviousHeight > 0) {
+            width = mPreviousWidth;
+            height = mPreviousHeight;
         }
         //Log.i("@@@@@@@@@@", "setting size: " + width + 'x' + height);
         setMeasuredDimension(width, height);
