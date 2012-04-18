@@ -69,6 +69,9 @@ namespace android {
 #define SYSFS_HPD               DEVICE_ROOT "/" DEVICE_NODE "/hpd"
 #define SYSFS_HDCP_PRESENT      DEVICE_ROOT "/" DEVICE_NODE "/hdcp_present"
 
+//Should match to the external_display_type HDMI in QComUI
+#define EXT_DISPLAY_HDMI        1
+
 HDMIDaemon::HDMIDaemon() : Thread(false),
            mFrameworkSock(-1), mAcceptedConnection(-1), mUeventSock(-1),
            mHDMIUeventQueueHead(NULL), fd1(-1), mCurrentID(-1), mNxtMode(-1)
@@ -525,7 +528,7 @@ void HDMIDaemon::setResolution(int ID)
             if (cur->video_format == ID)
                 mode = cur;
         }
-        SurfaceComposerClient::enableHDMIOutput(0);
+        SurfaceComposerClient::enableExternalDisplay(EXT_DISPLAY_HDMI, 0);
         ioctl(fd1, FBIOGET_VSCREENINFO, &info);
         LOGD("GET Info<ID=%d %dx%d (%d,%d,%d), (%d,%d,%d) %dMHz>",
             info.reserved[3], info.xres, info.yres,
@@ -549,7 +552,7 @@ void HDMIDaemon::setResolution(int ID)
     ioctl(fd1, FBIOPAN_DISPLAY, &info);
     property_set("hw.hdmiON", "1");
     //Inform SF about HDMI
-    SurfaceComposerClient::enableHDMIOutput(1);
+    SurfaceComposerClient::enableExternalDisplay(EXT_DISPLAY_HDMI, 1);
 }
 
 int HDMIDaemon::processFrameworkCommand()
@@ -580,7 +583,7 @@ int HDMIDaemon::processFrameworkCommand()
         if (!openFramebuffer())
             return -1;
         property_set("hw.hdmiON", "0");
-        SurfaceComposerClient::enableHDMIOutput(0);
+        SurfaceComposerClient::enableExternalDisplay(EXT_DISPLAY_HDMI, 0);
         close(fd1);
         fd1 = -1;
     } else if (!strncmp(buffer, HDMI_CMD_SET_ASWIDTH, strlen(HDMI_CMD_SET_ASWIDTH))) {
