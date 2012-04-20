@@ -34,6 +34,9 @@
 
 namespace android {
 
+// Treat time out as an error if we have not received any output
+// buffers after 1 seconds
+const static int64_t WaitLockEventTimeOutNs = 1000000000LL;
 static void AudioRecordCallbackFunction(int event, void *user, void *info) {
     AudioSource *source = (AudioSource *) user;
     switch (event) {
@@ -260,7 +263,9 @@ status_t AudioSource::read(
     }
 
     while (mStarted && mBuffersReceived.empty()) {
-        mFrameAvailableCondition.wait(mLock);
+        status_t err = mFrameAvailableCondition.waitRelative(mLock,WaitLockEventTimeOutNs);
+        if(err == -ETIMEDOUT)
+            return (status_t)err;
     }
     if (!mStarted) {
         return OK;
