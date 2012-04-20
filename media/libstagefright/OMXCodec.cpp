@@ -2573,8 +2573,8 @@ status_t OMXCodec::allocateOutputBuffersFromNativeWindow() {
     android_native_rect_t crop;
     crop.left = left;
     crop.top = top;
-    crop.right = right;
-    crop.bottom = bottom;
+    crop.right = right + 1;
+    crop.bottom = bottom + 1;
 
     err = native_window_set_crop(mNativeWindow.get(), &crop);
     if (err != OK) {
