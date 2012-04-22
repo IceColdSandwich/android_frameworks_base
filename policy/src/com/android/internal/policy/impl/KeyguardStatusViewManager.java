@@ -278,7 +278,7 @@ class KeyguardStatusViewManager implements OnClickListener {
     /**
      * Sets the carrier help text message, if view is present. Carrier help text
      * messages are typically for help dealing with SIMS and connectivity.
-     * 
+     *
      * @param resId resource id of the message
      */
     public void setCarrierHelpText(int resId) {
@@ -293,7 +293,7 @@ class KeyguardStatusViewManager implements OnClickListener {
     /**
      * Unlock help message. This is typically for help with unlock widgets, e.g.
      * "wrong password" or "try again."
-     * 
+     *
      * @param textResId
      * @param lockIcon
      */
@@ -379,7 +379,7 @@ class KeyguardStatusViewManager implements OnClickListener {
      * Update the status lines based on these rules: AlarmStatus: Alarm state
      * always gets it's own line. Status1 is shared between help, battery status
      * and generic unlock instructions, prioritized in that order.
-     * 
+     *
      * @param showStatusLines status lines are shown if true
      */
     void updateStatusLines(boolean showStatusLines) {
@@ -478,7 +478,7 @@ class KeyguardStatusViewManager implements OnClickListener {
                     for (EventBundle e : mCalendarEvents) {
                         String title = e.title + (e.dayString.isEmpty() ? " " : ", ");
                         String details = e.dayString
-                                + ((e.allDay) ? "" : " " + DateFormat.format(
+                                + ((e.allDay) ? " all-day " : " at " + DateFormat.format(
                                         DateFormat.is24HourFormat(getContext()) ? "kk:mm"
                                                 : "hh:mm a", e.begin).toString())
                                 + (!e.location.isEmpty() ? " (" + e.location + ")" : "");
@@ -655,7 +655,7 @@ class KeyguardStatusViewManager implements OnClickListener {
     /**
      * Update carrier text, carrier help and emergency button to match the
      * current status based on SIM state.
-     * 
+     *
      * @param simState
      */
     private void updateCarrierStateWithSimStatus(State simState) {
@@ -729,10 +729,25 @@ class KeyguardStatusViewManager implements OnClickListener {
         customLabel = Settings.System.getString(getContext().getContentResolver(),
                 Settings.System.CUSTOM_CARRIER_LABEL);
 
-        if (customLabel == null)
+        if (customLabel == null) {
             setCarrierText(carrierText);
-        else
-            setCarrierText(customLabel);
+        } else {
+            // If the custom carrier label contains any "$x" items then we must
+            // replace those with the proper text.
+            //  - $n = new line
+            //  - $d = default carrier text
+            //  - $p = plmn carrier text
+            //  - $s = spn carrier text
+            //
+
+            // For the default carrier text we will use carrierText, which we created above.
+            String customStr = customLabel;
+            customStr = customStr.replaceAll("\\$n", "\n");
+            customStr = customStr.replaceAll("\\$d", (carrierText != null) ? carrierText.toString() : "");
+            customStr = customStr.replaceAll("\\$p", (mPlmn != null) ? mPlmn.toString() : "");
+            customStr = customStr.replaceAll("\\$s", (mSpn != null) ? mSpn.toString() : "");
+            setCarrierText(customStr);
+        }
 
         setCarrierHelpText(carrierHelpTextId);
         updateEmergencyCallButtonState(mPhoneState);
@@ -886,7 +901,7 @@ class KeyguardStatusViewManager implements OnClickListener {
 
     /**
      * Performs concentenation of PLMN/SPN
-     * 
+     *
      * @param plmn
      * @param spn
      * @return
@@ -1010,9 +1025,9 @@ class KeyguardStatusViewManager implements OnClickListener {
         }, selection, null,
                 CalendarContract.Instances.START_DAY + " ASC, "
                         + CalendarContract.Instances.START_MINUTE + " ASC");
-        
+
         int events = eventCur.getCount();
-        
+
         if (events > 0) {
             eventCur.moveToFirst();
             do {
@@ -1031,25 +1046,20 @@ class KeyguardStatusViewManager implements OnClickListener {
         public Calendar begin;
         public String location;
         public String dayString;
-        public boolean allDay = false;
+        public boolean allDay;
         public int color;
 
         EventBundle(String s, long b, String l, Calendar now, boolean a, int c) {
             title = s;
             begin = Calendar.getInstance();
-            if (a) {
-                begin.setTimeInMillis(b - begin.get(Calendar.ZONE_OFFSET) - begin.get(Calendar.DST_OFFSET));
-                allDay = true;
-            } else {
-                begin.setTimeInMillis(b);
-            }
+            begin.setTimeInMillis(b);
             location = (l == null) ? "" : l;
             int beginDay = begin.get(Calendar.DAY_OF_YEAR);
             int today = now.get(Calendar.DAY_OF_YEAR);
             if (beginDay == today) { // today
                 dayString = "";
             } else if (today + 1 == beginDay || (today >= 365 && beginDay == 1)) { // tomorrow
-                dayString = getContext().getString(R.string.lockscreen_calendar_tomorrow);
+                dayString = "Tomorrow";
             } else { // another day of week
                 dayString = begin.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT,
                         Locale.getDefault());
