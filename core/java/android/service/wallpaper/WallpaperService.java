@@ -1026,7 +1026,10 @@ public abstract class WallpaperService extends Service {
                 } break;
                 case MSG_WINDOW_RESIZED: {
                     final boolean reportDraw = message.arg1 != 0;
-                    mEngine.updateSurface(true, true, reportDraw);
+                    boolean forceReport = true;
+                    if (Process.myUid() != Process.SYSTEM_UID)
+                        forceReport = false;
+                    mEngine.updateSurface(true, forceReport, reportDraw);
                     mEngine.doOffsetsChanged(true);
                 } break;
                 case MSG_TOUCH_EVENT: {
