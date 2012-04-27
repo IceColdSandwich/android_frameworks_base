@@ -212,8 +212,8 @@ void HWComposer::dump(String8& result, char* buffer, size_t SIZE,
             }
             snprintf(buffer, SIZE,
                     " %8s | %08x | %08x | %08x | %02x | %05x | %08x | [%5d,%5d,%5d,%5d] | [%5d,%5d,%5d,%5d] %s\n",
-                    l.compositionType ? "OVERLAY" : "FB",
-                    intptr_t(l.handle), l.hints, l.flags, l.transform, l.blending, format,
+                    l.compositionType ? (l.compositionType == HWC_OVERLAY ? "OVERLAY" : "COPYBIT") : "FB",
+                    intptr_t(l.handle), l.hints, l.flags, l.transform & FINAL_TRANSFORM_MASK, l.blending, format,
                     l.sourceCrop.left, l.sourceCrop.top, l.sourceCrop.right, l.sourceCrop.bottom,
                     l.displayFrame.left, l.displayFrame.top, l.displayFrame.right, l.displayFrame.bottom,
                     layer->getName().string());
