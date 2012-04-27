@@ -388,13 +388,23 @@ int SurfaceTextureClient::dispatchSetBuffersGeometry(va_list args) {
     if (err != 0) {
         return err;
     }
+    LOGV("Resetting the Buffer size to 0 after SET GEOMETRY");
+    err = performQcomOperation(NATIVE_WINDOW_SET_BUFFERS_SIZE, 0, 0, 0);
+    if (err != 0) {
+        return err;
+    }
     return setBuffersFormat(f);
 }
 
 int SurfaceTextureClient::dispatchSetBuffersDimensions(va_list args) {
     int w = va_arg(args, int);
     int h = va_arg(args, int);
-    return setBuffersDimensions(w, h);
+    int err = setBuffersDimensions(w, h);
+    if (err != 0) {
+        return err;
+    }
+    LOGV("Resetting the Buffer size to 0 after SET DIMENSIONS");
+    return performQcomOperation(NATIVE_WINDOW_SET_BUFFERS_SIZE, 0, 0, 0);
 }
 
 int SurfaceTextureClient::dispatchSetBuffersFormat(va_list args) {
