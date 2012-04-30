@@ -1846,6 +1846,13 @@ public class WebSettings {
         }
     }
 
+    /**
+     * @hide
+     */
+    public synchronized boolean isWebGLAvailable() {
+        return nativeIsWebGLAvailable();
+    }
+
     int getDoubleTapToastCount() {
         return mDoubleTapToastCount;
     }
@@ -1925,4 +1932,5 @@ public class WebSettings {
 
     // Synchronize the native and java settings.
     private native void nativeSync(int nativeFrame);
+    private native boolean nativeIsWebGLAvailable();
 }
