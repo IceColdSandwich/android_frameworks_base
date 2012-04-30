@@ -65,6 +65,7 @@ LiveSession::LiveSession(uint32_t flags, bool uidValid, uid_t uid)
       mDisconnectPending(false),
       mMonitorQueueGeneration(0),
       mRefreshState(INITIAL_MINIMUM_RELOAD_DELAY),
+      mCurrentPlayingTime(-1),
       mFirstSeqNumber(-1) {
     if (mUIDValid) {
         mHTTPDataSource->setUID(mUID);
@@ -118,6 +119,10 @@ void LiveSession::seekTo(int64_t timeUs, int64_t* newSeekTime ) {
         }
     }
     mSeekTimeUs = -1;
+}
+
+void LiveSession::setCurrentPlayingTime(int64_t curPlayTime) {
+    mCurrentPlayingTime = curPlayTime;
 }
 
 void LiveSession::onMessageReceived(const sp<AMessage> &msg) {
@@ -1039,8 +1044,10 @@ void LiveSession::onSeek(const sp<AMessage> &msg) {
     mSeekTimeUs = timeUs;
 
     if (mPlaylist != NULL && mPlaylist->isComplete() ) {
-        size_t index = 0;
+        size_t index = 0, seekSegmentIndex = 0, curPlayingSegmentIndex = 0;
         int64_t segmentStartUs = 0;
+
+        bool seekSegmentFound= false, currentPlaySegmentFound = false;
         while (index < mPlaylist->size()) {
             sp<AMessage> itemMeta;
             CHECK(mPlaylist->itemAt(
@@ -1049,7 +1056,20 @@ void LiveSession::onSeek(const sp<AMessage> &msg) {
             int64_t itemDurationUs;
             CHECK(itemMeta->findInt64("durationUs", &itemDurationUs));
 
-            if (mSeekTimeUs < segmentStartUs + itemDurationUs) {
+            if (!seekSegmentFound && (mSeekTimeUs < segmentStartUs + itemDurationUs)) {
+                seekSegmentFound= true;
+            } else if(!seekSegmentFound){
+                ++seekSegmentIndex;
+            }
+
+            if (!currentPlaySegmentFound && (mCurrentPlayingTime < segmentStartUs + itemDurationUs)) {
+                currentPlaySegmentFound = true;
+            } else if(!currentPlaySegmentFound){
+                ++curPlayingSegmentIndex;
+            }
+
+            if(seekSegmentFound && currentPlaySegmentFound) {
+                LOGV("Breaking --- mSeekTimeUs(%lld) segmentStartUs(%lld) itemDurationUs(%lld)",mSeekTimeUs,segmentStartUs,itemDurationUs);
                 break;
             }
 
@@ -1058,10 +1078,12 @@ void LiveSession::onSeek(const sp<AMessage> &msg) {
         }
 
         if (index < mPlaylist->size()) {
-             int32_t newSeqNumber = mFirstSeqNumber + index;
+             int32_t newSeqNumber = mFirstSeqNumber + seekSegmentIndex;
 
-             if (newSeqNumber == mSeqNumber) {
-                 LOGW("Seek not required current seq %d", mSeqNumber);
+             LOGV("index(%d) mFirstSeqNumber(%d) mSeqNumber(%d) ",index, mFirstSeqNumber, mSeqNumber);
+
+             if (newSeqNumber == curPlayingSegmentIndex) {
+                 LOGW("Seek not required, current playing seq %d and requested playing seq %d", curPlayingSegmentIndex, newSeqNumber);
                  mSeekTimeUs = -1;
 
              } else {

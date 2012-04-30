@@ -51,6 +51,8 @@ struct LiveSession : public AHandler {
     status_t getDuration(int64_t *durationUs);
     bool isSeekable();
 
+    void setCurrentPlayingTime(int64_t curPlayTime);
+
 protected:
     virtual ~LiveSession();
 
@@ -97,6 +99,7 @@ private:
     int64_t mSeekTimeUs;
     int32_t mNumRetries;
     int64_t mPrevBufferSize;
+    int64_t mCurrentPlayingTime;
 
     Mutex mLock;
     Condition mCondition;

@@ -46,6 +46,8 @@ struct NuPlayer::HTTPLiveSource : public NuPlayer::Source {
     virtual bool isSeekable();
     virtual status_t getNewSeekTime(int64_t *newSeek);
 
+    virtual void notifyRenderingPosition(int64_t nRenderingTS);
+
 protected:
     virtual ~HTTPLiveSource();
 
@@ -67,6 +69,7 @@ private:
     sp<ATSParser> mTSParser;
 
     int64_t mNewSeekTime;
+    int64_t mCurrentPlayingTime;
 
     DISALLOW_EVIL_CONSTRUCTORS(HTTPLiveSource);
 };

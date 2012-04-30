@@ -43,6 +43,7 @@ NuPlayer::HTTPLiveSource::HTTPLiveSource(
       mFlags(0),
       mFinalResult(OK),
       mOffset(0),
+      mCurrentPlayingTime(-1),
       mNewSeekTime(-1) {
     if (headers) {
         mExtraHeaders = *headers;
@@ -187,6 +188,8 @@ status_t NuPlayer::HTTPLiveSource::seekTo(int64_t seekTimeUs) {
     }
 
     int64_t newSeekTime = -1;
+    mLiveSession->setCurrentPlayingTime(mCurrentPlayingTime);
+
     mLiveSession->seekTo(seekTimeUs, &newSeekTime);
     if( newSeekTime >= 0 ) {
        mTSParser->signalDiscontinuity( ATSParser::DISCONTINUITY_HLS_PLAYER_SEEK, NULL);
@@ -195,6 +198,10 @@ status_t NuPlayer::HTTPLiveSource::seekTo(int64_t seekTimeUs) {
     mNewSeekTime = newSeekTime;
 
     return OK;
+}
+
+void NuPlayer::HTTPLiveSource::notifyRenderingPosition(int64_t currentPLayTime) {
+     mCurrentPlayingTime = currentPLayTime;
 }
 
 bool NuPlayer::HTTPLiveSource::isSeekable() {
