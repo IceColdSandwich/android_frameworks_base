@@ -4427,7 +4427,7 @@ status_t ResTable::createIdmap(const ResTable& overlay, uint32_t originalCrc, ui
             continue;
         }
         if (N == 1) { // vector expected to hold (offset) + (N > 0 entries)
-            ALOGW("idmap: type %d supposedly has entries, but no entries found\n", i);
+            LOGW("idmap: type %d supposedly has entries, but no entries found\n", i);
             return UNKNOWN_ERROR;
         }
         *data++ = htodl(N - 1); // do not count the offset (which is vector's first element)
