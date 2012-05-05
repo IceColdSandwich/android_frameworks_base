@@ -273,12 +273,6 @@
     <!-- Boolean indicating whether Softap require reloading AP firware -->
     <bool name="config_wifi_ap_firmware_reload">true</bool>
 
-    <!-- Boolean indicating whether Softap rely only on one interface -->
-    <bool name="config_wifi_ap_use_single_interface">false</bool>
-
-    <!-- Boolean indicating whether Softap require reloading AP firware -->
-    <bool name="config_wifi_ap_firmware_reload">true</bool>
-
     <!-- Flag indicating whether the keyguard should be bypassed when
          the slider is open.  This can be set or unset depending how easily
          the slider can be opened (for example, in a pocket or purse). -->
