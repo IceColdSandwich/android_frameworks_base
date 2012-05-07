@@ -74,14 +74,6 @@
 	    android:text="@string/recent_apps_title"
 	/>
 
-    <Button android:id="@+id/recents_kill_all_button"
-        android:layout_gravity="right"
-        android:layout_marginTop="5dp"
-        android:layout_marginRight="5dp"
-        android:layout_height="wrap_content"
-        android:layout_width="wrap_content"
-        android:text="@string/recent_kill_button_text"/>
-
     </FrameLayout>
 
     <include layout="@layout/status_bar_no_recent_apps"

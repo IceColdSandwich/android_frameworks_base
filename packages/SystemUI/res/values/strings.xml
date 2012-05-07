@@ -368,7 +368,6 @@
 
     <!-- for Sense 4.0 style multitasking mod -->
     <string name="recent_apps_title">Recent apps</string>
-    <string name="recent_kill_button_text">Kill all</string>
     
     <string name="battery_test">99</string>
     <string name="status_bar_settings_gps_button">GPS</string>
