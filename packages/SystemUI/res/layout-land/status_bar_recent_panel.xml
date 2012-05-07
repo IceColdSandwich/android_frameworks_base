@@ -26,53 +26,46 @@
 
     <FrameLayout
         android:id="@+id/recents_bg_protect"
-        android:background="@drawable/status_bar_recents_background_solid"
+        android:background="@drawable/status_bar_recents_background"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_centerVertical="true">
+        android:layout_height="match_parent"
+        android:layout_alignParentBottom="true"
+        android:clipToPadding="false"
+        android:clipChildren="false">
 
-        <ImageView
-	    android:gravity="center"
-	    android:layout_gravity="center"
-	    android:layout_width="match_parent"
-	    android:layout_height="match_parent"
-	    android:layout_marginTop="0.0dip"
-	    android:src="@drawable/nyandroid11"
-	/>
-
-        <com.android.systemui.recent.RecentsHorizontalScrollView
-	    android:id="@+id/recents_container"
-	    android:layout_gravity="bottom|left|center"
-	    android:scrollbars="none"
-	    android:fadingEdge="none"
-	    android:fadingEdgeLength="0.0dip"
-	    android:clipChildren="false"
-	    android:clipToPadding="false"
-        android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:layout_marginRight="0.0dip"
-	    android:stackFromBottom="true"
-	    android:divider="@null">
+        <com.android.systemui.recent.RecentsHorizontalScrollView android:id="@+id/recents_container"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginRight="@dimen/status_bar_recents_right_glow_margin"
+            android:divider="@null"
+            android:stackFromBottom="true"
+            android:fadingEdge="horizontal"
+            android:scrollbars="none"
+            android:fadingEdgeLength="@dimen/status_bar_recents_fading_edge_length"
+            android:layout_gravity="bottom|left"
+            android:orientation="horizontal"
+            android:clipToPadding="false"
+            android:clipChildren="false">
 
             <LinearLayout android:id="@+id/recents_linear_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:clipToPadding="false"
-                android:clipChildren="false">
+                android:clipChildren="false"
+                android:visibility="gone">
             </LinearLayout>
 
         </com.android.systemui.recent.RecentsHorizontalScrollView>
 
-	<TextView
-	    android:textSize="20.0dip"
-	    android:textColor="@color/status_bar_recents_app_label_color"
-	    android:gravity="center_horizontal"
-	    android:layout_marginTop="45.0dip"
+        <ImageView
+ 	    android:gravity="center"
+	    android:layout_gravity="center"
 	    android:layout_width="match_parent"
-	    android:layout_height="wrap_content"
-	    android:text="@string/recent_apps_title"
-	/>
+ 	    android:layout_height="match_parent"
+	    android:layout_marginTop="0.0dip"
+  	    android:src="@drawable/nyandroid11"
+        />
 
     </FrameLayout>
 

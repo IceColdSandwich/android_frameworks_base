@@ -41,7 +41,7 @@
 	/>
 
         <com.android.systemui.recent.RecentsHorizontalScrollView
-	    android:id="@+id/recents_container"
+	    android:id="@id/recents_container"
 	    android:layout_gravity="bottom|left|center"
 	    android:scrollbars="none"
 	    android:fadingEdge="none"
