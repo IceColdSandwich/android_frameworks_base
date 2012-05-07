@@ -92,10 +92,9 @@ private:
     bool mIsFirstBuffer;
     status_t mFirstBufferResult;
     MediaBuffer *mFirstBuffer;
-    const char *mComponentName;
     sp<MediaPlayerBase::AudioSink> mAudioSink;
     AwesomePlayer *mObserver;
-
+    const char *mComponentName;
     static void AudioCallback(int event, void *user, void *info);
     void AudioCallback(int event, void *info);
 

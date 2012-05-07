@@ -51,7 +51,8 @@ AudioPlayer::AudioPlayer(
       mFirstBuffer(NULL),
       mAudioSink(audioSink),
       mSourcePaused(false),
-      mObserver(observer) {
+      mObserver(observer),
+      mComponentName(NULL) {
 }
 
 AudioPlayer::~AudioPlayer() {
@@ -120,7 +121,6 @@ status_t AudioPlayer::start(bool sourceAlreadyStarted) {
     success = format->findInt32(kKeyChannelCount, &numChannels);
     CHECK(success);
     success = format->findCString(kKeyDecoderComponent, &mComponentName);
-    CHECK(success);
     if (mAudioSink.get() != NULL) {
         status_t err = mAudioSink->open(
                 mSampleRate, numChannels, AUDIO_FORMAT_PCM_16_BIT,
@@ -196,10 +196,12 @@ void AudioPlayer::pause(bool playPendingSamples) {
             mAudioTrack->pause();
         }
     }
-    if (strncmp("OMX.google.", mComponentName, 11)) {
-        CHECK(mSource != NULL);
-        if (mSource->pause() == OK) {
-            mSourcePaused = true;
+    if (mComponentName) {
+        if (strncmp("OMX.google.", mComponentName, 11)) {
+            CHECK(mSource != NULL);
+            if (mSource->pause() == OK) {
+                mSourcePaused = true;
+            }
         }
     }
 }
