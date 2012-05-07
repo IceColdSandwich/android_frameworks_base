@@ -52,20 +52,10 @@
                 android:layout_height="match_parent"
                 android:orientation="horizontal"
                 android:clipToPadding="false"
-                android:clipChildren="false"
-                android:visibility="gone">
+                android:clipChildren="false">
             </LinearLayout>
 
         </com.android.systemui.recent.RecentsHorizontalScrollView>
-
-        <ImageView
- 	    android:gravity="center"
-	    android:layout_gravity="center"
-	    android:layout_width="match_parent"
- 	    android:layout_height="match_parent"
-	    android:layout_marginTop="0.0dip"
-  	    android:src="@drawable/nyandroid11"
-        />
 
     </FrameLayout>
 
