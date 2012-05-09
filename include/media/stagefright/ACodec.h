@@ -136,7 +136,7 @@ private:
             ssize_t *index = NULL);
 
     void setComponentRole(bool isEncoder, const char *mime);
-    void configureCodec(const char *mime, const sp<AMessage> &msg);
+    status_t configureCodec(const char *mime, const sp<AMessage> &msg);
 
     status_t setVideoPortFormatType(
             OMX_U32 portIndex,

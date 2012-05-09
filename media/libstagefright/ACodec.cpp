@@ -850,7 +850,7 @@ void ACodec::setComponentRole(
     }
 }
 
-void ACodec::configureCodec(
+status_t ACodec::configureCodec(
         const char *mime, const sp<AMessage> &msg) {
     setComponentRole(false /* isEncoder */, mime);
 
@@ -859,8 +859,10 @@ void ACodec::configureCodec(
         CHECK(msg->findInt32("width", &width));
         CHECK(msg->findInt32("height", &height));
 
-        CHECK_EQ(setupVideoDecoder(mime, width, height),
-                 (status_t)OK);
+        if(setupVideoDecoder(mime, width, height) != (status_t)OK ) {
+            LOGE("Setup Video Decoder failed.");
+            return UNKNOWN_ERROR;
+        }
     } else if (!strcasecmp(mime, MEDIA_MIMETYPE_AUDIO_AAC)) {
         int32_t numChannels, sampleRate;
         CHECK(msg->findInt32("channel-count", &numChannels));
@@ -890,6 +892,7 @@ void ACodec::configureCodec(
         CHECK_EQ(setMinBufferSize(kPortIndexInput, 8192),  // XXX
                  (status_t)OK);
     }
+    return OK;
 }
 
 status_t ACodec::setMinBufferSize(OMX_U32 portIndex, size_t size) {
@@ -2175,7 +2178,15 @@ void ACodec::UninitializedState::onSetup(
             }
         }
     }
-    mCodec->configureCodec(mime.c_str(), msg);
+    if(mCodec->configureCodec(mime.c_str(), msg) != (status_t)OK) {
+        CHECK_EQ(mCodec->mOMX->freeNode(mCodec->mNode), (status_t)OK);
+
+        mCodec->mNode = NULL;
+        mCodec->mOMX.clear();
+        mCodec->mComponentName.clear();
+        mCodec->signalError();
+        return;
+    }
 
     sp<RefBase> obj;
     if (msg->findObject("native-window", &obj)
