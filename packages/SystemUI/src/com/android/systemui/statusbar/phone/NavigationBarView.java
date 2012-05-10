@@ -821,3 +821,4 @@ public class NavigationBarView extends LinearLayout {
         pw.println("    }");
     }
 }
+

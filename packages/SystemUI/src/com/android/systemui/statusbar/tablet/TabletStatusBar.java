@@ -69,7 +69,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.WindowManagerImpl;
 import android.widget.ImageView;
-import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import android.widget.RemoteViews;
 import android.widget.ScrollView;
@@ -493,6 +492,7 @@ public class TabletStatusBar extends StatusBar implements
         if (newTheme != null &&
                 (mCurrentTheme == null || !mCurrentTheme.equals(newTheme))) {
             mCurrentTheme = (CustomTheme)newTheme.clone();
+            StatusBar.resetColors(mContext);
             recreateStatusBar();
         }
             mHeightReceiver.updateHeight(); // display size may have changed
