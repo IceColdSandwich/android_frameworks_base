@@ -2808,9 +2808,6 @@ public class PhoneStatusBar extends StatusBar {
         if (newTheme != null &&
                 (mCurrentTheme == null || !mCurrentTheme.equals(newTheme))) {
             mCurrentTheme = (CustomTheme)newTheme.clone();
-            StatusBar.resetColors(mContext);
-            if(mNavigationBarView != null)
-                mNavigationBarView.updateSettings();
             recreateStatusBar();
             Intent weatherintent = new Intent("com.aokp.romcontrol.INTENT_WEATHER_REQUEST");
             weatherintent.putExtra(android.content.Intent.EXTRA_TEXT, "updateweather");
