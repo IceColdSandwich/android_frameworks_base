@@ -1,6 +1,9 @@
 package com.android.systemui.statusbar.policy.toggles;
 
 import android.provider.Settings;
+import android.content.ContentResolver;
+import android.database.ContentObserver;
+import android.os.Handler;
 import android.content.Context;
 
 import com.android.systemui.R;
@@ -10,23 +13,39 @@ public class BlnToggle extends Toggle {
 
     public BlnToggle(Context context) {
         super(context);
-
-        updateState();
+        SettingsObserver obs = new SettingsObserver(new Handler());
+        obs.observe();
         setLabel(R.string.toggle_bln);
-        if (mToggle.isChecked())
-        	setIcon(R.drawable.toggle_bln);
-        else
-        	setIcon(R.drawable.toggle_bln_off);
-        
+        updateState();
+    }
+
+    class SettingsObserver extends ContentObserver {
+        SettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        void observe() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.Secure.
+                    getUriFor(Settings.System.NOTIFICATION_USE_BUTTON_BACKLIGHT), false,
+                    this);
+            updateState();
+        }
+
+        @Override
+        public void onChange(boolean selfChange) {
+            updateState();
+        }
     }
 
     @Override
-    protected void updateInternalToggleState() {
+    protected boolean updateInternalToggleState() {
     	mToggle.setChecked(isBlnOn());
         if (mToggle.isChecked())
         	setIcon(R.drawable.toggle_bln);
         else
         	setIcon(R.drawable.toggle_bln_off);
+        return mToggle.isChecked();
     }
 
     @Override
@@ -36,11 +55,12 @@ public class BlnToggle extends Toggle {
         	setIcon(R.drawable.toggle_bln);
         else
         	setIcon(R.drawable.toggle_bln_off);
+        updateState();
     }
     
     @Override
     protected boolean onLongPress() {
-    	return false;
+       return false;
     }
     
     public boolean isBlnOn(){
