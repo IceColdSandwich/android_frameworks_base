@@ -99,10 +99,10 @@ public class WifiToggle extends Toggle {
 
     @Override
     protected boolean updateInternalToggleState() {
-//        final WifiManager wifiManager = (WifiManager) mContext
-//                .getSystemService(Context.WIFI_SERVICE);
-//        mWifiState = wifiManager.getWifiState();
-//
+        final WifiManager wifiManager = (WifiManager) mContext
+                .getSystemService(Context.WIFI_SERVICE);
+        mWifiState = wifiManager.getWifiState();
+
         switch (mWifiState) {
             case WifiManager.WIFI_STATE_ENABLED:
                 mIsWifiOn = true;
