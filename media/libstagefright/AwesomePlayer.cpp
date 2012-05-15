@@ -1335,6 +1335,7 @@ status_t AwesomePlayer::seekTo(int64_t timeUs) {
         return seekTo_l(timeUs);
     } else {
         notifyListener_l(MEDIA_SEEK_COMPLETE);
+        notifyListener_l(MEDIA_INFO, MEDIA_INFO_BUFFERING_END);
         mSeekNotificationSent = true;
     }
     return OK;
@@ -2345,7 +2346,7 @@ void AwesomePlayer::onPrepareAsyncEvent() {
             int64_t bitrate = 0;
             if( getBitrate( &bitrate ) ) {
                 //considering that Audio Video can be apart by 0.3 secs
-                mCachedSource->setAVInterleavingOffset( bitrate/3 );
+                mCachedSource->setAVInterleavingOffset( bitrate/(3 * 8) );
             }
         }
         postBufferingEvent_l();
