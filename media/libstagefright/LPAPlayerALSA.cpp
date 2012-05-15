@@ -81,6 +81,7 @@ mNumA2DPBytesPlayed(0),
 mSeeking(false),
 mInternalSeeking(false),
 mReachedEOS(false),
+mReachedOutputEOS(false),
 mFinalStatus(OK),
 mStarted(false),
 mIsFirstBuffer(false),
@@ -304,6 +305,7 @@ void LPAPlayer::handleA2DPSwitch() {
         mInternalSeeking = true;
         mNumA2DPBytesPlayed = 0;
         mReachedEOS = false;
+        mReachedOutputEOS = false;
         pthread_cond_signal(&a2dp_notification_cv);
     } else {
         if (isPaused)
@@ -485,6 +487,7 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
     LOGV("seekTo: time_us %ld", time_us);
     if ( mReachedEOS ) {
         mReachedEOS = false;
+        mReachedOutputEOS = false;
     }
     mSeeking = true;
 
@@ -769,6 +772,7 @@ void LPAPlayer::reset() {
     mSeeking = false;
     mInternalSeeking = false;
     mReachedEOS = false;
+    mReachedOutputEOS = false;
     mFinalStatus = OK;
     mStarted = false;
 }
@@ -781,10 +785,9 @@ bool LPAPlayer::isSeeking() {
 
 bool LPAPlayer::reachedEOS(status_t *finalStatus) {
     *finalStatus = OK;
-
     Mutex::Autolock autoLock(mLock);
     *finalStatus = mFinalStatus;
-    return mReachedEOS;
+    return mReachedOutputEOS;
 }
 
 
@@ -874,6 +877,7 @@ void LPAPlayer::decoderThreadEntry() {
                   all input buffers have been decoded and response queue is empty*/
                 if(mObserver && mReachedEOS && memBuffersResponseQueue.empty()) {
                     LOGV("Posting EOS event..zero byte buffer and response queue is empty");
+                    mReachedOutputEOS = true;
                     mObserver->postAudioEOS();
                 }
                 continue;
@@ -1008,6 +1012,7 @@ void LPAPlayer::eventThreadEntry() {
             LOGV("Timeout %d: Posting EOS event to AwesomePlayer",timeout);
             isPaused = true;
             mPauseTime = mSeekTimeUs + getTimeStamp(A2DP_DISABLED);
+            mReachedOutputEOS = true;
             mObserver->postAudioEOS();
             audioEOSPosted = true;
             timeout = -1;
@@ -1084,7 +1089,8 @@ void LPAPlayer::A2DPThreadEntry() {
 
         //TODO: Remove this
         pthread_mutex_lock(&mem_response_mutex);
-        if (memBuffersResponseQueue.empty() || !mAudioSinkOpen || isPaused || !bIsA2DPEnabled) {
+        if (memBuffersResponseQueue.empty() || !mAudioSinkOpen || isPaused
+			|| !bIsA2DPEnabled || mReachedOutputEOS) {
             LOGV("A2DPThreadEntry:: responseQ empty %d mAudioSinkOpen %d isPaused %d bIsA2DPEnabled %d",
                  memBuffersResponseQueue.empty(), mAudioSinkOpen, isPaused, bIsA2DPEnabled);
             LOGV("A2DPThreadEntry:: Waiting on a2dp_cv");
@@ -1156,6 +1162,7 @@ void LPAPlayer::A2DPThreadEntry() {
             }
             if (mObserver && !asyncReset && mReachedEOS && memBuffersResponseQueue.empty()) {
                 LOGV("Posting EOS event to AwesomePlayer");
+                mReachedOutputEOS = true;
                 mObserver->postAudioEOS();
             }
             pthread_mutex_lock(&mem_request_mutex);
@@ -1324,6 +1331,7 @@ void LPAPlayer::A2DPNotificationThreadEntry() {
         else {
             mInternalSeeking = true;
             mReachedEOS = false;
+            mReachedOutputEOS = false;
             mSeekTimeUs += getTimeStamp(A2DP_DISCONNECT);
             mNumA2DPBytesPlayed = 0;
             pthread_cond_signal(&a2dp_cv);
@@ -1706,6 +1714,7 @@ void LPAPlayer::onPauseTimeOut() {
         // 1.) Set seek flags
         mInternalSeeking = true;
         mReachedEOS = false;
+        mReachedOutputEOS = false;
         mSeekTimeUs += getTimeStamp(A2DP_DISABLED);
 
         // 2.) Flush the buffers and transfer everything to request queue
