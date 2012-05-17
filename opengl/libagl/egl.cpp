@@ -887,7 +887,7 @@ static const extention_map_t gExtentionMap[] = {
 
 static config_pair_t const config_base_attribute_list[] = {
         { EGL_STENCIL_SIZE,               0                                 },
-        { EGL_CONFIG_CAVEAT,              EGL_SLOW_CONFIG                   },
+        { EGL_CONFIG_CAVEAT,              EGL_NON_CONFORMANT_CONFIG         },
         { EGL_LEVEL,                      0                                 },
         { EGL_MAX_PBUFFER_HEIGHT,         GGL_MAX_VIEWPORT_DIMS             },
         { EGL_MAX_PBUFFER_PIXELS,
