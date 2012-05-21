@@ -1,6 +1,30 @@
 LOCAL_PATH:= $(call my-dir)
 include $(CLEAR_VARS)
 
+ifeq ($(TARGET_BOARD_PLATFORM),msm7627a)
+    LOCAL_CFLAGS += -DUSE_AAC_HW_DEC
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm7627_surf)
+    LOCAL_CFLAGS += -DUSE_AAC_HW_DEC
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm7627)
+    LOCAL_CFLAGS += -DTARGET7x27
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm7627a)
+    LOCAL_CFLAGS += -DTARGET7x27A
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm7x30)
+    LOCAL_CFLAGS += -DTARGET7x30
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),qsd8k)
+    LOCAL_CFLAGS += -DTARGET8x50
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm8660)
+    LOCAL_CFLAGS += -DTARGET8x60
+endif
+ifeq ($(TARGET_BOARD_PLATFORM),msm8960)
+    LOCAL_CFLAGS += -DTARGET8x60
+endif
 include frameworks/base/media/libstagefright/codecs/common/Config.mk
 
 LOCAL_SRC_FILES:=                         \
@@ -51,6 +75,9 @@ LOCAL_SRC_FILES:=                         \
         WVMExtractor.cpp                  \
         XINGSeeker.cpp                    \
         avc_utils.cpp                     \
+        ExtendedExtractor.cpp             \
+        ExtendedWriter.cpp                \
+        FMA2DPWriter.cpp
 
 LOCAL_C_INCLUDES:= \
 	$(JNI_H_INCLUDE) \
@@ -58,6 +85,12 @@ LOCAL_C_INCLUDES:= \
         $(TOP)/external/flac/include \
         $(TOP)/external/tremolo \
         $(TOP)/external/openssl/include \
+        $(TOP)/external/alsa-lib/include/sound \
+        $(TOP)/hardware/qcom/display/libgralloc \
+        $(TOP)/hardware/qcom/display/libqcomui \
+        $(TOP)/vendor/qcom/opensource/omx/mm-core/omxcore/inc \
+        $(TOP)/system/core/include \
+        $(TOP)/hardware/libhardware_legacy/include
 
 LOCAL_SHARED_LIBRARIES := \
         libbinder         \
@@ -91,28 +124,12 @@ LOCAL_STATIC_LIBRARIES := \
         libstagefright_id3 \
         libFLAC \
 
-ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
-LOCAL_SRC_FILES += \
-        ExtendedExtractor.cpp             \
-        ExtendedWriter.cpp                \
-        FMA2DPWriter.cpp
-
-LOCAL_C_INCLUDES += \
-	$(TOP)/external/alsa-lib/include/sound \
-        $(TOP)/hardware/qcom/display/libgralloc \
-        $(TOP)/hardware/qcom/display/libqcomui \
-        $(TOP)/vendor/qcom/opensource/omx/mm-core/omxcore/inc \
-        $(TOP)/system/core/include \
-        $(TOP)/hardware/libhardware_legacy/include
-
 LOCAL_SHARED_LIBRARIES += \
         libhardware_legacy
 
 LOCAL_STATIC_LIBRARIES += \
         libstagefright_aacdec \
         libstagefright_mp3dec
-
-LOCAL_CFLAGS += -DQCOM_HARDWARE
 
 #ifeq ($(BOARD_USES_ALSA_AUDIO),true)
 #        LOCAL_SRC_FILES += LPAPlayerALSA.cpp
@@ -127,33 +144,6 @@ LOCAL_CFLAGS += -DQCOM_HARDWARE
 #            LOCAL_SRC_FILES += LPAPlayerPMEM.cpp
 #        endif
 #endif
-
-ifeq ($(TARGET_BOARD_PLATFORM),msm7627a)
-    LOCAL_CFLAGS += -DUSE_AAC_HW_DEC
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),msm7627_surf)
-    LOCAL_CFLAGS += -DUSE_AAC_HW_DEC
-endif
-
-ifeq ($(TARGET_BOARD_PLATFORM),msm7627)
-    LOCAL_CFLAGS += -DTARGET7x27
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),msm7627a)
-    LOCAL_CFLAGS += -DTARGET7x27A
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),msm7x30)
-    LOCAL_CFLAGS += -DTARGET7x30
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),qsd8k)
-    LOCAL_CFLAGS += -DTARGET8x50
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),msm8660)
-    LOCAL_CFLAGS += -DTARGET8x60
-endif
-ifeq ($(TARGET_BOARD_PLATFORM),msm8960)
-    LOCAL_CFLAGS += -DTARGET8x60
-endif
-endif
 
 ################################################################################
 
