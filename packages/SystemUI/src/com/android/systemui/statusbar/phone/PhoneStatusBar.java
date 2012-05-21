@@ -2756,7 +2756,6 @@ public class PhoneStatusBar extends StatusBar {
         if (newTheme != null &&
                 (mCurrentTheme == null || !mCurrentTheme.equals(newTheme))) {
             mCurrentTheme = (CustomTheme)newTheme.clone();
-            StatusBar.resetColors(mContext);
 
             // restart system ui on theme change
             try {
