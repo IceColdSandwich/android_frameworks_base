@@ -61,8 +61,13 @@ SurfaceMediaSource::SurfaceMediaSource(uint32_t bufW, uint32_t bufH) :
     char value[PROPERTY_VALUE_MAX] = {0};
     if (property_get("ro.product.device", value, "0")) {
         if (!strncmp(value, "msm8660", sizeof("msm8660") - 1)) {
-            mUsageQuirks = (GRALLOC_USAGE_PRIVATE_SMI_HEAP |
-                            GRALLOC_USAGE_PRIVATE_UNCACHED);
+            #ifdef USE_ION
+                mUsageQuirks = (GRALLOC_USAGE_PRIVATE_MM_HEAP |
+                                 GRALLOC_USAGE_PRIVATE_UNCACHED);
+            #else
+                mUsageQuirks = (GRALLOC_USAGE_PRIVATE_SMI_HEAP |
+                                 GRALLOC_USAGE_PRIVATE_UNCACHED);
+            #endif
         }
         else if ((!strncmp(value, "msm8960", sizeof("msm8960") - 1)) ||
             (!strncmp(value, "msm7630", sizeof("msm7630") - 1)) ||
