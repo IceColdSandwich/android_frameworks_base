@@ -51,6 +51,7 @@ import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.HorizontalScrollView;
 import android.widget.ImageView;
 import android.widget.ImageView.ScaleType;
@@ -83,6 +84,7 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
     private boolean mShowing;
     private Choreographer mChoreo;
     private View mRecentsDismissButton;
+    private Button mRecentsKillAllButton;
 
     private RecentTasksLoader mRecentTasksLoader;
     private ArrayList<TaskDescription> mRecentTaskDescriptions;
@@ -410,6 +412,24 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
                 }
             });
         }
+        boolean recent_kill_all_button = Settings.System.getInt(mContext.getContentResolver(),
+                      Settings.System.RECENT_KILL_ALL_BUTTON, 0) == 1;
+        if(recent_kill_all_button){ //set the correct listener
+        mRecentsKillAllButton = (Button) findViewById(R.id.recents_kill_all_button);
+            if (mRecentsKillAllButton != null){
+                mRecentsKillAllButton.setOnClickListener(new OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        killAllRecentApps();
+                    }
+                });
+            }
+        } else { // Hide the Button completely
+            mRecentsKillAllButton = (Button) findViewById(R.id.recents_kill_all_button);
+            if (mRecentsKillAllButton != null){
+                mRecentsKillAllButton.setVisibility(View.GONE);
+            }
+        }
 
         // In order to save space, we make the background texture repeat in the Y direction
         if (mRecentsScrim != null && mRecentsScrim.getBackground() instanceof BitmapDrawable) {
@@ -712,5 +732,22 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
             }
         });
         popup.show();
+    }
+
+    private void killAllRecentApps(){
+        final ActivityManager am = (ActivityManager)
+                mContext.getSystemService(Context.ACTIVITY_SERVICE);
+        if(!mRecentTaskDescriptions.isEmpty()){
+            for(TaskDescription ad : mRecentTaskDescriptions){
+                am.removeTask(ad.persistentTaskId, ActivityManager.REMOVE_TASK_KILL_PROCESS);
+                // Accessibility feedback
+                setContentDescription(
+                        mContext.getString(R.string.accessibility_recents_item_dismissed, ad.getLabel()));
+                sendAccessibilityEvent(AccessibilityEvent.TYPE_VIEW_SELECTED);
+                setContentDescription(null);
+            }
+            mRecentTaskDescriptions.clear();
+        }
+        hide(false);
     }
 }
