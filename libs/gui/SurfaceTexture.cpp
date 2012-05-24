@@ -303,9 +303,6 @@ status_t SurfaceTexture::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
         int foundSync = -1;
         int dequeuedCount = 0;
         bool tryAgain = true;
-#ifdef MISSING_GRALLOC_BUFFERS
-        int dequeueRetries = 5;
-#endif
         while (tryAgain) {
             if (mAbandoned) {
                 ST_LOGE("dequeueBuffer: SurfaceTexture has been abandoned!");
@@ -395,22 +392,8 @@ status_t SurfaceTexture::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
             // clients are not allowed to dequeue more than one buffer
             // if they didn't set a buffer count.
             if (!mClientBufferCount && dequeuedCount) {
-#ifdef MISSING_GRALLOC_BUFFERS
-                if (--dequeueRetries) {
-                    LOGD("SurfaceTexture::dequeue: Not allowed to dequeue more "
-                            "than a buffer SLEEPING\n");
-                    usleep(10000);
-                } else {
-                    mClientBufferCount = mServerBufferCount;
-                    LOGD("SurfaceTexture::dequeue: Not allowed to dequeue more "
-                            "than a buffer RETRY mBufferCount:%d mServerBufferCount:%d\n",
-                            mBufferCount, mServerBufferCount);
-                }
-                continue;
-#else
                 ST_LOGE("dequeueBuffer: can't dequeue multiple buffers without "
                         "setting the buffer count");
-#endif
                 return -EINVAL;
             }
 
@@ -423,15 +406,6 @@ status_t SurfaceTexture::dequeueBuffer(int *outBuf, uint32_t w, uint32_t h,
                 // than allowed.
                 const int avail = mBufferCount - (dequeuedCount+1);
                 if (avail < (MIN_UNDEQUEUED_BUFFERS-int(mSynchronousMode))) {
-#ifdef MISSING_GRALLOC_BUFFERS
-                    if (mClientBufferCount != 0) {
-                        mBufferCount++;
-                        mClientBufferCount = mServerBufferCount = mBufferCount;
-                        LOGD("SurfaceTexture::dequeuebuffer: MIN EXCEEDED "
-                                "mBuffer:%d bumped\n", mBufferCount);
-                        continue;
-                    }
-#endif
                     ST_LOGE("dequeueBuffer: MIN_UNDEQUEUED_BUFFERS=%d exceeded "
                             "(dequeued=%d)",
                             MIN_UNDEQUEUED_BUFFERS-int(mSynchronousMode),
@@ -843,11 +817,7 @@ status_t SurfaceTexture::setScalingMode(int mode) {
     return OK;
 }
 
-#ifdef QCOM_HARDWARE
-status_t SurfaceTexture::updateTexImage(bool isComposition) {
-#else
 status_t SurfaceTexture::updateTexImage() {
-#endif
     ST_LOGV("updateTexImage");
     Mutex::Autolock lock(mMutex);
 
@@ -887,15 +857,6 @@ status_t SurfaceTexture::updateTexImage() {
                 image = createImage(dpy, mSlots[buf].mGraphicBuffer);
                 mSlots[buf].mEglImage = image;
                 mSlots[buf].mEglDisplay = dpy;
-
-                // GPU is not efficient in handling GL_TEXTURE_EXTERNAL_OES
-                // texture target. Depending on the image format, decide,
-                // the texture target to be used
-
-                if (isComposition) {
-                mTexTarget =
-                   decideTextureTarget (mSlots[buf].mGraphicBuffer->format);
-                }
 
                 if (image == EGL_NO_IMAGE_KHR) {
 #endif
@@ -1360,3 +1321,4 @@ static void mtxMul(float out[16], const float a[16], const float b[16]) {
 }
 
 }; // namespace android
+

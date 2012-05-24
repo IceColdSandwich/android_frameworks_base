@@ -478,17 +478,7 @@ void Layer::lockPageFlip(bool& recomputeVisibleRegions)
             mFlinger->signalEvent();
         }
 
-#ifdef QCOM_HARDWARE
-        // While calling updateTexImage() from SurfaceFlinger, let it know
-        // by passing an extra parameter
-        // This will be true always.
-
-        bool isComposition = true;
-
-        if (mSurfaceTexture->updateTexImage(isComposition) < NO_ERROR) {
-#else
         if (mSurfaceTexture->updateTexImage() < NO_ERROR) {
-#endif
             // something happened!
             recomputeVisibleRegions = true;
             return;
