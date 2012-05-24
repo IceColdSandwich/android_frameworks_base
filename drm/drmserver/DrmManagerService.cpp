@@ -229,7 +229,7 @@ DecryptHandle* DrmManagerService::openDecryptSession(
 
 DecryptHandle* DrmManagerService::openDecryptSession(
             int uniqueId, const DrmBuffer& buf, const String8& mimeType) {
-    ALOGV("Entering DrmManagerService::openDecryptSession for streaming");
+    LOGV("Entering DrmManagerService::openDecryptSession for streaming");
     if (isProtectedCallAllowed()) {
         return mDrmManager->openDecryptSession(uniqueId, buf, mimeType);
     }

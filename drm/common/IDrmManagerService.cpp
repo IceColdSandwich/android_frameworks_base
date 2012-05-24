@@ -642,7 +642,7 @@ DecryptHandle* BpDrmManagerService::openDecryptSession(int uniqueId, const char*
 
 DecryptHandle* BpDrmManagerService::openDecryptSession(
             int uniqueId, const DrmBuffer& buf, const String8& mimeType) {
-    ALOGV("Entering BpDrmManagerService::openDecryptSession");
+    LOGV("Entering BpDrmManagerService::openDecryptSession");
     Parcel data, reply;
 
     data.writeInterfaceToken(IDrmManagerService::getInterfaceDescriptor());
@@ -662,7 +662,7 @@ DecryptHandle* BpDrmManagerService::openDecryptSession(
         handle = new DecryptHandle();
         readDecryptHandleFromParcelData(handle, reply);
     } else {
-        ALOGV("no decryptHandle is generated in service side");
+        LOGV("no decryptHandle is generated in service side");
     }
     return handle;
 }
@@ -1326,7 +1326,7 @@ status_t BnDrmManagerService::onTransact(
 
     case OPEN_DECRYPT_SESSION_FOR_STREAMING:
     {
-        ALOGV("BnDrmManagerService::onTransact :OPEN_DECRYPT_SESSION_FOR_STREAMING");
+        LOGV("BnDrmManagerService::onTransact :OPEN_DECRYPT_SESSION_FOR_STREAMING");
         CHECK_INTERFACE(IDrmManagerService, data, reply);
 
         const int uniqueId = data.readInt32();
@@ -1343,7 +1343,7 @@ status_t BnDrmManagerService::onTransact(
             delete handle;
             handle = NULL;
         } else {
-            ALOGV("NULL decryptHandle is returned");
+            LOGV("NULL decryptHandle is returned");
         }
         return DRM_NO_ERROR;
     }
