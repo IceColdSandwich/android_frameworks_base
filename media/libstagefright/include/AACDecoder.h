@@ -43,7 +43,6 @@ struct AACDecoder : public MediaSource {
 
 protected:
     virtual ~AACDecoder();
-
 private:
     sp<MetaData>    mMeta;
     sp<MediaSource> mSource;

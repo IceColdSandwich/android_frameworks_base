@@ -28,8 +28,8 @@
 #include <pthread.h>
 #include <binder/IServiceManager.h>
 #include <linux/unistd.h>
-#include <include/linux/msm_audio.h>
-#include <include/linux/ion.h>
+#include <linux/msm_audio.h>
+#include <linux/ion.h>
 #include <include/TimedEventQueue.h>
 #include <binder/BinderService.h>
 #include <binder/MemoryDealer.h>

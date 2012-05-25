@@ -31,7 +31,7 @@
 #include <media/AudioTrack.h>
 
 extern "C" {
-   #include <asound.h>
+   #include <sound/asound.h>
    #include "alsa_audio.h"
 }
 

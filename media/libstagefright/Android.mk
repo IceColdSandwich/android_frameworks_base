@@ -79,6 +79,24 @@ LOCAL_SRC_FILES:=                         \
         ExtendedWriter.cpp                \
         FMA2DPWriter.cpp
 
+ifeq ($(TARGET_USES_QCOM_LPA),true)
+ifeq ($(BOARD_USES_ALSA_AUDIO),true)
+	LOCAL_SRC_FILES += LPAPlayerALSA.cpp
+	LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/mm-audio/libalsa-intf
+	LOCAL_C_INCLUDES += $(TOP)/hardware/libhardware_legacy/include
+	LOCAL_SHARED_LIBRARIES += libalsa-intf
+	LOCAL_SHARED_LIBRARIES += libhardware_legacy
+	LOCAL_SHARED_LIBRARIES += libpowermanager
+else
+	LOCAL_SRC_FILES += LPAPlayer.cpp
+ifeq ($(TARGET_USES_ION_AUDIO),true)
+	LOCAL_SRC_FILES += LPAPlayerION.cpp
+else
+	LOCAL_SRC_FILES += LPAPlayerPMEM.cpp
+endif
+endif
+endif # TARGET_USES_QCOM_LPA
+
 LOCAL_C_INCLUDES:= \
 	$(JNI_H_INCLUDE) \
         $(TOP)/frameworks/base/include/media/stagefright/openmax \
@@ -92,7 +110,7 @@ LOCAL_C_INCLUDES:= \
         $(TOP)/system/core/include \
         $(TOP)/hardware/libhardware_legacy/include
 
-LOCAL_SHARED_LIBRARIES := \
+LOCAL_SHARED_LIBRARIES += \
         libbinder         \
         libmedia          \
         libutils          \
@@ -127,23 +145,11 @@ LOCAL_STATIC_LIBRARIES := \
 LOCAL_SHARED_LIBRARIES += \
         libhardware_legacy
 
+ifeq ($(TARGET_USES_QCOM_LPA),true)
 LOCAL_STATIC_LIBRARIES += \
         libstagefright_aacdec \
         libstagefright_mp3dec
-
-#ifeq ($(BOARD_USES_ALSA_AUDIO),true)
-#        LOCAL_SRC_FILES += LPAPlayerALSA.cpp
-#        LOCAL_C_INCLUDES += $(TARGET_OUT_HEADERS)/mm-audio/libalsa-intf
-#        LOCAL_C_INCLUDES += $(TOP)/kernel/include/sound
-#        LOCAL_SHARED_LIBRARIES += libalsa-intf
-#else
-#        LOCAL_SRC_FILES += LPAPlayer.cpp
-#        ifeq ($(call is-board-platform,msm8660),true)
-#            LOCAL_SRC_FILES += LPAPlayerION.cpp
-#        else
-#            LOCAL_SRC_FILES += LPAPlayerPMEM.cpp
-#        endif
-#endif
+endif
 
 ################################################################################
 

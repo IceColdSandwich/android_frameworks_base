@@ -135,6 +135,10 @@ const int32_t ColorFormatInfo::preferredColorFormat[] = {
 #endif
 };
 
+#define FACTORY_CREATE(name) \
+static sp<MediaSource> Make##name(const sp<MediaSource> &source) { \
+    return new name(source); \
+}
 
 #define FACTORY_CREATE(name) \
 static sp<MediaSource> Make##name(const sp<MediaSource> &source) { \
@@ -148,8 +152,10 @@ static sp<MediaSource> Make##name(const sp<MediaSource> &source, const sp<MetaDa
 
 #define FACTORY_REF(name) { #name, Make##name },
 
+#ifdef WITH_QCOM_LPA
 FACTORY_CREATE(MP3Decoder)
 FACTORY_CREATE(AACDecoder)
+#endif
 FACTORY_CREATE_ENCODER(AMRNBEncoder)
 FACTORY_CREATE_ENCODER(AMRWBEncoder)
 FACTORY_CREATE_ENCODER(AACEncoder)
@@ -181,6 +187,7 @@ static sp<MediaSource> InstantiateSoftwareEncoder(
     return NULL;
 }
 
+#ifdef WITH_QCOM_LPA
 static sp<MediaSource> InstantiateSoftwareDecoder(
         const char *name, const sp<MediaSource> &source) {
     struct FactoryInfo {
@@ -201,6 +208,7 @@ static sp<MediaSource> InstantiateSoftwareDecoder(
 
     return NULL;
 }
+#endif
 
 #undef FACTORY_REF
 #undef FACTORY_CREATE
@@ -210,7 +218,9 @@ static const CodecInfo kDecoderInfo[] = {
     { MEDIA_MIMETYPE_AUDIO_MPEG, "OMX.qcom.audio.decoder.mp3" },
 //    { MEDIA_MIMETYPE_AUDIO_MPEG, "OMX.TI.MP3.decode" },
     { MEDIA_MIMETYPE_AUDIO_MPEG, "OMX.google.mp3.decoder" },
+#ifdef WITH_QCOM_LPA
     { MEDIA_MIMETYPE_AUDIO_MPEG, "MP3Decoder" },
+#endif
     { MEDIA_MIMETYPE_AUDIO_MPEG_LAYER_II, "OMX.Nvidia.mp2.decoder" },
 //    { MEDIA_MIMETYPE_AUDIO_AMR_NB, "OMX.TI.AMR.decode" },
 //    { MEDIA_MIMETYPE_AUDIO_AMR_NB, "OMX.Nvidia.amr.decoder" },
@@ -224,7 +234,9 @@ static const CodecInfo kDecoderInfo[] = {
 //    { MEDIA_MIMETYPE_AUDIO_AAC, "OMX.Nvidia.aac.decoder" },
     { MEDIA_MIMETYPE_AUDIO_AAC, "OMX.TI.AAC.decode" },
     { MEDIA_MIMETYPE_AUDIO_AAC, "OMX.google.aac.decoder" },
+#ifdef WITH_QCOM_LPA
     { MEDIA_MIMETYPE_AUDIO_AAC, "AACDecoder" },
+#endif
     { MEDIA_MIMETYPE_AUDIO_G711_ALAW, "OMX.google.g711.alaw.decoder" },
     { MEDIA_MIMETYPE_AUDIO_G711_MLAW, "OMX.google.g711.mlaw.decoder" },
     { MEDIA_MIMETYPE_VIDEO_MPEG4, "OMX.TI.DUCATI1.VIDEO.DECODER" },
@@ -738,8 +750,10 @@ sp<MediaSource> OMXCodec::Create(
         sp<MediaSource> softwareCodec;
         if (createEncoder) {
             softwareCodec = InstantiateSoftwareEncoder(componentName, source, meta);
+#ifdef WITH_QCOM_LPA
         } else {
             softwareCodec = InstantiateSoftwareDecoder(componentName, source);
+#endif
 		}
         if (softwareCodec != NULL) {
             LOGE("Successfully allocated software codec '%s'", componentName);

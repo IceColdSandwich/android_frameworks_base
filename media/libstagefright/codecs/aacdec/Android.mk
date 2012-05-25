@@ -186,7 +186,7 @@ include $(BUILD_SHARED_LIBRARY)
 
 ################################################################################
 
-ifeq ($(BOARD_USES_QCOM_HARDWARE),true)
+ifeq ($(TARGET_USES_QCOM_LPA),true)
 include $(CLEAR_VARS)
 
 LOCAL_SRC_FILES := \
@@ -342,4 +342,3 @@ LOCAL_MODULE := libstagefright_aacdec
 include $(BUILD_STATIC_LIBRARY)
 
 endif
-
