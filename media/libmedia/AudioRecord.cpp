@@ -229,8 +229,6 @@ status_t AudioRecord::set(
         return BAD_VALUE;
     }
 
-    LOGV("AudioRecord::set() minFrameCount = %d", minFrameCount);
-
     mFirstread = false;
     // Change for Codec type
     int frameSizeInBytes = 0;
