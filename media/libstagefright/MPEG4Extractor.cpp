@@ -1407,7 +1407,6 @@ status_t MPEG4Extractor::parseChunk(off64_t *offset, int depth) {
             char buffer[23];
             if (chunk_data_size != 7 &&
                 chunk_data_size != 23) {
-
                 LOGW("Incorrect D263 box size %lld, skipping this atom", chunk_data_size);
                 *offset += chunk_size;
                 break;
@@ -2669,6 +2668,20 @@ static bool BetterSniffMPEG4(
 
     *mimeType = MEDIA_MIMETYPE_CONTAINER_MPEG4;
     *confidence = 0.6f;
+
+    if (moovAtomEndOffset >= 0) {
+        *meta = new AMessage;
+        (*meta)->setInt64("meta-data-size", moovAtomEndOffset);
+
+        LOGV("found metadata size: %lld", moovAtomEndOffset);
+    }
+
+    if (moovAtomEndOffset >= 0) {
+        *meta = new AMessage;
+        (*meta)->setInt64("meta-data-size", moovAtomEndOffset);
+
+        LOGV("found metadata size: %lld", moovAtomEndOffset);
+    }
 
     if (moovAtomEndOffset >= 0) {
         *meta = new AMessage;

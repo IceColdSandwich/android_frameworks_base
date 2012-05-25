@@ -135,13 +135,14 @@ private:
     sp<DataSource>            mDataSource;
     bool                      mIsVideo;
     sp<TSBuffer>              mTSBuffer;
+    uint64_t                  mLastKnownSyncFrameTime;
 
     Mutex mLock;
 
     status_t findOffsetForPTS(off64_t& seekOffset, uint64_t seekPTS);
     status_t feedMoreForStream();
     status_t seekToSync();
-
+    status_t seekPrepare( int64_t seekTimeUs, bool* seekError);
     DISALLOW_EVIL_CONSTRUCTORS(MPEG2TSSource);
 };
 
@@ -153,6 +154,7 @@ MPEG2TSSource::MPEG2TSSource(
     : mExtractor(extractor),
       mImpl(impl),
       mDataSource(dataSource),
+      mLastKnownSyncFrameTime(-1),
       mIsVideo(isVideo) {
 
     // Create stream info
@@ -193,44 +195,67 @@ sp<MetaData> MPEG2TSSource::getFormat() {
     return mFormat;
 }
 
+
+status_t MPEG2TSSource::seekPrepare( int64_t seekTimeUs,bool* seekError) {
+     // Get file offset for seek position
+     status_t err = OK;
+     uint64_t seekPTS = ((seekTimeUs*9/100) + mStream->mFirstPTS);
+     off64_t  seekOffset = (seekTimeUs * mExtractor->mClipSize) / mStream->mDurationUs;
+     seekOffset = (off64_t)(seekOffset / kTSPacketSize) * kTSPacketSize;
+     LOGV("Seek PTS %lld , start searching from offset %lld", seekPTS, seekOffset);
+
+     err = findOffsetForPTS(seekOffset, seekPTS);
+     if (err != OK) {
+         LOGE("Cannot seek, unable to find offset %lld",seekTimeUs);
+         return err;
+     }
+     mStream->mOffset = seekOffset;
+     LOGV("Found seek offset at %lld", seekOffset);
+     mTSBuffer->flush();
+
+     //Flush all PES data in parser
+     mExtractor->seekTo(seekTimeUs);
+
+     //Seek to I frame for video
+     if (mIsVideo) {
+         err = seekToSync();
+         if (err != OK) {
+             LOGE("Cannot seek this TS clip %d", err);
+             *seekError = true;
+             return err;
+         }
+     }
+     return err;
+}
+
+
 status_t MPEG2TSSource::read(
         MediaBuffer **out, const ReadOptions *options) {
     Mutex::Autolock autoLock(mLock);
 
     *out = NULL;
 
-    int64_t seekTimeUs;
+    int64_t seekTimeUs = 0;
     ReadOptions::SeekMode seekMode;
     status_t err = OK;
     bool seekAble = mExtractor->isSeekable();
 
     if (seekAble && options && options->getSeekTo(&seekTimeUs, &seekMode)) {
+        bool seekErr = false;
+        err = seekPrepare(seekTimeUs, &seekErr);
+        if(err != OK && seekErr) {
+            //reset to last known IFrame location
+            //call seekPrepare again;
 
-        // Get file offset for seek position
-        uint64_t seekPTS = ((seekTimeUs*9/100) + mStream->mFirstPTS);
-        off64_t seekOffset = (seekTimeUs * mExtractor->mClipSize) / mStream->mDurationUs;
-        seekOffset = (off64_t)(seekOffset / kTSPacketSize) * kTSPacketSize;
-        LOGV("Seek PTS %lld , start searching from offset %lld", seekPTS, seekOffset);
-
-        err = findOffsetForPTS(seekOffset, seekPTS);
-        if (err != OK) {
-            LOGE("Cannot seek, unable to find offset %lld",seekTimeUs);
-            return err;
-        }
-        mStream->mOffset = seekOffset;
-        LOGV("Found seek offset at %lld", seekOffset);
-        mTSBuffer->flush();
-
-        //Flush all PES data in parser
-        mExtractor->seekTo(seekTimeUs);
-
-        //Seek to I frame for video
-        if (mIsVideo) {
-            err = seekToSync();
-            if (err != OK) {
-                LOGE("Cannot seek this TS clip %d", err);
-                return err;
+            if(mLastKnownSyncFrameTime != -1) {
+                err = seekPrepare(mLastKnownSyncFrameTime, &seekErr);
+            } else{
+                err = seekPrepare(0, &seekErr);
             }
+        }
+
+        if(err != OK) {
+            return err;
         }
     }
 
@@ -245,7 +270,21 @@ status_t MPEG2TSSource::read(
             mImpl->signalEOS(err);
         }
     }
-    return mImpl->read(out, options);
+    bool isSync = false;
+    mImpl->nextBufferIsSync(&isSync);
+    int64_t curPts =0;
+
+    if(isSync){
+        mImpl->nextBufferTime(&curPts);
+    }
+
+    err = mImpl->read(out, options);
+
+    if((err == OK) && isSync) {
+        mLastKnownSyncFrameTime = curPts;
+    }
+
+    return err;
 }
 
 status_t MPEG2TSSource::findStreamDuration(){

@@ -72,10 +72,6 @@
 
 #define DISPLAY_COUNT       1
 
-#ifdef USE_LGE_HDMI
-extern "C" void NvDispMgrAutoOrientation(int rotation);
-#endif
-
 namespace android {
 // ---------------------------------------------------------------------------
 
@@ -109,11 +105,10 @@ SurfaceFlinger::SurfaceFlinger()
 #ifdef QCOM_HARDWARE
         mCanSkipComposition(false),
 #endif
-        mSecureFrameBuffer(0),
-        mUseDithering(false)
 #ifdef QCOM_HDMI_OUT
         mExtDispOutput(EXT_TYPE_NONE),
 #endif
+        mSecureFrameBuffer(0)
 {
     init();
 }
@@ -133,10 +128,6 @@ void SurfaceFlinger::init()
 
     property_get("debug.sf.ddms", value, "0");
     mDebugDDMS = atoi(value);
-
-    property_get("persist.sys.use_dithering", value, "0");
-    mUseDithering = atoi(value) == 1;
-
     if (mDebugDDMS) {
         DdmConnection::start(getServiceName());
     }
@@ -144,7 +135,6 @@ void SurfaceFlinger::init()
     LOGI_IF(mDebugRegion,       "showupdates enabled");
     LOGI_IF(mDebugBackground,   "showbackground enabled");
     LOGI_IF(mDebugDDMS,         "DDMS debugging enabled");
-    LOGI_IF(mUseDithering,      "use dithering");
 }
 
 SurfaceFlinger::~SurfaceFlinger()
@@ -449,11 +439,6 @@ bool SurfaceFlinger::threadLoop()
     if (UNLIKELY(mHwWorkListDirty)) {
         // build the h/w work list
         handleWorkList();
-    }
-
-    if (isRotationCompleted() == false) {
-        LOGD("Rotation is not finished. Skip the composition");
-        return true;
     }
 
     const DisplayHardware& hw(graphicPlane(0).displayHardware());
@@ -854,19 +839,6 @@ void SurfaceFlinger::unlockPageFlip(const LayerVector& currentLayers)
     }
 }
 
-bool SurfaceFlinger::isRotationCompleted()
-{
-    const Vector< sp<LayerBase> >& currentLayers(mVisibleLayersSortedByZ);
-    const size_t count = currentLayers.size();
-
-    for (size_t i=0 ; i<count ; i++) {
-        if (currentLayers[i]->isRotated() == false) {
-            return false;
-        }
-    }
-    return true;
-}
-
 void SurfaceFlinger::handleWorkList()
 {
     mHwWorkListDirty = false;
@@ -1047,9 +1019,7 @@ void SurfaceFlinger::setupHardwareComposer(Region& dirtyInOut)
                     dirtyInOut.orSelf(layer->visibleRegionScreen);
                 }
                 layer->setOverlay(isOverlay);
-#ifdef QCOM_HARDWARE
                 layer->mQCLayer->setS3DComposeFormat(cur[i].hints);
-#endif
             }
             // don't erase stuff outside the dirty region
             transparent.andSelf(dirtyInOut);
@@ -1639,11 +1609,6 @@ uint32_t SurfaceFlinger::setClientStateLocked(
 
 void SurfaceFlinger::screenReleased(int dpy)
 {
-#ifdef SURFACEFLINGER_FORCE_SCREEN_RELEASE
-    const DisplayHardware& hw = graphicPlane(0).displayHardware();
-    hw.releaseScreen();
-#endif
-
     // this may be called by a signal handler, we can't do too much in here
     android_atomic_or(eConsoleReleased, &mConsoleSignals);
     signalEvent();
@@ -2163,11 +2128,6 @@ status_t SurfaceFlinger::electronBeamOffAnimationImplLocked()
     glDeleteTextures(1, &tname);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
-
-#ifdef SURFACEFLINGER_FORCE_SCREEN_RELEASE
-    hw.releaseScreen();
-#endif
-
     return NO_ERROR;
 }
 
@@ -2843,9 +2803,6 @@ void GraphicPlane::setDisplayHardware(DisplayHardware *hw)
         case 90:
             displayOrientation = ISurfaceComposer::eOrientation90;
             break;
-        case 180:
-            displayOrientation = ISurfaceComposer::eOrientation180;
-            break;
         case 270:
             displayOrientation = ISurfaceComposer::eOrientation270;
             break;
@@ -2902,9 +2859,6 @@ status_t GraphicPlane::setOrientation(int orientation)
     mWidth = int(w);
     mHeight = int(h);
 
-#ifdef USE_LGE_HDMI
-    NvDispMgrAutoOrientation(orientation);
-#endif
     Transform orientationTransform;
     GraphicPlane::orientationToTransfrom(orientation, w, h,
             &orientationTransform);

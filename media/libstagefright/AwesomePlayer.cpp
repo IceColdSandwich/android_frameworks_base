@@ -241,6 +241,8 @@ AwesomePlayer::AwesomePlayer()
         mStats.mLastFrameUs = 0;
         mStats.mStatisticsFrames = 0;
         mStats.mFPSSumUs = 0;
+        mStats.mTotalTime = 0;
+        mStats.mFirstFrameTime = 0;
     }
     reset();
 }
@@ -254,6 +256,7 @@ AwesomePlayer::~AwesomePlayer() {
         Mutex::Autolock autoLock(mStatsLock);
         LOGW("=========================================================");
         LOGW("Average Frames Per Second: %.4f", mStats.mFPSSumUs/((double)mStats.mStatisticsFrames));
+        LOGW("Total Frames / Total Time: %.4f", ((double)(mStats.mTotalFrames-1)*1E6)/((double)mStats.mTotalTime));
         LOGW("========================================================");
     }
 
@@ -1748,6 +1751,29 @@ void AwesomePlayer::onVideoEvent() {
     }
     mVideoEventPending = false;
 
+    if (mStatistics) {
+        Mutex::Autolock autoLock(mStatsLock);
+        if(mStats.mTotalFrames < 2){
+           mStats.mLastFrameUs = getTimeOfDayUs();
+           mStats.mFirstFrameTime = getTimeOfDayUs();
+        }
+        mStats.mTotalTime = getTimeOfDayUs() - mStats.mFirstFrameTime;
+        int64_t now = getTimeOfDayUs();
+        int64_t diff = now - mStats.mLastFrameUs;
+        if (diff > 250000 && !mStats.mVeryFirstFrame) {
+             double fps =((mStats.mTotalFrames - mStats.mLastFrame) * 1E6)/diff;
+             if (mStats.mStatisticsFrames == 0) {
+                 fps =((mStats.mTotalFrames - mStats.mLastFrame - 1) * 1E6)/diff;
+             }
+             LOGW("Frames per second: %.4f, Duration of measurement: %lld", fps,diff);
+             mStats.mFPSSumUs += fps;
+             ++mStats.mStatisticsFrames;
+             mStats.mLastFrameUs = now;
+             mStats.mLastFrame = mStats.mTotalFrames;
+         }
+    }
+
+
     if (mSeeking != NO_SEEK) {
         if (mVideoBuffer) {
             mVideoBuffer->release();
@@ -1893,8 +1919,11 @@ void AwesomePlayer::onVideoEvent() {
         if(mStatistics)
         {
             Mutex::Autolock autoLock(mStatsLock);
-            if(mStats.mVeryFirstFrame)
+            if(mStats.mVeryFirstFrame){
                 logFirstFrame();
+                LOGW("setting first frame time");
+                mStats.mLastFrameUs = getTimeOfDayUs();
+            }
         }
     }
 
@@ -2001,18 +2030,6 @@ void AwesomePlayer::onVideoEvent() {
             logOnTime(timeUs,nowUs,latenessUs);
             mStats.mTotalFrames++;
             mStats.mConsecutiveFramesDropped = 0;
-
-            int64_t now = getTimeOfDayUs(),
-            diff = now - mStats.mLastFrameUs;
-            if (diff > 250000) {
-                float fps =((mStats.mTotalFrames - mStats.mLastFrame) * 1E6)/diff;
-                LOGW("Frames per second: %.4f", fps);
-
-                mStats.mFPSSumUs += fps;
-                mStats.mLastFrameUs = now;
-                mStats.mLastFrame = mStats.mTotalFrames;
-                ++mStats.mStatisticsFrames;
-            }
         }
     }
 
@@ -2608,7 +2625,7 @@ void AwesomePlayer::logStatistics() {
     if (mFlags & LOOPING) {LOGW("Looping Update");}
     LOGW("Mime Type: %s",mime);
     LOGW("Number of frames dropped: %lld",mStats.mNumVideoFramesDropped);
-    LOGW("Number of frames rendered: %u",mStats.mTotalFrames);
+    LOGW("Number of frames rendered: %llu",mStats.mTotalFrames);
     LOGW("=====================================================");
 }
 
@@ -2682,4 +2699,3 @@ inline int64_t AwesomePlayer::getTimeOfDayUs() {
     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 }
 }  // namespace android
-

@@ -32,9 +32,7 @@
 #include "LayerBase.h"
 #include "SurfaceFlinger.h"
 #include "DisplayHardware/DisplayHardware.h"
-#ifdef QCOM_HARDWARE
 #include "qcom_ui.h"
-#endif
 
 namespace android {
 
@@ -55,16 +53,12 @@ LayerBase::LayerBase(SurfaceFlinger* flinger, DisplayID display)
 {
     const DisplayHardware& hw(flinger->graphicPlane(0).displayHardware());
     mFlags = hw.getFlags();
-#ifdef QCOM_HARDWARE
     mQCLayer = new QCBaseLayer;
-#endif
 }
 
 LayerBase::~LayerBase()
 {
-#ifdef QCOM_HARDWARE
     delete mQCLayer;
-#endif
 }
 
 void LayerBase::setName(const String8& name) {
@@ -363,10 +357,6 @@ bool LayerBase::isOverlay() const {
     return mInOverlay;
 }
 
-bool LayerBase::isRotated() const {
-    return true;
-}
-
 void LayerBase::setFiltering(bool filtering)
 {
     mFiltering = filtering;
@@ -404,7 +394,6 @@ void LayerBase::clearWithOpenGL(const Region& clip, GLclampf red,
     glDisable(GL_TEXTURE_EXTERNAL_OES);
     glDisable(GL_TEXTURE_2D);
     glDisable(GL_BLEND);
-    glDisable(GL_DITHER);
 
     Region::const_iterator it = clip.begin();
     Region::const_iterator const end = clip.end();
@@ -466,12 +455,6 @@ void LayerBase::drawWithOpenGL(const Region& clip) const
     texCoords[3].u = 1;
     texCoords[3].v = 1;
 
-    if (needsDithering()) {
-        glEnable(GL_DITHER);
-    } else {
-        glDisable(GL_DITHER);
-    }
-
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glVertexPointer(2, GL_FLOAT, 0, mVertices);
     glTexCoordPointer(2, GL_FLOAT, 0, texCoords);
@@ -488,7 +471,6 @@ void LayerBase::drawWithOpenGL(const Region& clip) const
     glDisable(GL_BLEND);
 }
 
-#ifdef QCOM_HARDWARE
 void LayerBase::drawS3DUIWithOpenGL(const Region& clip) const
 {
     const DisplayHardware& hw(graphicPlane(0).displayHardware());
@@ -534,12 +516,6 @@ void LayerBase::drawS3DUIWithOpenGL(const Region& clip) const
     texCoords[2].v = 0;
     texCoords[3].u = 1;
     texCoords[3].v = 1;
-
-    if (needsDithering()) {
-        glEnable(GL_DITHER);
-    } else {
-        glDisable(GL_DITHER);
-    }
 
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
@@ -616,7 +592,6 @@ void LayerBase::drawS3DUIWithOpenGL(const Region& clip) const
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
     glDisable(GL_BLEND);
 }
-#endif
 
 void LayerBase::dump(String8& result, char* buffer, size_t SIZE) const
 {

@@ -29,12 +29,31 @@
 #include <media/stagefright/MetaData.h>
 #include <media/stagefright/Utils.h>
 
+#include <cutils/properties.h>
 #include "include/avc_utils.h"
+
+#define SAMPLE_PER_FRAME 1152
 
 namespace android {
 
 ElementaryStreamQueue::ElementaryStreamQueue(Mode mode)
-    : mMode(mode) {
+    : mMode(mode),
+      mAACtimeUs(-1),
+      mAACFrameDuration(0),
+      mIsHWAACDec(false),
+      mPrevPESPartial(false),
+      mCurPESPartial(false),
+      mPreTimeStamp(-1),
+      mCount(0) {
+    char value[PROPERTY_VALUE_MAX] = {0};
+    if (property_get("ro.product.device", value, "0"))
+    {
+        if (!strncmp(value, "msm7627a", sizeof("msm7627a") - 1))
+        {
+            mIsHWAACDec = true;
+            LOGW("HW AAC Decoder used");
+        }
+    }
 }
 
 sp<MetaData> ElementaryStreamQueue::getFormat() {
@@ -51,6 +70,12 @@ void ElementaryStreamQueue::clear(bool clearFormat) {
     if (clearFormat) {
         mFormat.clear();
     }
+    mAACtimeUs = -1;
+    mAACFrameDuration = 0;
+    mPrevPESPartial = false;
+    mCurPESPartial = false;
+    mPreTimeStamp = -1;
+    mCount = 0;
 }
 
 static bool IsSeeminglyValidADTSHeader(const uint8_t *ptr, size_t size) {
@@ -318,91 +343,231 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitAAC() {
     size_t auSize = 0;
 
     size_t offset = 0;
-    while (offset + 7 <= mBuffer->size()) {
-        ABitReader bits(mBuffer->data() + offset, mBuffer->size() - offset);
+    if (mIsHWAACDec)
+    {
+        if (offset + 7 <= mBuffer->size())
+        {
+            ABitReader bits(mBuffer->data() + offset,
+                            mBuffer->size() - offset);
 
-        // adts_fixed_header
+            // adts_fixed_header
 
-        CHECK_EQ(bits.getBits(12), 0xfffu);
-        bits.skipBits(3);  // ID, layer
-        bool protection_absent = bits.getBits(1) != 0;
+            CHECK_EQ(bits.getBits(12), 0xfffu);
+            bits.skipBits(3);  // ID, layer
+            bool protection_absent = bits.getBits(1) != 0;
 
-        if (mFormat == NULL) {
-            unsigned profile = bits.getBits(2);
-            CHECK_NE(profile, 3u);
-            unsigned sampling_freq_index = bits.getBits(4);
-            bits.getBits(1);  // private_bit
-            unsigned channel_configuration = bits.getBits(3);
-            CHECK_NE(channel_configuration, 0u);
-            bits.skipBits(2);  // original_copy, home
+            if (mFormat == NULL)
+            {
+                unsigned profile = bits.getBits(2);
+                // Avoid crash, rather look for next packet to get the format info
+                if(profile == 3u) {
+                    return NULL;
+                }
+                unsigned sampling_freq_index = bits.getBits(4);
+                bits.getBits(1);  // private_bit
+                unsigned channel_configuration = bits.getBits(3);
+                // Avoid crash, rather look for next packet to get the format info
+                if(channel_configuration ==  0u) {
+                    return NULL;
+                }
 
-            mFormat = MakeAACCodecSpecificData(
-                    profile, sampling_freq_index, channel_configuration);
+                bits.skipBits(2);  // original_copy, home
 
-            mFormat->setInt32(kKeyMaxInputSize, (8192 * 3));
+                mFormat = MakeAACCodecSpecificData(profile,
+                                                   sampling_freq_index,
+                                                   channel_configuration);
 
-            int32_t sampleRate;
-            int32_t numChannels;
-            int32_t maxInputSize;
-            CHECK(mFormat->findInt32(kKeySampleRate, &sampleRate));
-            CHECK(mFormat->findInt32(kKeyChannelCount, &numChannels));
-            CHECK(mFormat->findInt32(kKeyMaxInputSize, &maxInputSize));
+                mFormat->setInt32(kKeyMaxInputSize, (8192 * 3));
 
-            LOGI("found AAC codec config (%d Hz, %d channels), Input buffer size %d",
-                 sampleRate, numChannels,maxInputSize);
-        } else {
-            // profile_ObjectType, sampling_frequency_index, private_bits,
-            // channel_configuration, original_copy, home
-            bits.skipBits(12);
+                int32_t sampleRate;
+                int32_t numChannels;
+                int32_t maxInputSize;
+                CHECK(mFormat->findInt32(kKeySampleRate, &sampleRate));
+                CHECK(mFormat->findInt32(kKeyChannelCount, &numChannels));
+                CHECK(mFormat->findInt32(kKeyMaxInputSize, &maxInputSize));
+
+                LOGI("found AAC codec config (%d Hz, %d channels), "
+                     "Input buffer size %d",
+                     sampleRate, numChannels,maxInputSize);
+                if (sampleRate > 0)
+                {
+                    mAACFrameDuration = (1024 * 1000 * 1000) / sampleRate;
+                    //Number of AAC frames per sample
+                    //divided by sample rate
+                }
+            }
+            else
+            {
+                // profile_ObjectType, sampling_frequency_index,
+                // private_bits, channel_configuration, original_copy, home
+                bits.skipBits(12);
+            }
+
+            // adts_variable_header
+
+            // copyright_identification_bit, copyright_identification_start
+            bits.skipBits(2);
+
+            unsigned aac_frame_length = bits.getBits(13);
+
+            bits.skipBits(11);  // adts_buffer_fullness
+
+            unsigned number_of_raw_data_blocks_in_frame = bits.getBits(2);
+
+            if (number_of_raw_data_blocks_in_frame != 0)
+            {
+                // To be implemented.
+                TRESPASS();
+            }
+
+            if (offset + aac_frame_length > mBuffer->size())
+            {
+                return NULL;
+            }
+
+            size_t headerSize = protection_absent ? 7 : 9;
+
+            ranges.push(aac_frame_length);
+            frameOffsets.push(offset + headerSize);
+            frameSizes.push(aac_frame_length - headerSize);
+            auSize += aac_frame_length - headerSize;
+
+            offset += aac_frame_length;
+        }
+    }
+    else
+    {
+        while (offset + 7 <= mBuffer->size())
+        {
+            ABitReader bits(mBuffer->data() + offset,
+                            mBuffer->size() - offset);
+
+            // adts_fixed_header
+
+            CHECK_EQ(bits.getBits(12), 0xfffu);
+            bits.skipBits(3);  // ID, layer
+            bool protection_absent = bits.getBits(1) != 0;
+
+            if (mFormat == NULL)
+            {
+                unsigned profile = bits.getBits(2);
+                // Avoid crash, rather look for next packet to get the format info
+                if(profile == 3u) {
+                    return NULL;
+                }
+
+                unsigned sampling_freq_index = bits.getBits(4);
+                bits.getBits(1);  // private_bit
+                unsigned channel_configuration = bits.getBits(3);
+                // Avoid crash, rather look for next packet to get the format info
+                if(channel_configuration == 0u) {
+                    return NULL;
+                }
+
+                bits.skipBits(2);  // original_copy, home
+
+                mFormat = MakeAACCodecSpecificData(profile,
+                                                   sampling_freq_index,
+                                                   channel_configuration);
+
+                mFormat->setInt32(kKeyMaxInputSize, (8192 * 3));
+
+                int32_t sampleRate;
+                int32_t numChannels;
+                int32_t maxInputSize;
+                CHECK(mFormat->findInt32(kKeySampleRate, &sampleRate));
+                CHECK(mFormat->findInt32(kKeyChannelCount, &numChannels));
+                CHECK(mFormat->findInt32(kKeyMaxInputSize, &maxInputSize));
+
+                LOGI("found AAC codec config (%d Hz, %d channels), "
+                     "Input buffer size %d",
+                     sampleRate, numChannels,maxInputSize);
+            }
+            else
+            {
+                // profile_ObjectType, sampling_frequency_index,
+                // private_bits, channel_configuration, original_copy, home
+                bits.skipBits(12);
+            }
+
+            // adts_variable_header
+
+            // copyright_identification_bit, copyright_identification_start
+            bits.skipBits(2);
+
+            unsigned aac_frame_length = bits.getBits(13);
+
+            bits.skipBits(11);  // adts_buffer_fullness
+
+            unsigned number_of_raw_data_blocks_in_frame = bits.getBits(2);
+
+            if (number_of_raw_data_blocks_in_frame != 0)
+            {
+                // To be implemented.
+                TRESPASS();
+            }
+
+            if (offset + aac_frame_length > mBuffer->size())
+            {
+                break;
+            }
+
+            size_t headerSize = protection_absent ? 7 : 9;
+
+            ranges.push(aac_frame_length);
+            frameOffsets.push(offset + headerSize);
+            frameSizes.push(aac_frame_length - headerSize);
+            auSize += aac_frame_length - headerSize;
+
+            offset += aac_frame_length;
         }
 
-        // adts_variable_header
-
-        // copyright_identification_bit, copyright_identification_start
-        bits.skipBits(2);
-
-        unsigned aac_frame_length = bits.getBits(13);
-
-        bits.skipBits(11);  // adts_buffer_fullness
-
-        unsigned number_of_raw_data_blocks_in_frame = bits.getBits(2);
-
-        if (number_of_raw_data_blocks_in_frame != 0) {
-            // To be implemented.
-            TRESPASS();
-        }
-
-        if (offset + aac_frame_length > mBuffer->size()) {
-            break;
-        }
-
-        size_t headerSize = protection_absent ? 7 : 9;
-
-        ranges.push(aac_frame_length);
-        frameOffsets.push(offset + headerSize);
-        frameSizes.push(aac_frame_length - headerSize);
-        auSize += aac_frame_length - headerSize;
-
-        offset += aac_frame_length;
+        if ((mBuffer->size() - offset) > 0)
+            mCurPESPartial = true;
+        else if ((mBuffer->size() - offset) == 0)
+            mCurPESPartial = false;
     }
 
-    if (offset == 0) {
+    if (offset == 0)
+    {
+        mPrevPESPartial = mCurPESPartial;
         return NULL;
     }
 
-    int64_t timeUs = -1;
-
-    for (size_t i = 0; i < ranges.size(); ++i) {
+    for (size_t i = 0; i < ranges.size(); ++i)
+    {
         int64_t tmpUs = fetchTimestamp(ranges.itemAt(i));
-
-        if (i == 0) {
-            timeUs = tmpUs;
+        if (mIsHWAACDec)
+        {
+            if (mAACtimeUs >= 0 && mAACFrameDuration > 0)
+            {
+                mAACtimeUs = mAACtimeUs + (mAACFrameDuration);
+            }
+            else
+            {
+                mAACtimeUs = tmpUs;
+            }
+        }
+        else
+        {
+            // If Prev PES was complete, take timestamp of first frame
+            // If Prev PES was partial, take time stamp of the second
+            // frame(which is the first complete frame)
+            if (i == 0 && !mPrevPESPartial)
+            {
+                mAACtimeUs = tmpUs;
+            }
+            else if (i == 1 && mPrevPESPartial)
+            {
+                mAACtimeUs = tmpUs ;
+            }
         }
     }
 
     sp<ABuffer> accessUnit = new ABuffer(auSize);
     size_t dstOffset = 0;
-    for (size_t i = 0; i < frameOffsets.size(); ++i) {
+    for (size_t i = 0; i < frameOffsets.size(); ++i)
+    {
         size_t frameOffset = frameOffsets.itemAt(i);
 
         memcpy(accessUnit->data() + dstOffset,
@@ -416,11 +581,15 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitAAC() {
             mBuffer->size() - offset);
     mBuffer->setRange(0, mBuffer->size() - offset);
 
-    if (timeUs >= 0) {
-        accessUnit->meta()->setInt64("timeUs", timeUs);
-    } else {
+    if (mAACtimeUs >= 0)
+    {
+        accessUnit->meta()->setInt64("timeUs", mAACtimeUs);
+    }
+    else
+    {
         LOGW("no time for AAC access unit");
     }
+    mPrevPESPartial = mCurPESPartial;
 
     return accessUnit;
 }
@@ -624,6 +793,18 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitMPEGAudio() {
 
     int64_t timeUs = fetchTimestamp(frameSize);
     CHECK_GE(timeUs, 0ll);
+
+    int64_t frameTimeUs = (SAMPLE_PER_FRAME * 1000 * 1000)/samplingRate; //frame time in microsec
+
+    if(timeUs != mPreTimeStamp) { // for 1st frame keep the packet timestamp
+        mPreTimeStamp = timeUs;
+        mCount = 1;
+    } else { // 2nd frame onwards add frame duration with packet timestamp
+        timeUs += mCount * frameTimeUs;
+        ++mCount;
+    }
+
+    LOGV("timeUs = %lld  sample rate = %d  bitrate= %d channel = %ld frame size = %ld   time Delta = %lld",timeUs,samplingRate, bitrate, numChannels, frameSize,frameTimeUs);
 
     accessUnit->meta()->setInt64("timeUs", timeUs);
 

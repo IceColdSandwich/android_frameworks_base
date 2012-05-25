@@ -51,12 +51,21 @@ private:
         size_t mLength;
     };
 
+    bool mIsHWAACDec;
+    int64_t mAACtimeUs;
+    int64_t mAACFrameDuration;
+
+    bool mPrevPESPartial;
+    bool mCurPESPartial;
     Mode mMode;
 
     sp<ABuffer> mBuffer;
     List<RangeInfo> mRangeInfos;
 
     sp<MetaData> mFormat;
+
+    int64_t mPreTimeStamp;
+    int mCount;
 
     sp<ABuffer> dequeueAccessUnitH264();
     sp<ABuffer> dequeueAccessUnitAAC();
