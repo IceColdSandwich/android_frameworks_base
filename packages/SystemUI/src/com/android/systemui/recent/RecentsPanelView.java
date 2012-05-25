@@ -414,19 +414,17 @@ public class RecentsPanelView extends RelativeLayout implements OnItemClickListe
         }
         boolean recent_kill_all_button = Settings.System.getInt(mContext.getContentResolver(),
                       Settings.System.RECENT_KILL_ALL_BUTTON, 0) == 1;
-        if(recent_kill_all_button){ //set the correct listener
+
         mRecentsKillAllButton = (Button) findViewById(R.id.recents_kill_all_button);
-            if (mRecentsKillAllButton != null){
+        if (mRecentsKillAllButton != null){
+            if (recent_kill_all_button){ //set the listener
                 mRecentsKillAllButton.setOnClickListener(new OnClickListener() {
                     @Override
                     public void onClick(View v) {
                         killAllRecentApps();
                     }
                 });
-            }
-        } else { // Hide the Button completely
-            mRecentsKillAllButton = (Button) findViewById(R.id.recents_kill_all_button);
-            if (mRecentsKillAllButton != null){
+            } else { // hide the button completely (gone)
                 mRecentsKillAllButton.setVisibility(View.GONE);
             }
         }
