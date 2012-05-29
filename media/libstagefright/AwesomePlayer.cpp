@@ -1390,7 +1390,6 @@ status_t AwesomePlayer::seekTo(int64_t timeUs) {
         return seekTo_l(timeUs);
     } else {
         notifyListener_l(MEDIA_SEEK_COMPLETE);
-        notifyListener_l(MEDIA_INFO, MEDIA_INFO_BUFFERING_END);
         mSeekNotificationSent = true;
     }
     return OK;
@@ -1426,6 +1425,7 @@ status_t AwesomePlayer::seekTo_l(int64_t timeUs) {
     if (mFlags & CACHE_UNDERRUN) {
         modifyFlags(CACHE_UNDERRUN, CLEAR);
         play_l();
+        notifyListener_l(MEDIA_INFO, MEDIA_INFO_BUFFERING_END);
     }
 
     if ((mFlags & PLAYING) && mVideoSource != NULL && (mFlags & VIDEO_AT_EOS)) {
