@@ -122,7 +122,7 @@ public final class ShutdownThread extends Thread {
             // Set different dialog message based on whether or not we're rebooting
             if (mReboot) {
                 dialog = new AlertDialog.Builder(context)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
                         .setTitle(com.android.internal.R.string.reboot_system)
                         .setSingleChoiceItems(com.android.internal.R.array.shutdown_reboot_options, 0, new DialogInterface.OnClickListener() {
                             public void onClick(DialogInterface dialog, int which) {
@@ -164,7 +164,7 @@ public final class ShutdownThread extends Thread {
                         });
             } else {
                 dialog = new AlertDialog.Builder(context)
-                        .setIcon(android.R.drawable.ic_dialog_alert)
+                        .setIconAttribute(android.R.attr.alertDialogIcon)
                         .setTitle(com.android.internal.R.string.power_off)
                         .setMessage(com.android.internal.R.string.shutdown_confirm)
                         .setPositiveButton(com.android.internal.R.string.yes, new DialogInterface.OnClickListener() {
