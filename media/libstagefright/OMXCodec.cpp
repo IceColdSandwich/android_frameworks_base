@@ -6320,7 +6320,7 @@ status_t OMXCodec::processSEIData() {
         status_t err = mOMX->getConfig(mNode, (OMX_INDEXTYPE)OMX_QcomIndexConfigVideoFramePackingArrangement,
                                        &arrangementInfo, (size_t)sizeof(arrangementInfo));
         if (err != OK) {
-            ALOGV("Not supported config OMX_QcomIndexConfigVideoFramePackingArrangement");
+            LOGV("Not supported config OMX_QcomIndexConfigVideoFramePackingArrangement");
             return OK;
         }
 
@@ -6346,7 +6346,7 @@ status_t OMXCodec::processSEIData() {
 
                 colorFormat |= format3D;
             } else
-                ALOGW("This is supposedly a 3d video but the frame arrangement "
+                LOGW("This is supposedly a 3d video but the frame arrangement "
                      " [%d] is not supported", (int)arrangementInfo.type);
 
             colorFormatChanged = (format3D != 0);
