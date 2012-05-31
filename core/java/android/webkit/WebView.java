@@ -684,17 +684,6 @@ public class WebView extends AbsoluteLayout
     // cached value used to determine if we need to switch drawing models
     private boolean mHardwareAccelSkia = false;
 
-    // BrowserMgmt Plugin Handlers
-    private Class mBrowserMgmtClassType=null;
-    private Object mBrowserMgmtInst=null;
-    private Class[] args_types = null;
-    private Context[] args_val = null;
-    private boolean mFirstPaint = true;
-    private final String BrowserMgmtPluginName=
-        "/system/framework/browsermanagement.jar";
-    private final String BrowserMgmtClassName=
-        "com.android.qualcomm.browsermanagement.BrowserManagement";
-
     /*
      * Private message ids
      */
@@ -1115,45 +1104,7 @@ public class WebView extends AbsoluteLayout
             startPrivateBrowsing();
         }
 
-        boolean mIsBrowserManagementOn =
-            android.os.SystemProperties.getBoolean("browser.management", true);
-        if (DebugFlags.WEB_VIEW) {
-            Log.d(LOGTAG,"BrowserManagement sys prop is "+ mIsBrowserManagementOn);
-        }
-        if (mIsBrowserManagementOn) {
-            setupBrowserMgmtPlugin(context);
-        }
-
         mAutoFillData = new WebViewCore.AutoFillData();
-    }
-
-    private void setupBrowserMgmtPlugin(Context context) {
-
-        try {
-            dalvik.system.PathClassLoader pluginClassLoader =
-                new dalvik.system.PathClassLoader(
-                    BrowserMgmtPluginName,ClassLoader.getSystemClassLoader());
-            try {
-                mBrowserMgmtClassType =
-                    pluginClassLoader.loadClass(BrowserMgmtClassName);
-                mBrowserMgmtInst = mBrowserMgmtClassType.newInstance();
-                args_types = new Class[1];
-                args_val = new Context[1];
-                args_types[0] = Context.class;
-                args_val[0] = context;
-
-                try {
-                    mBrowserMgmtClassType.getMethod("Init",args_types).
-                    invoke(mBrowserMgmtInst,(Object)args_val[0]);
-                } catch (Throwable e) {
-                    Log.e(LOGTAG, "method not found: Init " + e);
-                }
-            } catch (Throwable e) {
-                Log.e(LOGTAG, "BrowserMgmt Instance failed " + e);
-            }
-       } catch (Throwable el) {
-            Log.e(LOGTAG, "browsermanagement jar not loaded "+el);
-       }
     }
 
     private static class ProxyReceiver extends BroadcastReceiver {
@@ -1740,15 +1691,6 @@ public class WebView extends AbsoluteLayout
         if (mNativeClass != 0) {
             nativeDestroy();
             mNativeClass = 0;
-        }
-
-        if(mBrowserMgmtClassType != null) {
-            try {
-                mBrowserMgmtClassType.getMethod("Destroy",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                Log.e(LOGTAG, "BrowserMgmt method not found: Destroy " + e);
-            }
         }
     }
 
@@ -3818,16 +3760,6 @@ public class WebView extends AbsoluteLayout
         // reset the flag since we set to true in if need after
         // loading is see onPageFinished(Url)
         mAccessibilityScriptInjected = false;
-
-        if(mBrowserMgmtClassType != null) {
-            try {
-                mBrowserMgmtClassType.getMethod("PageLoadStarted",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                Log.e(LOGTAG, "method not found: PageLoadStarted " + e);
-            }
-            mFirstPaint = true;
-        }
     }
 
     /**
@@ -3848,15 +3780,6 @@ public class WebView extends AbsoluteLayout
         }
         mZoomManager.onPageFinished(url);
         injectAccessibilityForUrl(url);
-
-        if(mBrowserMgmtClassType != null) {
-            try {
-                mBrowserMgmtClassType.getMethod("PageLoadFinished",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                Log.e(LOGTAG, "method not found: PageLoadFinished " + e);
-            }
-        }
     }
 
     /**
@@ -4606,16 +4529,6 @@ public class WebView extends AbsoluteLayout
                 isPictureAfterFirstLayout, registerPageSwapCallback);
         if (mHTML5VideoViewManager != null)
             mHTML5VideoViewManager.setBaseLayer(layer);
-
-        if((mBrowserMgmtClassType != null) && (mFirstPaint)) {
-            try {
-                mBrowserMgmtClassType.getMethod("WebviewLoaded",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                    Log.e(LOGTAG, "method not found: WebviewLoaded " + e);
-            }
-            mFirstPaint = false;
-        }
     }
 
     int getBaseLayer() {
@@ -5913,15 +5826,6 @@ public class WebView extends AbsoluteLayout
             mKeysPressed.clear();
         }
 
-        if(mBrowserMgmtClassType != null) {
-            try {
-                mBrowserMgmtClassType.getMethod("FocusChanged",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                Log.e(LOGTAG, "method not found: FocusChanged " + e);
-            }
-        }
-
         super.onFocusChanged(focused, direction, previouslyFocusedRect);
     }
 
@@ -6192,15 +6096,6 @@ public class WebView extends AbsoluteLayout
         int deltaY = mLastTouchY - y;
         int contentX = viewToContentX(x + mScrollX);
         int contentY = viewToContentY(y + mScrollY);
-
-        if(mBrowserMgmtClassType != null) {
-            try {
-                mBrowserMgmtClassType.getMethod("PageTouched",args_types).
-                invoke(mBrowserMgmtInst,(Object)args_val[0]);
-            } catch (Throwable e) {
-                Log.d(LOGTAG, "method not found: PageTouched " + e);
-            }
-        }
 
         switch (action) {
             case MotionEvent.ACTION_DOWN: {
