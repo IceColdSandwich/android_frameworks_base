@@ -10772,6 +10772,7 @@ package android.media {
     method public void setWakeMode(android.content.Context, int);
     method public void start() throws java.lang.IllegalStateException;
     method public void stop() throws java.lang.IllegalStateException;
+    field public static final int KEY_PARAMETER_3D_ATTRIBUTES = 8001; // 0x1f41
     field public static final int MEDIA_ERROR_NOT_VALID_FOR_PROGRESSIVE_PLAYBACK = 200; // 0xc8
     field public static final int MEDIA_ERROR_SERVER_DIED = 100; // 0x64
     field public static final int MEDIA_ERROR_UNKNOWN = 1; // 0x1

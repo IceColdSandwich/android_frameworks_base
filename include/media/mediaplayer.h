@@ -145,6 +145,8 @@ enum media_parameter_keys {
     // audio track, or zero for error (e.g. no audio track) or unknown.
     KEY_PARAMETER_AUDIO_CHANNEL_COUNT = 1200,                   // get only
 
+    // key to return/set 3d attributes for suspend/resume cycle.
+    KEY_PARAMETER_3D_ATTRIBUTES = 8001,                   // get/set
 };
 
 // ----------------------------------------------------------------------------

@@ -3483,6 +3483,12 @@ void OMXCodec::onCmdComplete(OMX_COMMANDTYPE cmd, OMX_U32 data) {
                 sp<MetaData> oldOutputFormat = mOutputFormat;
                 initOutputFormat(mSource->getFormat());
 
+                int32_t format3D = 0;
+                if (oldOutputFormat->findInt32(kKey3D, &format3D)) {
+                    CODEC_LOGV("old output format had 3d flag, set that now too");
+                    mOutputFormat->setInt32(kKey3D, format3D);
+                }
+
                 // Don't notify clients if the output port settings change
                 // wasn't of importance to them, i.e. it may be that just the
                 // number of buffers has changed and nothing else.
@@ -5729,6 +5735,13 @@ void OMXCodec::initOutputFormat(const sp<MetaData> &inputFormat) {
         if (inputFormat->findInt32(kKeyTimeScale, &timeScale)) {
             mOutputFormat->setInt32(kKeyTimeScale, timeScale);
         }
+    } else {
+        int32_t format3D;
+        //It's unlikely that we get another 3D SEI, so remember flags
+        //associated with old 3D SEI
+        if (inputFormat->findInt32(kKey3D, &format3D)) {
+            mOutputFormat->setInt32(kKey3D, format3D);
+        }
     }
 
     OMX_PARAM_PORTDEFINITIONTYPE def;
@@ -6210,6 +6223,16 @@ status_t OMXCodec::processSEIData() {
     if (!m3DVideoDetected)
     {
         CODEC_LOGI("In processSEIData");
+
+        bool colorFormatChanged = false;
+        int width, height, colorFormat, last3DArrangement;
+        CHECK(mOutputFormat->findInt32(kKeyWidth, &width));
+        CHECK(mOutputFormat->findInt32(kKeyHeight, &height));
+        CHECK(mOutputFormat->findInt32(kKeyColorFormat, &colorFormat));
+
+        colorFormat = (colorFormat == QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka) ?
+            HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED : colorFormat;
+
         //We don't want to continue checking every buffer, so we mark as 3D detected
         //regardless. We only take action by xoring the 3d flag when cancel_flag is set
         m3DVideoDetected = true;
@@ -6220,42 +6243,52 @@ status_t OMXCodec::processSEIData() {
                                          //struct if video is not H264
         status_t err = mOMX->getConfig(mNode, (OMX_INDEXTYPE)OMX_QcomIndexConfigVideoFramePackingArrangement,
                                        &arrangementInfo, (size_t)sizeof(arrangementInfo));
-        if (err != OK)
-        {
-            LOGV("Not supported config OMX_QcomIndexConfigVideoFramePackingArrangement");
+        if (err != OK) {
+            ALOGV("Not supported config OMX_QcomIndexConfigVideoFramePackingArrangement");
             return OK;
         }
 
         if (arrangementInfo.cancel_flag != 1)
         {
-            int width, height, colorFormat;
-            CHECK(mOutputFormat->findInt32(kKeyWidth, &width));
-            CHECK(mOutputFormat->findInt32(kKeyHeight, &height));
-            CHECK(mOutputFormat->findInt32(kKeyColorFormat, &colorFormat));
+            bool flip =
+                (arrangementInfo.content_interpretation_type == QOMX_VIDEO_CONTENT_RL_VIEW); //LR should be treated as RL
+            int format3D = 0;
 
-            colorFormat = (colorFormat == QOMX_COLOR_FormatYUV420PackedSemiPlanar64x32Tile2m8ka) ?
-                HAL_PIXEL_FORMAT_YCbCr_420_SP_TILED : colorFormat;
-
-            bool flip = (arrangementInfo.content_interpretation_type == 2); //LR should be treated as RL
-
-            if (arrangementInfo.type == 3) //side-by-side
-            {
+            if (arrangementInfo.type == QOMX_VIDEO_FRAME_PACKING_SIDE_BY_SIDE) { //side-by-side
                 if (flip)
-                    colorFormat |= HAL_3D_OUT_SIDE_BY_SIDE | HAL_3D_IN_SIDE_BY_SIDE_R_L;
+                    format3D = HAL_3D_OUT_SIDE_BY_SIDE | HAL_3D_IN_SIDE_BY_SIDE_R_L;
                 else
-                    colorFormat |= HAL_3D_OUT_SIDE_BY_SIDE | HAL_3D_IN_SIDE_BY_SIDE_L_R;
-            }
-            else if (arrangementInfo.type == 4) //top-bottom
-            {
+                    format3D = HAL_3D_OUT_SIDE_BY_SIDE | HAL_3D_IN_SIDE_BY_SIDE_L_R;
+
+                colorFormat |= format3D;
+            } else if (arrangementInfo.type == QOMX_VIDEO_FRAME_PACKING_TOP_BOTTOM) { //top-bottom
                 if (flip)
-                    LOGE("flipping top-bottom 3d video not supported, continuing to display as top bottom");
-                colorFormat |= HAL_3D_OUT_TOP_BOTTOM | HAL_3D_IN_TOP_BOTTOM;
-            }
-            else
-                LOGW("This is supposedly a 3d video but the frame arragement [%d] is not supported", (int)arrangementInfo.type);
-            err = mNativeWindow.get()->perform(mNativeWindow.get(), NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY, width, height, colorFormat);
+                    CODEC_LOGE("flipping top-bottom 3d video not supported, "
+                               "continuing to display as top bottom");
+                else
+                    format3D = HAL_3D_OUT_TOP_BOTTOM | HAL_3D_IN_TOP_BOTTOM;
+
+                colorFormat |= format3D;
+            } else
+                ALOGW("This is supposedly a 3d video but the frame arrangement "
+                     " [%d] is not supported", (int)arrangementInfo.type);
+
+            colorFormatChanged = (format3D != 0);
+
+            //save the 3D format for suspend resume case
+            mOutputFormat->setInt32(kKey3D, format3D);
+        } else if (mOutputFormat->findInt32(kKey3D, &last3DArrangement)) {
+            //if kKey3D exists let's force-set whatever format it reports
+            colorFormatChanged = true;
+            colorFormat |= last3DArrangement;
+        }
+
+        if (colorFormatChanged) {
+            err = mNativeWindow.get()->perform(mNativeWindow.get(),
+                                               NATIVE_WINDOW_UPDATE_BUFFERS_GEOMETRY,
+                                               width, height, colorFormat);
             if (err != 0) {
-                LOGE("native_window_update_buffers_geometry failed: %s (%d)",
+                CODEC_LOGE("native_window_update_buffers_geometry failed: %s (%d)",
                         strerror(-err), -err);
                 return err;
             }

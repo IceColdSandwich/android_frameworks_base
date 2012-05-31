@@ -139,6 +139,7 @@ private:
         TEXTPLAYER_STARTED  = 0x20000,
 
         SLOW_DECODER_HACK   = 0x40000,
+        NOTIFY_ATTRIBUTES   = 0x80000000,
     };
 
     mutable Mutex mLock;
@@ -308,6 +309,8 @@ private:
     void logOnTime(int64_t ts, int64_t clock, int64_t delta);
     void logSyncLoss();
     int64_t getTimeOfDayUs();
+    void notifyVideoAttributes_l();
+
     bool mVeryFirstFrame;
     bool mStatistics;
 

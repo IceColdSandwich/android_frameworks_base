@@ -1303,6 +1303,12 @@ public class MediaPlayer
      */
     private static final int KEY_PARAMETER_TIMED_TEXT_ADD_OUT_OF_BAND_SOURCE = 1001;
 
+    /*
+     * Key to read and set 3D attributes across suspend/resume cycle in VideoView
+     * {@hide}
+     */
+    public static final int KEY_PARAMETER_3D_ATTRIBUTES = 8001;
+
     // There are currently no defined keys usable from Java with get*Parameter.
     // But if any keys are defined, the order must be kept in sync with include/media/mediaplayer.h.
     // private static final int KEY_PARAMETER_... = ...;

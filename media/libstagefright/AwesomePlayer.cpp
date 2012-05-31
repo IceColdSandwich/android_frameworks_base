@@ -62,6 +62,7 @@
 #include <media/stagefright/foundation/AMessage.h>
 
 #include <cutils/properties.h>
+#include <gralloc_priv.h>
 
 #define USE_SURFACE_ALLOC 1
 #define FRAME_DROP_FREQ 0
@@ -1870,6 +1871,11 @@ void AwesomePlayer::onVideoEvent() {
         }
     }
 
+    if (mFlags & NOTIFY_ATTRIBUTES) {
+        modifyFlags(NOTIFY_ATTRIBUTES, CLEAR);
+        notifyVideoAttributes_l();
+    }
+
     int64_t timeUs;
     CHECK(mVideoBuffer->meta_data()->findInt64(kKeyTime, &timeUs));
 
@@ -2468,6 +2474,7 @@ void AwesomePlayer::finishAsyncPrepare_l() {
     mPrepareResult = OK;
     modifyFlags((PREPARING|PREPARE_CANCELLED|PREPARING_CONNECTED), CLEAR);
     modifyFlags(PREPARED, SET);
+    modifyFlags(NOTIFY_ATTRIBUTES, SET);
     mAsyncPrepareEvent = NULL;
     mPreparedCondition.broadcast();
 }
@@ -2505,6 +2512,23 @@ status_t AwesomePlayer::setParameter(int key, const Parcel &request) {
         case KEY_PARAMETER_CACHE_STAT_COLLECT_FREQ_MS:
         {
             return setCacheStatCollectFreq(request);
+        }
+        case KEY_PARAMETER_3D_ATTRIBUTES:
+        {
+            int32_t format3D = 0;
+            sp<MetaData> meta = mVideoSource->getFormat();
+
+            request.readInt32(&format3D);
+
+            //Validate it, but client really shouldn't be messing with this
+            CHECK(!(format3D & ~(HAL_3D_OUT_SIDE_BY_SIDE |
+                                 HAL_3D_OUT_TOP_BOTTOM   |
+                                 HAL_3D_IN_SIDE_BY_SIDE_R_L |
+                                 HAL_3D_IN_SIDE_BY_SIDE_L_R |
+                                 HAL_3D_IN_TOP_BOTTOM)));
+
+            meta->setInt32(kKey3D, format3D);
+            return OK;
         }
         default:
         {
@@ -2698,4 +2722,16 @@ inline int64_t AwesomePlayer::getTimeOfDayUs() {
 
     return (int64_t)tv.tv_sec * 1000000 + tv.tv_usec;
 }
+
+void AwesomePlayer::notifyVideoAttributes_l() {
+    sp<MetaData> meta = mVideoSource->getFormat();
+    int format3D = 0;
+
+    if (!meta->findInt32(kKey3D, &format3D))
+        format3D = 0;
+
+    notifyListener_l(MEDIA_INFO,
+                     KEY_PARAMETER_3D_ATTRIBUTES, format3D);
+}
+
 }  // namespace android

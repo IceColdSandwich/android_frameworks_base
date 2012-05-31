@@ -88,6 +88,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
     private boolean     mCanPause;
     private boolean     mCanSeekBack;
     private boolean     mCanSeekForward;
+    private int         m3DAttributes;
 
     public VideoView(Context context) {
         super(context);
@@ -220,6 +221,7 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
             mMediaPlayer = new MediaPlayer();
             mMediaPlayer.setOnPreparedListener(mPreparedListener);
             mMediaPlayer.setOnVideoSizeChangedListener(mSizeChangedListener);
+            mMediaPlayer.setOnInfoListener(mInfoListener);
             mDuration = -1;
             mMediaPlayer.setOnCompletionListener(mCompletionListener);
             mMediaPlayer.setOnErrorListener(mErrorListener);
@@ -281,6 +283,8 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
     MediaPlayer.OnPreparedListener mPreparedListener = new MediaPlayer.OnPreparedListener() {
         public void onPrepared(MediaPlayer mp) {
             mCurrentState = STATE_PREPARED;
+
+            mp.setParameter(MediaPlayer.KEY_PARAMETER_3D_ATTRIBUTES, m3DAttributes);
 
             // Get the capabilities of the player for this stream
             Metadata data = mp.getMetadata(MediaPlayer.METADATA_ALL,
@@ -411,6 +415,17 @@ public class VideoView extends SurfaceView implements MediaPlayerControl {
         new MediaPlayer.OnBufferingUpdateListener() {
         public void onBufferingUpdate(MediaPlayer mp, int percent) {
             mCurrentBufferPercentage = percent;
+        }
+    };
+
+    private MediaPlayer.OnInfoListener mInfoListener =
+        new MediaPlayer.OnInfoListener() {
+        public boolean onInfo(MediaPlayer mp, int framework_err, int impl_err) {
+            if (framework_err == MediaPlayer.KEY_PARAMETER_3D_ATTRIBUTES) {
+                m3DAttributes = impl_err;
+                return true;
+            }
+            return false;
         }
     };
 
