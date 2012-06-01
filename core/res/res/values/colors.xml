@@ -78,7 +78,7 @@
     <drawable name="input_method_fullscreen_background_holo">@drawable/screen_background_holo_dark</drawable>
 
     <!-- For date picker widget -->
-    <drawable name="selected_day_background">#ff0092f4</drawable>
+    <drawable name="selected_day_background">#ff666666</drawable>
 
     <!-- For settings framework -->
     <color name="lighter_gray">#ddd</color>
@@ -159,13 +159,13 @@
     <eat-comment />
 
     <!-- A light Holo shade of blue -->
-    <color name="holo_blue_light">#ff33b5e5</color>
+    <color name="holo_blue_light">#ffffffff</color>
     <!-- A light Holo shade of green -->
-    <color name="holo_green_light">#ff99cc00</color>
+    <color name="holo_green_light">#ff666666</color>
     <!-- A light Holo shade of red -->
     <color name="holo_red_light">#ffff4444</color>
     <!-- A dark Holo shade of blue -->
-    <color name="holo_blue_dark">#ff0099cc</color>
+    <color name="holo_blue_dark">#ff919191</color>
     <!-- A dark Holo shade of green -->
     <color name="holo_green_dark">#ff669900</color>
     <!-- A dark Holo shade of red -->
