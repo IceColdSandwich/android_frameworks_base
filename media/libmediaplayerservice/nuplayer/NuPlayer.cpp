@@ -567,7 +567,7 @@ void NuPlayer::onMessageReceived(const sp<AMessage> &msg) {
                if( (mAudioDecoder != NULL) &&
                    (mFlushingAudio == NONE|| mFlushingAudio == AWAITING_DISCONTINUITY) )
                {
-                   flushDecoder( true, false );  // flush audio,  shutdown
+                   flushDecoder( true, true );  // flush audio,  shutdown
                }
                if( mAudioDecoder == NULL ) {
                    LOGV("Audio is not there, set it to shutdown");
