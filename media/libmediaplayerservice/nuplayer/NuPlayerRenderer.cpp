@@ -223,6 +223,19 @@ void NuPlayer::Renderer::signalAudioSinkChanged() {
 }
 
 bool NuPlayer::Renderer::onDrainAudioQueue() {
+    //Check for EOS before retrieving position from audiosink
+    if(!mAudioQueue.empty()) {
+        QueueEntry *entry = &*mAudioQueue.begin();
+
+        if (entry->mBuffer == NULL) {
+            // EOS
+            notifyEOS(true /* audio */, entry->mFinalResult);
+            mAudioQueue.erase(mAudioQueue.begin());
+            entry = NULL;
+            return false;
+        }
+    }
+
     uint32_t numFramesPlayed;
     if (mAudioSink->getPosition(&numFramesPlayed) != OK) {
         return false;
