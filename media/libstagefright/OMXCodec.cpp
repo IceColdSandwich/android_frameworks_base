@@ -308,6 +308,7 @@ static const CodecInfo kEncoderInfo[] = {
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.TI.DUCATI1.VIDEO.H264E" },
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.qcom.7x30.video.encoder.avc" },
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.qcom.video.encoder.avc" },
+    { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.ittiam.video.encoder.avc" },
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.TI.Video.encoder" },
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.Nvidia.h264.encoder" },
     { MEDIA_MIMETYPE_VIDEO_AVC, "OMX.SEC.AVC.Encoder" },
@@ -519,6 +520,11 @@ uint32_t OMXCodec::getComponentQuirks(
        quirks |= kRequiresGlobalFlush;
     }
 
+    if (!strncmp(componentName, "OMX.ittiam.video.encoder.", 25)) {
+        quirks |= kRequiresAllocateBufferOnInputPorts;
+      //  quirks |= kRequiresAllocateBufferOnOutputPorts;
+        quirks |= kRequiresLoadedToIdleAfterAllocation;
+    }
 
     if (!strcmp(componentName, "OMX.qcom.audio.encoder.evrc")) {
         quirks |= kRequiresAllocateBufferOnInputPorts;
