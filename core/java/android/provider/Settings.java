@@ -3027,6 +3027,18 @@ public final class Settings {
         public static final String QUIET_HOURS_HAPTIC = "quiet_hours_haptic";
 
         /**
+         * Whether to remove the sound from outgoing notifications during quiet hours.
+         * @hide
+         */
+        public static final String QUIET_HOURS_NOTIFICATIONS = "quiet_hours_notifications";
+
+        /**
+         * Whether to mute phone ringtones during quiet hours.
+         * @hide
+         */
+        public static final String QUIET_HOURS_RINGER = "quiet_hours_ringer";
+
+        /**
          * Whether to remove the vibration from outgoing notifications during quiet hours.
          * @hide
          */
@@ -3037,7 +3049,6 @@ public final class Settings {
          * @hide
          */
         public static final String QUIET_HOURS_DIM = "quiet_hours_dim";
-
     }
 
     /**

@@ -66,6 +66,7 @@ import java.io.FileDescriptor;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 
 /** {@hide} */
 public class NotificationManagerService extends INotificationManager.Stub
@@ -123,6 +124,16 @@ public class NotificationManagerService extends INotificationManager.Stub
 
     private ArrayList<NotificationRecord> mLights = new ArrayList<NotificationRecord>();
     private NotificationRecord mLedNotification;
+
+    private boolean mQuietHoursEnabled = false;
+    // Minutes from midnight when quiet hours begin.
+    private int mQuietHoursStart = 0;
+    // Minutes from midnight when quiet hours end.
+    private int mQuietHoursEnd = 0;
+    // Don't play sounds.
+    private boolean mQuietHoursMute = true;
+    // Dim LED if hardware supports it.
+    private boolean mQuietHoursDim = true;
 
     private static String idDebugString(Context baseContext, String packageName, int id) {
         Context c = null;
@@ -487,7 +498,10 @@ public class NotificationManagerService extends INotificationManager.Stub
 
         SettingsObserver observer = new SettingsObserver(mHandler);
         observer.observe();
+        QuietHoursSettingsObserver qhObserver = new QuietHoursSettingsObserver(mHandler);
+        qhObserver.observe();
         ThemeUtils.registerThemeChangeReceiver(mContext, mThemeChangeReceiver);
+        
     }
 
     void systemReady() {
@@ -774,6 +788,7 @@ public class NotificationManagerService extends INotificationManager.Stub
         }
 
         synchronized (mNotificationList) {
+            final boolean inQuietHours = inQuietHours();
             NotificationRecord r = new NotificationRecord(pkg, tag, id,
                     callingUid, callingPid,
                     priority,
@@ -859,7 +874,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                 // sound
                 final boolean useDefaultSound =
                         (notification.defaults & Notification.DEFAULT_SOUND) != 0;
-                if (useDefaultSound || notification.sound != null) {
+                if (!(inQuietHours && mQuietHoursMute)
+                        && (useDefaultSound || notification.sound != null)) {
                     Uri uri;
                     if (useDefaultSound) {
                         uri = Settings.System.DEFAULT_NOTIFICATION_URI;
@@ -921,6 +937,21 @@ public class NotificationManagerService extends INotificationManager.Stub
         }
 
         idOut[0] = id;
+    }
+
+    private boolean inQuietHours() {
+        if (mQuietHoursEnabled && (mQuietHoursStart != mQuietHoursEnd)) {
+            // Get the date in "quiet hours" format.
+            Calendar calendar = Calendar.getInstance();
+            int minutes = calendar.get(Calendar.HOUR_OF_DAY) * 60 + calendar.get(Calendar.MINUTE);
+            if (mQuietHoursEnd < mQuietHoursStart) {
+                // Starts at night, ends in the morning.
+                return (minutes > mQuietHoursStart) || (minutes < mQuietHoursEnd);
+            } else {
+                return (minutes > mQuietHoursStart) && (minutes < mQuietHoursEnd);
+            }
+        }
+        return false;
     }
 
     private void sendAccessibilityEvent(Notification notification, CharSequence packageName) {
@@ -1135,7 +1166,8 @@ public class NotificationManagerService extends INotificationManager.Stub
 
         // Don't flash while we are in a call or screen is on
 				// Depending on ROMControl "Screen ON flash" flag
-        if (mLedNotification == null || mInCall || (mScreenOn && !ledScreenOn)) {
+        if (mLedNotification == null || mInCall || (mScreenOn && !ledScreenOn)
+                || (inQuietHours() && mQuietHoursDim)) {
             mNotificationLight.turnOff();
             if (!mScreenOn) {
                 mButtonBackLight.setBrightness(0);
@@ -1248,6 +1280,46 @@ public class NotificationManagerService extends INotificationManager.Stub
             pw.println("  mVibrateNotification=" + mVibrateNotification);
             pw.println("  mDisabledNotifications=0x" + Integer.toHexString(mDisabledNotifications));
             pw.println("  mSystemReady=" + mSystemReady);
+        }
+    }
+
+    class QuietHoursSettingsObserver extends ContentObserver {
+        QuietHoursSettingsObserver(Handler handler) {
+            super(handler);
+        }
+
+        void observe() {
+            ContentResolver resolver = mContext.getContentResolver();
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_ENABLED), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_START), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_END), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_NOTIFICATIONS), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_DIM), false, this);
+            update();
+        }
+
+        @Override public void onChange(boolean selfChange) {
+            update();
+            updateNotificationPulse();
+        }
+
+        public void update() {
+            ContentResolver resolver = mContext.getContentResolver();
+            mQuietHoursEnabled = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_ENABLED, 0) != 0;
+            mQuietHoursStart = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_START, 0);
+            mQuietHoursEnd = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_END, 0);
+            mQuietHoursMute = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_NOTIFICATIONS, 0) != 0;
+            mQuietHoursDim = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_DIM, 0) != 0;
         }
     }
 }
