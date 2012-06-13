@@ -3038,12 +3038,6 @@ public final class Settings {
          */
         public static final String QUIET_HOURS_DIM = "quiet_hours_dim";
 
-        /**
-         * Whether disable Bln during quiet hours.
-         * @hide
-         */
-        public static final String QUIET_HOURS_BLN = "quiet_hours_bln";
-
     }
 
     /**
