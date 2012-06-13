@@ -135,6 +135,8 @@ public class NotificationManagerService extends INotificationManager.Stub
     private boolean mQuietHoursMute = true;
     // Dim LED if hardware supports it.
     private boolean mQuietHoursDim = true;
+    // Don't use Bln.
+    private boolean mQuietHoursBln = true;
 
     private HashMap<String, Long> mAnnoyingNotifications = new HashMap<String, Long>();
     private long mAnnoyingNotificationThreshold = -1;
@@ -1210,7 +1212,7 @@ public class NotificationManagerService extends INotificationManager.Stub
                 mNotificationLight.setFlashing(ledARGB, LightsService.LIGHT_FLASH_TIMED,
                         ledOnMS, ledOffMS);
                 // turn on button backlights
-                if (mButtonBackLightEnabled) {
+                if (mButtonBackLightEnabled && (!(inQuietHours() && mQuietHoursBln))) {
                     mButtonBackLight.setBrightness(255);
                 }
             }
@@ -1325,6 +1327,8 @@ public class NotificationManagerService extends INotificationManager.Stub
             resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.QUIET_HOURS_DIM), false, this);
             resolver.registerContentObserver(Settings.System.getUriFor(
+                    Settings.System.QUIET_HOURS_BLN), false, this);
+            resolver.registerContentObserver(Settings.System.getUriFor(
                     Settings.System.MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD), false, this);
             update();
         }
@@ -1346,6 +1350,8 @@ public class NotificationManagerService extends INotificationManager.Stub
                     Settings.System.QUIET_HOURS_NOTIFICATIONS, 0) != 0;
             mQuietHoursDim = Settings.System.getInt(resolver,
                     Settings.System.QUIET_HOURS_DIM, 0) != 0;
+            mQuietHoursBln = Settings.System.getInt(resolver,
+                    Settings.System.QUIET_HOURS_BLN, 0) != 0;
             mAnnoyingNotificationThreshold = Settings.System.getLong(resolver,
                     Settings.System.MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD, 0);
         }
