@@ -3015,6 +3015,13 @@ public final class Settings {
          */
         public static final String QUIET_HOURS_BLN = "quiet_hours_bln";
 
+        /**
+         * How long to wait between playing notification sounds from a package
+         * Should be in milliseconds. 0 to disable
+         * @hide
+         */
+        public static final String MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD = "mute_annoying_notifications_threshold";
+
     }
 
     /**
