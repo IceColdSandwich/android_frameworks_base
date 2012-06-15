@@ -43,7 +43,8 @@ import java.util.TimerTask;
 /**
  * @hide This is only used by the browser
  */
-public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
+public class HTML5VideoView implements MediaPlayer.OnPreparedListener,
+                            MediaPlayer.OnVideoSizeChangedListener {
 
     protected static final String LOGTAG = "HTML5VideoView";
 
@@ -91,6 +92,11 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
     // The timer for timeupate events.
     // See http://www.whatwg.org/specs/web-apps/current-work/#event-media-timeupdate
     protected Timer mTimer;
+
+    // The video size will be ready when prepared. Used to make sure the aspect
+    // ratio is correct.
+    protected int mVideoWidth;
+    protected int mVideoHeight;
 
     // The spec says the timer should fire every 250 ms or less.
     private static final int TIMEUPDATE_PERIOD = 250;  // ms
@@ -239,6 +245,10 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
         mPlayer.setOnInfoListener(proxy);
     }
 
+    public void setOnVideoSizeChangedListener() {
+        mPlayer.setOnVideoSizeChangedListener(this);
+    }
+
     // Normally called immediately after setVideoURI. But for full screen,
     // this should be after surface holder created
     public void prepareDataAndDisplayMode(HTML5VideoViewProxy proxy) {
@@ -249,6 +259,7 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
         setOnPreparedListener(proxy);
         setOnErrorListener(proxy);
         setOnInfoListener(proxy);
+        setOnVideoSizeChangedListener();
         // When there is exception, we could just bail out silently.
         // No Video will be played though. Write the stack for debug
         try {
@@ -302,6 +313,14 @@ public class HTML5VideoView implements MediaPlayer.OnPreparedListener {
         if (mPauseDuringPreparing) {
             pauseAndDispatch(mProxy);
             mPauseDuringPreparing = false;
+        }
+    }
+
+    public void onVideoSizeChanged(MediaPlayer mp, int width, int height) {
+        mVideoWidth = width;
+        mVideoHeight = height;
+        if (mProxy != null) {
+            mProxy.onVideoSizeChanged(mp, width, height);
         }
     }
 
