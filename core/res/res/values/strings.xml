@@ -3503,5 +3503,8 @@
 
     <!-- Lockscreen calendar string -->
     <string name="lockscreen_calendar_tomorrow">Tomorrow</string>
+    
+    <!-- Lockscreen weather slash string -->
+    <string name="weatherpanel_slash">/</string>
 
 </resources>
