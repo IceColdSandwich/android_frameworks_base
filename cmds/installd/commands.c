@@ -17,10 +17,6 @@
 #include "installd.h"
 #include <diskusage/dirsize.h>
 
-#ifdef HAVE_SELINUX
-#include <selinux/android.h>
-#endif
-
 /* Directory records that are used in execution of commands. */
 dir_rec_t android_data_dir;
 dir_rec_t android_datadata_dir;
@@ -63,15 +59,6 @@ int install(const char *pkgname, uid_t uid, gid_t gid)
         unlink(pkgdir);
         return -errno;
     }
-
-#ifdef HAVE_SELINUX
-    if (selinux_android_setfilecon(pkgdir, pkgname, uid) < 0) {
-        LOGE("cannot setfilecon dir '%s': %s\n", pkgdir, strerror(errno));
-        unlink(pkgdir);
-        return -errno;
-    }
-#endif
-
     if (mkdir(libdir, 0755) < 0) {
         LOGE("cannot create dir '%s': %s\n", libdir, strerror(errno));
         unlink(pkgdir);
@@ -89,16 +76,6 @@ int install(const char *pkgname, uid_t uid, gid_t gid)
         unlink(pkgdir);
         return -errno;
     }
-
-#ifdef HAVE_SELINUX
-    if (selinux_android_setfilecon(libdir, pkgname, AID_SYSTEM) < 0) {
-        LOGE("cannot setfilecon dir '%s': %s\n", libdir, strerror(errno));
-        unlink(libdir);
-        unlink(pkgdir);
-        return -errno;
-    }
-#endif
-
     return 0;
 }
 
@@ -159,15 +136,6 @@ int make_user_data(const char *pkgname, uid_t uid, uid_t persona)
         unlink(pkgdir);
         return -errno;
     }
-
-#ifdef HAVE_SELINUX
-    if (selinux_android_setfilecon(pkgdir, pkgname, uid) < 0) {
-        LOGE("cannot setfilecon dir '%s': %s\n", pkgdir, strerror(errno));
-        unlink(pkgdir);
-        return -errno;
-    }
-#endif
-
     return 0;
 }
 
@@ -321,17 +289,11 @@ int protect(char *pkgname, gid_t gid)
         LOGE("failed to chgrp '%s': %s\n", pkgpath, strerror(errno));
         return -1;
     }
+
     if (chmod(pkgpath, S_IRUSR|S_IWUSR|S_IRGRP) < 0) {
         LOGE("failed to chmod '%s': %s\n", pkgpath, strerror(errno));
         return -1;
     }
-
-#ifdef HAVE_SELINUX
-    if (selinux_android_setfilecon(pkgpath, pkgname, s.st_uid) < 0) {
-        LOGE("cannot setfilecon dir '%s': %s\n", pkgpath, strerror(errno));
-        return -1;
-    }
-#endif
 
     return 0;
 }
