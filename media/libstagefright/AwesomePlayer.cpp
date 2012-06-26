@@ -496,11 +496,11 @@ status_t AwesomePlayer::setDataSource_l(const sp<MediaExtractor> &extractor) {
 }
 
 void AwesomePlayer::reset() {
+    Mutex::Autolock autoLock(mLock);
     //Disconnect datasource
     if (mConnectingDataSource != NULL) {
         mConnectingDataSource->disconnect();
     }
-    Mutex::Autolock autoLock(mLock);
     reset_l();
 }
 
