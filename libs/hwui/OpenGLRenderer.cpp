@@ -33,7 +33,6 @@
 #include "OpenGLRenderer.h"
 #include "DisplayListRenderer.h"
 #include "Vector.h"
-#include "tilerenderer.h"
 
 namespace android {
 namespace uirenderer {
@@ -218,21 +217,12 @@ void OpenGLRenderer::resume() {
 
     glViewport(0, 0, snapshot->viewport.getWidth(), snapshot->viewport.getHeight());
 
-    GLuint previousFbo;
-    glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*) &previousFbo);
-
     glEnable(GL_SCISSOR_TEST);
     dirtyClip();
 
     glDisable(GL_DITHER);
-    TILERENDERING_END(previousFbo);
-    glBindFramebuffer(GL_FRAMEBUFFER, snapshot->fbo);
-    TILERENDERING_START(snapshot->fbo, 0, 0,
-                        snapshot->viewport.getWidth(),
-                        snapshot->viewport.getHeight(),
-                        snapshot->viewport.getWidth(),
-                        snapshot->viewport.getHeight(), true);
 
+    glBindFramebuffer(GL_FRAMEBUFFER, snapshot->fbo);
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
     mCaches.blend = true;
@@ -546,10 +536,7 @@ bool OpenGLRenderer::createFboLayer(Layer* layer, Rect& bounds, sp<Snapshot> sna
     snapshot->orthoMatrix.load(mOrthoMatrix);
 
     // Bind texture to FBO
-    TILERENDERING_END(previousFbo);
     glBindFramebuffer(GL_FRAMEBUFFER, layer->getFbo());
-    TILERENDERING_START(layer->getFbo(), clip.left, clip.top,
-                        clip.right, clip.bottom, mWidth, mHeight);
     layer->bindTexture();
 
     // Initialize the texture if needed
@@ -565,11 +552,11 @@ bool OpenGLRenderer::createFboLayer(Layer* layer, Rect& bounds, sp<Snapshot> sna
     GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
     if (status != GL_FRAMEBUFFER_COMPLETE) {
         LOGE("Framebuffer incomplete (GL error code 0x%x)", status);
-        TILERENDERING_END(layer->getFbo(), true);
+
         glBindFramebuffer(GL_FRAMEBUFFER, previousFbo);
-        TILERENDERING_START(previousFbo);
         layer->deleteTexture();
         mCaches.fboCache.put(layer->getFbo());
+
         delete layer;
 
         return false;
@@ -602,17 +589,13 @@ void OpenGLRenderer::composeLayer(sp<Snapshot> current, sp<Snapshot> previous) {
 
     const bool fboLayer = current->flags & Snapshot::kFlagIsFboLayer;
 
-    Layer* layer = current->layer;
-    const Rect& rect = layer->layer;
-
     if (fboLayer) {
-        TILERENDERING_END(current->fbo);
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
-
         // Unbind current FBO and restore previous one
         glBindFramebuffer(GL_FRAMEBUFFER, previous->fbo);
-        TILERENDERING_START(previous->fbo, true);
     }
+
+    Layer* layer = current->layer;
+    const Rect& rect = layer->layer;
 
     if (!fboLayer && layer->getAlpha() < 255) {
         drawColorRect(rect.left, rect.top, rect.right, rect.bottom,
@@ -642,9 +625,13 @@ void OpenGLRenderer::composeLayer(sp<Snapshot> current, sp<Snapshot> previous) {
     }
 
     if (fboLayer) {
+        // Detach the texture from the FBO
+        glBindFramebuffer(GL_FRAMEBUFFER, current->fbo);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, 0, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, previous->fbo);
+
         // Put the FBO name back in the cache, if it doesn't fit, it will be destroyed
         mCaches.fboCache.put(current->fbo);
-        TILERENDERING_CLEARCACHE(current->fbo);
     }
 
     dirtyClip();
