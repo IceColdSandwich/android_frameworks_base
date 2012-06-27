@@ -1623,6 +1623,24 @@ public final class Settings {
             "notifications_use_ring_volume";
 
         /**
+         * Whether the phone ringtone should be played in an increasing manner
+         * @hide
+         */
+        public static final String INCREASING_RING = "increasing_ring";
+
+        /**
+         * Minimum volume index for increasing ring volume
+         * @hide
+         */
+        public static final String INCREASING_RING_MIN_VOLUME = "increasing_ring_min_vol";
+
+        /**
+         * Time (in ms) between ringtone volume increases
+         * @hide
+         */
+        public static final String INCREASING_RING_INTERVAL = "increasing_ring_interval";
+
+        /**
          * Whether silent mode should allow vibration feedback. This is used
          * internally in AudioService and the Sound settings activity to
          * coordinate decoupling of vibrate and silent modes. This setting
@@ -2918,6 +2936,11 @@ public final class Settings {
         /**
          * @hide
          */
+        public static final String LOCKSCREEN_WEATHER_TYPE = "lockscreen_weather_type";
+
+        /**
+         * @hide
+         */
         public static final String USE_WEATHER = "use_weather";
         
         /**
@@ -3020,13 +3043,6 @@ public final class Settings {
          * @hide
          */
         public static final String QUIET_HOURS_BLN = "quiet_hours_bln";
-
-        /**
-         * How long to wait between playing notification sounds from a package
-         * Should be in milliseconds. 0 to disable
-         * @hide
-         */
-        public static final String MUTE_ANNOYING_NOTIFICATIONS_THRESHOLD = "mute_annoying_notifications_threshold";
 
     }
 
