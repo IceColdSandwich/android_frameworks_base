@@ -752,7 +752,7 @@ status_t NuPlayer::instantiateDecoder(bool audio, sp<Decoder> *decoder) {
         CHECK(meta->findCString(kKeyMIMEType, &mime));
         mVideoIsAVC = !strcasecmp(MEDIA_MIMETYPE_VIDEO_AVC, mime);
         if (mVideoIsAVC &&
-           (mLiveSourceType == kHttpLiveSource)) {
+           ((mLiveSourceType == kHttpLiveSource) || (mLiveSourceType == kHttpDashSource))) {
             LOGV("Set Enable smooth streaming in meta data ");
             meta->setInt32(kKeySmoothStreaming, 1);
         }

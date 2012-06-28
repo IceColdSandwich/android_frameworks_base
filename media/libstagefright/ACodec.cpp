@@ -1868,7 +1868,7 @@ void ACodec::BaseState::HandleExtraData(IOMX::buffer_id bufferID) {
                  pPortDef->format.video.nSliceHeight);
 
              mCodec->mOutputPortDef = *pPortDef;
-             mCodec->mSentFormat = false;
+             mCodec->sendFormatChange();
         }
     }
 }
