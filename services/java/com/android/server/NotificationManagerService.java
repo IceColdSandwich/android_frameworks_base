@@ -1179,7 +1179,7 @@ public class NotificationManagerService extends INotificationManager.Stub
         // Get ROMControl "flash when screen ON" flag
         boolean ledScreenOn = Settings.Secure.getInt(
           mContext.getContentResolver(),
-          Settings.Secure.LED_SCREEN_ON, 0) == 1;
+          Settings.Secure.LED_SCREEN_ON, 1) == 1;
 
         // handle notification lights
         if (mLedNotification == null) {
