@@ -3,7 +3,6 @@ package com.android.systemui.statusbar.policy;
 
 
 
-import android.R.integer;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -12,8 +11,7 @@ import android.content.IntentFilter;
 import android.database.ContentObserver;
 import android.net.wifi.WifiManager;
 import android.os.Handler;
-import android.os.Message;
-import android.provider.Settings;;
+import android.provider.Settings;
 import android.text.Spannable;
 import android.text.SpannableStringBuilder;
 import android.text.style.CharacterStyle;

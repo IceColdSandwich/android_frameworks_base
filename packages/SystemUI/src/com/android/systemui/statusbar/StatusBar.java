@@ -186,6 +186,17 @@ public abstract class StatusBar extends SystemUI implements CommandQueue.Callbac
         mContext.sendBroadcast(weatherintent);
     }
 
+    public static void resetColors(Context c) {
+        Settings.System.putInt(c.getContentResolver(), Settings.System.STATUSBAR_CLOCK_COLOR,
+                Integer.MIN_VALUE);
+        Settings.System.putInt(c.getContentResolver(), Settings.System.STATUSBAR_BATTERY_BAR_COLOR,
+                Integer.MIN_VALUE);
+        Settings.System.putInt(c.getContentResolver(), Settings.System.STATUSBAR_SIGNAL_TEXT_COLOR,
+                Integer.MIN_VALUE);
+        Settings.System.putInt(c.getContentResolver(), Settings.System.STATUSBAR_WIFI_SIGNAL_TEXT_COLOR,
+                Integer.MIN_VALUE);
+    }
+
     protected View updateNotificationVetoButton(View row, StatusBarNotification n) {
         View vetoButton = row.findViewById(R.id.veto);
         if (n.isClearable()) {
