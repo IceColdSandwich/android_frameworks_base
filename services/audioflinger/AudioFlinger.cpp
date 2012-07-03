@@ -872,7 +872,9 @@ status_t AudioFlinger::setSessionVolume(int stream, float left, float right)
 
     mLPALeftVol  = left;
     mLPARightVol = right;
-    if( (mLPAOutput != NULL) && (mLPAStreamType == stream) ) {
+    if( (mLPAOutput != NULL) &&
+        (mLPAStreamType == stream) &&
+        (mLPAHandle == (audio_io_handle_t)output) ) {
         mLPAOutput->stream->set_volume(mLPAOutput->stream,left*mStreamTypes[stream].volume,
                                        right*mStreamTypes[stream].volume);
     }
