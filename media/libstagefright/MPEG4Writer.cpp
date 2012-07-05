@@ -1134,12 +1134,12 @@ MPEG4Writer::Track::Track(
       mTrackDurationUs(0),
       mEstimatedTrackSizeBytes(0),
       mSamplesHaveSameSize(true),
+      mSeqEnhanceInfo(NULL),
       mCodecSpecificData(NULL),
       mCodecSpecificDataSize(0),
       mGotAllCodecSpecificData(false),
       mReachedEOS(false),
-      mRotation(0),
-      mSeqEnhanceInfo(NULL) {
+      mRotation(0) {
     getCodecSpecificDataFromInputFormatIfPossible();
 
     const char *mime;

@@ -68,28 +68,28 @@ int LPAPlayer::objectsAlive = 0;
 LPAPlayer::LPAPlayer(
                     const sp<MediaPlayerBase::AudioSink> &audioSink, bool &initCheck,
                     AwesomePlayer *observer)
-:mInputBuffer(NULL),
+:AudioPlayer(audioSink,observer),
+mInputBuffer(NULL),
 mSampleRate(0),
 mLatencyUs(0),
 mFrameSize(0),
-mSeekTimeUs(0),
 mNumFramesPlayed(0),
 mPositionTimeMediaUs(-1),
 mPositionTimeRealUs(-1),
-mPauseTime(0),
-mNumA2DPBytesPlayed(0),
 mSeeking(false),
 mInternalSeeking(false),
 mReachedEOS(false),
 mReachedOutputEOS(false),
 mFinalStatus(OK),
+mSeekTimeUs(0),
+mPauseTime(0),
+mNumA2DPBytesPlayed(0),
 mStarted(false),
 mIsFirstBuffer(false),
 mFirstBufferResult(OK),
 mFirstBuffer(NULL),
 mAudioSink(audioSink),
-mObserver(observer),
-AudioPlayer(audioSink,observer) {
+mObserver(observer) {
     LOGV("LPAPlayer::LPAPlayer() ctor");
     a2dpDisconnectPause = false;
     mSeeked = false;
@@ -410,9 +410,9 @@ status_t LPAPlayer::start(bool sourceAlreadyStarted) {
     LOGV("pcm_open hardware 0,4 for LPA ");
     //Open PCM driver
     if (numChannels == 1)
-        handle = (void *)pcm_open((PCM_MMAP | DEBUG_ON | PCM_MONO) , "hw:0,4");
+        handle = (void *)pcm_open((PCM_MMAP | DEBUG_ON | PCM_MONO) , (char *) "hw:0,4");
     else
-        handle = (void *)pcm_open((PCM_MMAP | DEBUG_ON | PCM_STEREO) , "hw:0,4");
+        handle = (void *)pcm_open((PCM_MMAP | DEBUG_ON | PCM_STEREO) , (char *) "hw:0,4");
 
     struct pcm * local_handle = (struct pcm *)handle;
     if (!local_handle) {
@@ -484,7 +484,7 @@ status_t LPAPlayer::start(bool sourceAlreadyStarted) {
 status_t LPAPlayer::seekTo(int64_t time_us) {
     Mutex::Autolock autoLock1(mSeekLock);
     Mutex::Autolock autoLock(mLock);
-    LOGV("seekTo: time_us %ld", time_us);
+    LOGV("seekTo: time_us %lld", time_us);
     if ( mReachedEOS ) {
         mReachedEOS = false;
         mReachedOutputEOS = false;
@@ -502,7 +502,7 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
             pthread_mutex_lock(&mem_request_mutex);
             memBuffersResponseQueue.clear();
             memBuffersRequestQueue.clear();
-            
+
             List<BuffersAllocated>::iterator it = bufPool.begin();
             for(;it!=bufPool.end();++it) {
                  memBuffersRequestQueue.push_back(*it);
@@ -520,7 +520,7 @@ status_t LPAPlayer::seekTo(int64_t time_us) {
                 LOGV("Reset, drain and prepare completed");
                 local_handle->sync_ptr->flags = SNDRV_PCM_SYNC_PTR_APPL | SNDRV_PCM_SYNC_PTR_AVAIL_MIN;
                 sync_ptr(local_handle);
-                LOGV("appl_ptr= %d", local_handle->sync_ptr->c.control.appl_ptr);
+                LOGV("appl_ptr= %ld", local_handle->sync_ptr->c.control.appl_ptr);
                 pthread_cond_signal(&decoder_cv);
             }
         }
@@ -645,7 +645,7 @@ void LPAPlayer::resume() {
                 LOGV("Reset, drain and prepare completed");
                 local_handle->sync_ptr->flags = SNDRV_PCM_SYNC_PTR_APPL | SNDRV_PCM_SYNC_PTR_AVAIL_MIN;
                 sync_ptr(local_handle);
-                LOGV("appl_ptr= %d", local_handle->sync_ptr->c.control.appl_ptr);
+                LOGV("appl_ptr= %ld", local_handle->sync_ptr->c.control.appl_ptr);
             }
             if (mAudioSink.get() != NULL) {
                 mAudioSink->resumeSession();
@@ -892,7 +892,7 @@ void LPAPlayer::decoderThreadEntry() {
                 // it will be re applied as the buffer already present in responseQ
                 if (!asyncReset) {
                     pthread_mutex_lock(&apply_effect_mutex);
-                    LOGV("decoderThread: applying effects on mem buf at buf.memBuf %x", buf.memBuf);
+                    LOGV("decoderThread: applying effects on mem buf at buf.memBuf %p", buf.memBuf);
                     mAudioFlinger->applyEffectsOn((int16_t*)buf.localBuf,
                                                   (int16_t*)buf.memBuf,
                                                   (int)buf.bytesToWrite);
@@ -1158,7 +1158,7 @@ void LPAPlayer::A2DPThreadEntry() {
                     LOGV("Seeking A2DP Playback");
                     break;
                 }
-                data += bytesWritten;
+                data = (char *) data + bytesWritten;
                 mNumA2DPBytesPlayed += bytesWritten;
                 bytesToWrite -= bytesWritten;
                 LOGV("@_@bytes To write2:%d",bytesToWrite);
@@ -1447,7 +1447,7 @@ size_t LPAPlayer::fillBuffer(void *data, size_t size) {
         LOGV("AudioCallback");
     }
 
-    LOGV("Number of Frames Played: %u", mNumFramesPlayed);
+    LOGV("Number of Frames Played: %lld", mNumFramesPlayed);
     if (mReachedEOS) {
         return 0;
     }
@@ -1633,7 +1633,7 @@ int64_t LPAPlayer::getTimeStamp(A2DPState state) {
 
 int64_t LPAPlayer::getMediaTimeUs() {
     Mutex::Autolock autoLock(mLock);
-    LOGV("getMediaTimeUs() isPaused %d mSeekTimeUs %d mPauseTime %d", isPaused, mSeekTimeUs, mPauseTime);
+    LOGV("getMediaTimeUs() isPaused %d mSeekTimeUs %lld mPauseTime %lld", isPaused, mSeekTimeUs, mPauseTime);
     if (isPaused) {
         return mPauseTime;
     } else {

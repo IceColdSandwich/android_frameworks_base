@@ -71,10 +71,8 @@ void VideoSourceDownSampler::downSampleYUVImage(
     // find the YUV format
     int32_t srcFormat;
     CHECK(mMeta->findInt32(kKeyColorFormat, &srcFormat));
-    YUVImage::YUVFormat yuvFormat;
-    if (srcFormat == OMX_COLOR_FormatYUV420SemiPlanar) {
-        yuvFormat = YUVImage::YUV420SemiPlanar;
-    } else if (srcFormat == OMX_COLOR_FormatYUV420Planar) {
+    YUVImage::YUVFormat yuvFormat = YUVImage::YUV420SemiPlanar;
+    if (srcFormat == OMX_COLOR_FormatYUV420Planar) {
         yuvFormat = YUVImage::YUV420Planar;
     }
 

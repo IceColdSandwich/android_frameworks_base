@@ -41,7 +41,6 @@
 #include <dlfcn.h>  // for dlopen/dlclose
 
 #include "include/ExtendedExtractor.h"
-#define LOGV LOGE
 
 static const char* MM_PARSER_LIB = "libmmparser.so";
 static const char* MM_PARSER_LITE_LIB = "libmmparser_lite.so";

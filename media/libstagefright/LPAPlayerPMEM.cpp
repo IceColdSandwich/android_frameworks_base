@@ -31,7 +31,7 @@ void LPAPlayer::audio_register_memory() {
     for (int i = 0; i < MEM_BUFFER_COUNT; i++) {
         pmem_buf = memBufferAlloc(MEM_BUFFER_SIZE, &pmem_fd);
         memset(&pmem_info, 0, sizeof(msm_audio_pmem_info));
-        LOGV("Registering PMEM with fd %d and address as %x", pmem_fd, pmem_buf);
+        LOGV("Registering PMEM with fd %d and address as %p", pmem_fd, pmem_buf);
         pmem_info.fd = pmem_fd;
         pmem_info.vaddr = pmem_buf;
         if ( ioctl(afd, AUDIO_REGISTER_PMEM, &pmem_info) < 0 ) {
@@ -96,7 +96,7 @@ void LPAPlayer::memBufferDeAlloc()
         if (ioctl(afd, AUDIO_DEREGISTER_PMEM, &pmem_info) < 0) {
             LOGE("PMEM deregister failed");
         }
-        LOGV("Unmapping the address %u, size %d, fd %d from Request",pmemBuffer.memBuf,pmemBuffer.bytesToWrite,pmemBuffer.memFd);
+        LOGV("Unmapping the address %u, size %d, fd %d from Request",(unsigned int) pmemBuffer.memBuf,pmemBuffer.bytesToWrite, (int) pmemBuffer.memFd);
         munmap(pmemBuffer.memBuf, MEM_BUFFER_SIZE);
         LOGV("closing the pmem fd");
         close(pmemBuffer.memFd);
@@ -116,7 +116,7 @@ void LPAPlayer::memBufferDeAlloc()
         if (ioctl(afd, AUDIO_DEREGISTER_PMEM, &pmem_info) < 0) {
             LOGE("PMEM deregister failed");
         }
-        LOGV("Unmapping the address %u, size %d, fd %d from Response",pmemBuffer.memBuf,MEM_BUFFER_SIZE,pmemBuffer.memFd);
+        LOGV("Unmapping the address %u, size %d, fd %d from Response",(unsigned int) pmemBuffer.memBuf,mBuffSize,(int) pmemBuffer.memFd);
         munmap(pmemBuffer.memBuf, MEM_BUFFER_SIZE);
         LOGV("closing the pmem fd");
         close(pmemBuffer.memFd);

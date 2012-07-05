@@ -46,11 +46,11 @@ AudioPlayer::AudioPlayer(
       mReachedEOS(false),
       mFinalStatus(OK),
       mStarted(false),
+      mSourcePaused(false),
       mIsFirstBuffer(false),
       mFirstBufferResult(OK),
       mFirstBuffer(NULL),
       mAudioSink(audioSink),
-      mSourcePaused(false),
       mObserver(observer),
       mComponentName(NULL) {
 }

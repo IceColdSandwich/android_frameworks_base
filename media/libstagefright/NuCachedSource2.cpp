@@ -263,8 +263,8 @@ uint32_t NuCachedSource2::flags() {
 void NuCachedSource2::setAVInterleavingOffset(int64_t av_offset){
     Mutex::Autolock autoLock(mLock);
 
-    mAVOffset = av_offset > kMaxAVInterleavingOffset ? kMaxAVInterleavingOffset: av_offset;
-    mAVOffset = mAVOffset < kMinAVInterleavingOffset ? kMinAVInterleavingOffset: mAVOffset;
+    mAVOffset = av_offset > kMaxAVInterleavingOffset ? (int64_t) kMaxAVInterleavingOffset: av_offset;
+    mAVOffset = mAVOffset < kMinAVInterleavingOffset ? (int64_t) kMinAVInterleavingOffset: mAVOffset;
 
     LOGV("setAVOffset %lld", mAVOffset);
 }
