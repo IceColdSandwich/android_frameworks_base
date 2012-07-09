@@ -459,9 +459,9 @@ public class GsmConnection extends Connection {
                 changed = true;
                 cnapName = "";
             }
-	} else if (!dc.name.equals(cnapName)) {
-                changed = true;
-                cnapName = dc.name;
+        } else if (!dc.name.equals(cnapName)) {
+            changed = true;
+            cnapName = dc.name;
         }
 
         if (Phone.DEBUG_PHONE) log("--dssds----"+cnapName);

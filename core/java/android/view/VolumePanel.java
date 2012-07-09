@@ -567,7 +567,7 @@ public class VolumePanel extends Handler implements OnSeekBarChangeListener,
             mDialog.show();
         }
 
-        if(mRingerAndNotificationStreamsLinked && sc.streamType != AudioManager.STREAM_VOICE_CALL) {
+        if(mRingerAndNotificationStreamsLinked && (sc != null && sc.streamType != AudioManager.STREAM_VOICE_CALL)) {
             updateStates();
         }
 
