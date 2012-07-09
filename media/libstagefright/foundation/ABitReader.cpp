@@ -28,7 +28,6 @@ ABitReader::ABitReader(const uint8_t *data, size_t size)
 }
 
 void ABitReader::fillReservoir() {
-    CHECK_GT(mSize, 0u);
 
     mReservoir = 0;
     size_t i;
@@ -49,6 +48,12 @@ uint32_t ABitReader::getBits(size_t n) {
     uint32_t result = 0;
     while (n > 0) {
         if (mNumBitsLeft == 0) {
+
+            if(mSize <= 0u) {
+                LOGE("Looks like something has gone wrong .. exit gracefully");
+                return result;
+            }
+
             fillReservoir();
         }
 
