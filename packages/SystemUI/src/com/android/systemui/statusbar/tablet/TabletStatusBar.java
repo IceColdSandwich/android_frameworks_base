@@ -50,7 +50,6 @@ import android.os.Message;
 import android.os.RemoteException;
 import android.os.ServiceManager;
 import android.os.storage.StorageManager;
-import android.os.SystemProperties;
 import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Pair;
@@ -546,17 +545,8 @@ public class TabletStatusBar extends StatusBar implements
         mHeightReceiver.registerReceiver();
         loadDimens();
 
-        boolean mTabletModEnabled = Settings.System.getInt(mContext.getContentResolver(),
-                                        Settings.System.TABLETMODE_ENABLED, 0) == 1;
-
-        int currentDpi = Integer.parseInt(SystemProperties.get("ro.sf.lcd_density", null));
-
-        final TabletStatusBarView sb;
-        if (mTabletModEnabled && currentDpi >=128){
-            sb = (TabletStatusBarView)View.inflate(context, R.layout.status_bar_tablet, null);
-        } else {
-            sb = (TabletStatusBarView)View.inflate(context, R.layout.status_bar, null);
-        }
+        final TabletStatusBarView sb = (TabletStatusBarView)View.inflate(
+                context, R.layout.status_bar, null);
         mStatusBarView = sb;
 
         sb.setHandler(mHandler);

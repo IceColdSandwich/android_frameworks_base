@@ -3073,12 +3073,6 @@ public final class Settings {
         public static final String QUIET_HOURS_BLN = "quiet_hours_bln";
 
         /**
-         * Whether tablet mode is enabled.
-         * @hide
-         */
-        public static final String TABLETMODE_ENABLED = "tabletmode_enabled";
-
-        /**
          * How long to wait between playing notification sounds from a package
          * Should be in milliseconds. 0 to disable
          * @hide
