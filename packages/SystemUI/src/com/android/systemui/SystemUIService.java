@@ -72,7 +72,7 @@ public class SystemUIService extends Service {
                 ServiceManager.getService(Context.WINDOW_SERVICE));
         try {
             SERVICES[0] = wm.canStatusBarHide()
-                    ? R.string.config_statusBarComponent
+                    ? R.string.config_systemBarComponent
                     : R.string.config_systemBarComponent;
         } catch (RemoteException e) {
             Slog.w(TAG, "Failing checking whether status bar can hide", e);

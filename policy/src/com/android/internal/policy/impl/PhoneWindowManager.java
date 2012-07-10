@@ -1004,11 +1004,13 @@ public class PhoneWindowManager implements WindowManagerPolicy {
 
         // Determine whether the status bar can hide based on the size
         // of the screen.  We assume sizes > 600dp are tablets where we
-        // will use the system bar.
-        int shortSizeDp = shortSize
-                * DisplayMetrics.DENSITY_DEFAULT
-                / DisplayMetrics.DENSITY_DEVICE;
-        mStatusBarCanHide = shortSizeDp < 600;
+        // will use the system bar.     BYPASSED
+        //int shortSizeDp = shortSize
+        //        * DisplayMetrics.DENSITY_DEFAULT
+        //        / DisplayMetrics.DENSITY_DEVICE;
+        //mStatusBarCanHide = shortSizeDp < 600;
+
+        mStatusBarCanHide = false;
         mStatusBarHeight = mContext.getResources().getDimensionPixelSize(
                 mStatusBarCanHide
                 ? com.android.internal.R.dimen.status_bar_height
