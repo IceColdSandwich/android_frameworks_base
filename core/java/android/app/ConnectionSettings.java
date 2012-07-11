@@ -97,6 +97,12 @@ public final class ConnectionSettings implements Parcelable {
         boolean currentState;
 
         switch (getConnectionId()) {
+            case PROFILE_CONNECTION_MOBILEDATA:
+                currentState = cm.getMobileDataEnabled();
+                if (forcedState != currentState) {
+                    cm.setMobileDataEnabled(forcedState);
+                }
+                break;
             case PROFILE_CONNECTION_BLUETOOTH:
                 currentState = bta.isEnabled();
                 if (forcedState && !currentState) {
@@ -105,11 +111,25 @@ public final class ConnectionSettings implements Parcelable {
                     bta.disable();
                 }
                 break;
+            case PROFILE_CONNECTION_WIMAX:
+                if (WimaxHelper.isWimaxSupported(context)) {
+                    currentState = WimaxHelper.isWimaxEnabled(context);
+                    if (currentState != forcedState) {
+                        WimaxHelper.setWimaxEnabled(context, forcedState);
+                    }
+                }
+                break;
             case PROFILE_CONNECTION_GPS:
                 currentState = lm.isProviderEnabled(LocationManager.GPS_PROVIDER);
                 if (currentState != forcedState) {
                     Settings.Secure.setLocationProviderEnabled(context.getContentResolver(),
                             LocationManager.GPS_PROVIDER, forcedState);
+                }
+                break;
+            case PROFILE_CONNECTION_SYNC:
+                currentState = ContentResolver.getMasterSyncAutomatically();
+                if (forcedState != currentState) {
+                    ContentResolver.setMasterSyncAutomatically(forcedState);
                 }
                 break;
             case PROFILE_CONNECTION_WIFI:
@@ -133,30 +153,6 @@ public final class ConnectionSettings implements Parcelable {
                         wm.setWifiEnabled(false);
                     }
                     wm.setWifiApEnabled(null, forcedState);
-                }
-                break;
-            case PROFILE_CONNECTION_WIMAX:
-                if (WimaxHelper.isWimaxSupported(context)) {
-                    currentState = WimaxHelper.isWimaxEnabled(context);
-                    if (currentState != forcedState) {
-                        WimaxHelper.setWimaxEnabled(context, forcedState);
-                    }
-                }
-                break;
-            case PROFILE_CONNECTION_MOBILEDATA:
-                currentState = cm.getMobileDataEnabled();
-                if (forcedState && !currentState) {
-                    cm.setMobileDataEnabled(true);
-                } else if (!forcedState && currentState) {
-                    cm.setMobileDataEnabled(false);
-                }
-                break;
-            case PROFILE_CONNECTION_SYNC:
-                currentState = ContentResolver.getMasterSyncAutomatically();
-                if (forcedState && !currentState) {
-                    ContentResolver.setMasterSyncAutomatically(true);
-                } else if (!forcedState && currentState) {
-                    ContentResolver.setMasterSyncAutomatically(false);
                 }
                 break;
         }
