@@ -630,7 +630,7 @@ public class NetworkController extends BroadcastReceiver {
         if (!isCdma()) {
             // GSM case, we have to check also the sim state
             if (mSimState == IccCard.State.READY || mSimState == IccCard.State.UNKNOWN) {
-                if (mDataState == TelephonyManager.DATA_CONNECTED) {
+                if (hasService() && mDataState == TelephonyManager.DATA_CONNECTED) {
                     switch (mDataActivity) {
                         case TelephonyManager.DATA_ACTIVITY_IN:
                             iconId = mDataIconList[1];
@@ -656,7 +656,7 @@ public class NetworkController extends BroadcastReceiver {
             }
         } else {
             // CDMA case, mDataActivity can be also DATA_ACTIVITY_DORMANT
-            if (mDataState == TelephonyManager.DATA_CONNECTED) {
+            if (hasService() && mDataState == TelephonyManager.DATA_CONNECTED) {
                 switch (mDataActivity) {
                     case TelephonyManager.DATA_ACTIVITY_IN:
                         iconId = mDataIconList[1];
@@ -950,8 +950,6 @@ public class NetworkController extends BroadcastReceiver {
                 combinedActivityIconId = mMobileActivityIconId;
                 combinedSignalIconId = mDataSignalIconId; // set by updateDataIcon()
                 mContentDescriptionCombinedSignal = mContentDescriptionDataType;
-            } else {
-                mMobileActivityIconId = 0;
             }
         }
 
@@ -1035,7 +1033,10 @@ public class NetworkController extends BroadcastReceiver {
                 mHasMobileDataFeature ? mDataSignalIconId : mWifiIconId;
             mContentDescriptionCombinedSignal = mHasMobileDataFeature
                 ? mContentDescriptionDataType : mContentDescriptionWifi;
+        }
 
+        if (!mDataConnected) {
+            Slog.d(TAG, "refreshViews: Data not connected!! Set no data type icon");
             if ((isCdma() && isCdmaEri()) || mPhone.isNetworkRoaming()) {
                 mDataTypeIconId = R.drawable.stat_sys_data_connected_roam;
             } else {
