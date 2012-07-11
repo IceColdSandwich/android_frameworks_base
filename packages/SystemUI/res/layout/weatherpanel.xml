@@ -32,19 +32,19 @@
         android:textAppearance="@style/Text" />
 
     <TextView
-        android:id="@+id/zipcode"
+        android:id="@+id/humidity"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/Text" />
 
     <TextView
-        android:id="@+id/humidity"
+        android:id="@+id/winds"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/Text" />
         
     <TextView
-        android:id="@+id/winds"
+        android:id="@+id/condition"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:textAppearance="@style/Text" />
