@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--Dummies to fix build.
+    IDs added so it builds. if they aren't really there, it shouldn't matter because PhoneStatusBar should never be used-->
+
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android">
+<View
+android:id="@+id/statusIcons"/>
+<View
+android:id="@+id/moreIcon"/>
+<View
+android:id="@+id/center_clock_layout"/>
+<View
+android:id="@+id/ticker"/>
+<View
+android:id="@+id/tickerText"/>
+<View
+android:id="@+id/center_clock"/>
+<View
+android:id="@+id/tickerIcon"/>
+<View
+android:id="@+id/tickerText"/>
+<View
+android:id="@+id/center_clock"/>
+
+</LinearLayout>

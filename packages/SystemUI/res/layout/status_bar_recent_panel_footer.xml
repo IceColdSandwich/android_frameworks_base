@@ -18,19 +18,8 @@
 */
 -->
 
-<FrameLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_height="match_parent"
-    android:layout_width="match_parent"
-    >
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="20dp"
-        android:textColor="@android:color/holo_blue_light"
-        android:text="@string/status_bar_no_recent_apps"
-        android:gravity="left"
-        android:layout_gravity="bottom|left"
-    />
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/listview_footer_padding"
+    android:layout_height="24dip"
+    android:layout_width="match_parent">
 </FrameLayout>
