@@ -561,6 +561,10 @@ sp<ABuffer> ElementaryStreamQueue::dequeueAccessUnitAAC() {
             {
                 mAACtimeUs = tmpUs ;
             }
+            else if(i == 0 && mPrevPESPartial && ranges.size() == 1)
+            {
+                mAACtimeUs = tmpUs ;
+            }
         }
     }
 
