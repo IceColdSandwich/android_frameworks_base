@@ -2522,20 +2522,24 @@ status_t AwesomePlayer::setParameter(int key, const Parcel &request) {
         }
         case KEY_PARAMETER_3D_ATTRIBUTES:
         {
-            int32_t format3D = 0;
-            sp<MetaData> meta = mVideoSource->getFormat();
+            if(mVideoSource!=NULL) {
+                int32_t format3D = 0;
+                sp<MetaData> meta = mVideoSource->getFormat();
 
-            request.readInt32(&format3D);
+                request.readInt32(&format3D);
 
-            //Validate it, but client really shouldn't be messing with this
-            CHECK(!(format3D & ~(HAL_3D_OUT_SIDE_BY_SIDE |
-                                 HAL_3D_OUT_TOP_BOTTOM   |
-                                 HAL_3D_IN_SIDE_BY_SIDE_R_L |
-                                 HAL_3D_IN_SIDE_BY_SIDE_L_R |
-                                 HAL_3D_IN_TOP_BOTTOM)));
+                //Validate it, but client really shouldn't be messing with this
+                CHECK(!(format3D & ~(HAL_3D_OUT_SIDE_BY_SIDE |
+                                     HAL_3D_OUT_TOP_BOTTOM |
+                                     HAL_3D_IN_SIDE_BY_SIDE_R_L |
+                                     HAL_3D_IN_SIDE_BY_SIDE_L_R |
+                                     HAL_3D_IN_TOP_BOTTOM)));
 
-            meta->setInt32(kKey3D, format3D);
-            return OK;
+                meta->setInt32(kKey3D, format3D);
+                return OK;
+            }
+            else
+                return ERROR_UNSUPPORTED;
         }
         default:
         {
