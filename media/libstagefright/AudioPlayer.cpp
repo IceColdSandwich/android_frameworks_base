@@ -199,8 +199,9 @@ void AudioPlayer::pause(bool playPendingSamples) {
     if (mComponentName) {
         if (strncmp("OMX.google.", mComponentName, 11)) {
             CHECK(mSource != NULL);
-            if (mSource->pause() == OK) {
-                mSourcePaused = true;
+            mSourcePaused = true;
+            if (mSource->pause() != OK) {
+                mSourcePaused = false;
             }
         }
     }
@@ -383,7 +384,10 @@ size_t AudioPlayer::fillBuffer(void *data, size_t size) {
 
                 mIsFirstBuffer = false;
             } else {
-                err = mSource->read(&mInputBuffer, &options);
+                if(mSourcePaused != true)
+                    err = mSource->read(&mInputBuffer, &options);
+                else
+                    return 0;
             }
 
             CHECK((err == OK && mInputBuffer != NULL)
