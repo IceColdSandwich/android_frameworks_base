@@ -25,7 +25,7 @@
 #include <audio_effects/effect_agc.h>
 #include <audio_effects/effect_ns.h>
 #include "modules/interface/module_common_types.h"
-#include "modules/audio_processing/main/interface/audio_processing.h"
+#include "modules/audio_processing/interface/audio_processing.h"
 #include "speex/speex_resampler.h"
 
 
