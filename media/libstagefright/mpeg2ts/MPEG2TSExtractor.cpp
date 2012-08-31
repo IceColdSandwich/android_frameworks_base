@@ -243,7 +243,9 @@ status_t MPEG2TSSource::read(
     if (seekAble && options && options->getSeekTo(&seekTimeUs, &seekMode)) {
         bool seekErr = false;
         err = seekPrepare(seekTimeUs, &seekErr);
-        if(err != OK && seekErr) {
+        if(err == DEAD_OBJECT) {
+            return err;
+        }else if(err != OK && seekErr) {
             //reset to last known IFrame location
             //call seekPrepare again;
 
@@ -371,8 +373,10 @@ status_t MPEG2TSSource::feedMoreForStream() {
             break;
         }
         //TODO handle program/stream PID change
-        /*if (PID == 0 || PID == mStream->mProgramPID) {
-        }*/
+        if (PID == 0 || PID == mStream->mProgramPID) {
+            LOGE("PID Changed ... at these clips are not supported");
+            return DEAD_OBJECT;
+        }
 
         offset += kTSPacketSize;
     }

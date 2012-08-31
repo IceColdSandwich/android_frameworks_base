@@ -802,7 +802,7 @@ public:
     static void doTextBounds(JNIEnv* env, const jchar* text, int count,
                              jobject bounds, const SkPaint& paint)
     {
-        SkRect  r;
+        SkRect  r{0,0,0,0};
         SkIRect ir;
 
         paint.measureText(text, count << 1, &r);

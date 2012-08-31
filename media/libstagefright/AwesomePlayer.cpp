@@ -637,13 +637,13 @@ void AwesomePlayer::notifyListener_l(int msg, int ext1, int ext2) {
 
 bool AwesomePlayer::getBitrate(int64_t *bitrate) {
     off64_t size;
-    if (mDurationUs >= 0 && mCachedSource != NULL
+    if (mDurationUs > 0 && mCachedSource != NULL
             && mCachedSource->getSize(&size) == OK) {
         *bitrate = size * 8000000ll / mDurationUs;  // in bits/sec
         return true;
     }
 
-    if (mBitrate >= 0) {
+    if (mBitrate > 0) {
         *bitrate = mBitrate;
         return true;
     }
@@ -730,7 +730,10 @@ void AwesomePlayer::onBufferingUpdate() {
                 size_t cachedSize = mCachedSource->cachedSize();
                 int64_t cachedDurationUs = cachedSize * 8000000ll / bitrate;
 
-                int percentage = 100.0 * (double)cachedDurationUs / mDurationUs;
+                int percentage = 100.0;
+                if(mDurationUs > 0) {
+                    percentage = 100.0 * (double)cachedDurationUs / mDurationUs;
+                }
                 if (percentage > 100) {
                     percentage = 100;
                     LOGV("Percentage is 100, EOS Reached");
@@ -784,7 +787,10 @@ void AwesomePlayer::onBufferingUpdate() {
                 finishAsyncPrepare_l();
             }
         } else {
-            int percentage = 100.0 * (double)cachedDurationUs / mDurationUs;
+            int percentage = 100.0;
+            if(mDurationUs > 0) {
+                percentage = 100.0 * (double)cachedDurationUs / mDurationUs;
+            }
             if (percentage > 100) {
                 percentage = 100;
                 mBufferingDone = true;
@@ -1065,7 +1071,6 @@ status_t AwesomePlayer::startAudioPlayer_l(bool sendErrorNotification) {
     }
 
     if (!(mFlags & AUDIOPLAYER_STARTED)) {
-        modifyFlags(AUDIOPLAYER_STARTED, SET);
 
         bool wasSeeking = mAudioPlayer->isSeeking();
 
@@ -1081,6 +1086,7 @@ status_t AwesomePlayer::startAudioPlayer_l(bool sendErrorNotification) {
 
             return err;
         }
+        modifyFlags(AUDIOPLAYER_STARTED, SET);
 
         if (wasSeeking) {
             CHECK(!mAudioPlayer->isSeeking());
@@ -1553,7 +1559,7 @@ status_t AwesomePlayer::initAudioDecoder() {
         int64_t durationUs;
         if (mAudioTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
             Mutex::Autolock autoLock(mMiscStateLock);
-            if (mDurationUs < 0 || durationUs > mDurationUs) {
+            if (mDurationUs < 0 || (durationUs > mDurationUs)) {
                 mDurationUs = durationUs;
             }
         }
@@ -1658,7 +1664,7 @@ status_t AwesomePlayer::initVideoDecoder(uint32_t flags) {
         int64_t durationUs;
         if (mVideoTrack->getFormat()->findInt64(kKeyDuration, &durationUs)) {
             Mutex::Autolock autoLock(mMiscStateLock);
-            if (mDurationUs < 0 || durationUs > mDurationUs) {
+            if (mDurationUs < 0 || (durationUs > mDurationUs)) {
                 mDurationUs = durationUs;
             }
         }
@@ -2516,20 +2522,24 @@ status_t AwesomePlayer::setParameter(int key, const Parcel &request) {
         }
         case KEY_PARAMETER_3D_ATTRIBUTES:
         {
-            int32_t format3D = 0;
-            sp<MetaData> meta = mVideoSource->getFormat();
+            if(mVideoSource!=NULL) {
+                int32_t format3D = 0;
+                sp<MetaData> meta = mVideoSource->getFormat();
 
-            request.readInt32(&format3D);
+                request.readInt32(&format3D);
 
-            //Validate it, but client really shouldn't be messing with this
-            CHECK(!(format3D & ~(HAL_3D_OUT_SIDE_BY_SIDE |
-                                 HAL_3D_OUT_TOP_BOTTOM   |
-                                 HAL_3D_IN_SIDE_BY_SIDE_R_L |
-                                 HAL_3D_IN_SIDE_BY_SIDE_L_R |
-                                 HAL_3D_IN_TOP_BOTTOM)));
+                //Validate it, but client really shouldn't be messing with this
+                CHECK(!(format3D & ~(HAL_3D_OUT_SIDE_BY_SIDE |
+                                     HAL_3D_OUT_TOP_BOTTOM |
+                                     HAL_3D_IN_SIDE_BY_SIDE_R_L |
+                                     HAL_3D_IN_SIDE_BY_SIDE_L_R |
+                                     HAL_3D_IN_TOP_BOTTOM)));
 
-            meta->setInt32(kKey3D, format3D);
-            return OK;
+                meta->setInt32(kKey3D, format3D);
+                return OK;
+            }
+            else
+                return ERROR_UNSUPPORTED;
         }
         default:
         {
